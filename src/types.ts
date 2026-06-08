@@ -37,6 +37,33 @@ export interface Student {
   formTeacherName: string;
   principalName: string;
   resumptionDate: string;
+  password?: string; // Password field for Student Authentication
+}
+
+export interface FacultyProfile {
+  id: string;
+  name: string;
+  role: string;
+  avatar: string;
+  password?: string; // Password field for Teacher Authentication
+}
+
+export interface Workspace15Template {
+  schoolName: string;            // 1
+  motto: string;                 // 2
+  address: string;               // 3
+  phone: string;                 // 4
+  email: string;                 // 5
+  resumptionDate: string;        // 6
+  termDate: string;              // 7
+  session: string;               // 8
+  principalName: string;         // 9
+  formTeacherJunior: string;     // 10
+  formTeacherSenior: string;     // 11
+  currentTerm: string;           // 12
+  nextTermFee: string;           // 13
+  distinctionThreshold: number;  // 14
+  passThreshold: number;         // 15
 }
 
 export interface SchoolInfo {

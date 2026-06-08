@@ -243,7 +243,8 @@ export function createStudent(name: string, className: ClassName, idx: number): 
     formTeacherRemark: remarks[remarkIdx],
     formTeacherName: isJSS ? "Mrs. Gladys Alabi" : "Mr. Anthony Okon",
     principalName: "Dr. Ezekiel Beck",
-    resumptionDate: "2026-09-14"
+    resumptionDate: "2026-09-14",
+    password: "123456"
   };
 }
 

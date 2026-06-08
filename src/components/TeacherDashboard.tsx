@@ -5,28 +5,24 @@
 
 import React, { useState, useRef } from 'react';
 import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, Printer, UserCheck } from 'lucide-react';
-import { Student, ClassName, SubjectGrade, BehaviourRating } from '../types';
+import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile } from '../types';
 import { createStudent, calculateStudentStats, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal } from '../utils/academicUtils';
 
 interface TeacherDashboardProps {
   students: Student[];
+  template: Workspace15Template;
   onBack: () => void;
   onUpdateStudents: (updatedList: Student[]) => void;
+  onUpdateTemplate: (newTemplate: Workspace15Template) => void;
 }
 
-interface FacultyProfile {
-  name: string;
-  role: string;
-  avatar: string;
-}
-
-const FACULTY_LIST: FacultyProfile[] = [
-  { name: "Dr. Ezekiel Beck", role: "School Head Principal & Founder", avatar: "👨‍🏫" },
-  { name: "Mrs. Gladys Alabi", role: "Junior Secondary Form Lead", avatar: "👩‍🏫" },
-  { name: "Mr. Anthony Okon", role: "Senior Secondary Form Lead", avatar: "👨‍💻" }
+const DEFAULT_FACULTY: FacultyProfile[] = [
+  { id: "ezekiel", name: "Dr. Ezekiel Beck", role: "School Head Principal & Founder", avatar: "👨‍🏫", password: "admin" },
+  { id: "gladys", name: "Mrs. Gladys Alabi", role: "Junior Secondary Form Lead", avatar: "👩‍🏫", password: "junior" },
+  { id: "anthony", name: "Mr. Anthony Okon", role: "Senior Secondary Form Lead", avatar: "👨‍💻", password: "senior" }
 ];
 
-export default function TeacherDashboard({ students, onBack, onUpdateStudents }: TeacherDashboardProps) {
+export default function TeacherDashboard({ students, template, onBack, onUpdateStudents, onUpdateTemplate }: TeacherDashboardProps) {
   const [currentUser, setCurrentUser] = useState<FacultyProfile | null>(null);
   const [selectedClass, setSelectedClass] = useState<ClassName>('JSS1');
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
@@ -34,14 +30,82 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
   const [showAddForm, setShowAddForm] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   
-  // New Student input fields
+  // Dashboard Sub-navigation Tab
+  const [activeSubTab, setActiveSubTab] = useState<'roster' | 'workspace'>('roster');
+
+  // Dynamic Faculty Management State
+  const [facultyProfiles, setFacultyProfiles] = useState<FacultyProfile[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('ezibeck_faculty_profiles');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error parsing stored faculty profiles', e);
+        }
+      }
+    }
+    return DEFAULT_FACULTY;
+  });
+
+  // Faculty Login Credentials States
+  const [pendingLoginUser, setPendingLoginUser] = useState<FacultyProfile | null>(null);
+  const [teacherPasswordInput, setTeacherPasswordInput] = useState('');
+  const [teacherLoginError, setTeacherLoginError] = useState('');
+
+  // Faculty Registration States
+  const [showRegisterForm, setShowRegisterForm] = useState(false);
+  const [regName, setRegName] = useState('');
+  const [regRole, setRegRole] = useState('Secondary Subject Educator');
+  const [regAvatar, setRegAvatar] = useState('👩‍🏫');
+  const [regPassword, setRegPassword] = useState('');
+
+  // 15 properties Editable Workspace template states
+  const [tempSchoolName, setTempSchoolName] = useState(template.schoolName);
+  const [tempMotto, setTempMotto] = useState(template.motto);
+  const [tempAddress, setTempAddress] = useState(template.address);
+  const [tempPhone, setTempPhone] = useState(template.phone);
+  const [tempEmail, setTempEmail] = useState(template.email);
+  const [tempResumptionDate, setTempResumptionDate] = useState(template.resumptionDate);
+  const [tempTermDate, setTempTermDate] = useState(template.termDate);
+  const [tempSession, setTempSession] = useState(template.session);
+  const [tempCurrentTerm, setTempCurrentTerm] = useState(template.currentTerm);
+  const [tempPrincipalName, setTempPrincipalName] = useState(template.principalName);
+  const [tempFormTeacherJunior, setTempFormTeacherJunior] = useState(template.formTeacherJunior);
+  const [tempFormTeacherSenior, setTempFormTeacherSenior] = useState(template.formTeacherSenior);
+  const [tempNextTermFee, setTempNextTermFee] = useState(template.nextTermFee);
+  const [tempDistinctionThreshold, setTempDistinctionThreshold] = useState(template.distinctionThreshold);
+  const [tempPassThreshold, setTempPassThreshold] = useState(template.passThreshold);
+
+  // Synchronize dynamic template modifications
+  React.useEffect(() => {
+    setTempSchoolName(template.schoolName);
+    setTempMotto(template.motto);
+    setTempAddress(template.address);
+    setTempPhone(template.phone);
+    setTempEmail(template.email);
+    setTempResumptionDate(template.resumptionDate);
+    setTempTermDate(template.termDate);
+    setTempSession(template.session);
+    setTempCurrentTerm(template.currentTerm);
+    setTempPrincipalName(template.principalName);
+    setTempFormTeacherJunior(template.formTeacherJunior);
+    setTempFormTeacherSenior(template.formTeacherSenior);
+    setTempNextTermFee(template.nextTermFee);
+    setTempDistinctionThreshold(template.distinctionThreshold);
+    setTempPassThreshold(template.passThreshold);
+  }, [template]);
+
+  // New Student input fields including password
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentSex, setNewStudentSex] = useState<'Male' | 'Female'>('Male');
   const [newStudentAge, setNewStudentAge] = useState(12);
+  const [newStudentPassword, setNewStudentPassword] = useState('123456');
 
-  // Edit Student form fields state
+  // Edit Student form fields state including password
   const [editAge, setEditAge] = useState(12);
   const [editSex, setEditSex] = useState<'Male' | 'Female'>('Male');
+  const [editPassword, setEditPassword] = useState('123456');
   const [editAttendancePresent, setEditAttendancePresent] = useState(100);
   const [editAttendanceTotal, setEditAttendanceTotal] = useState(110);
   const [editSubjects, setEditSubjects] = useState<SubjectGrade[]>([]);
@@ -57,10 +121,46 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
     setTimeout(() => setSuccessMsg(''), 4000);
   };
 
+  // Staff registration helper
+  const handleRegisterStaff = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!regName.trim() || !regPassword) return;
+
+    const newFaculty: FacultyProfile = {
+      id: "staff_" + Date.now(),
+      name: regName.trim(),
+      role: regRole,
+      avatar: regAvatar,
+      password: regPassword
+    };
+
+    const updated = [...facultyProfiles, newFaculty];
+    setFacultyProfiles(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(updated));
+    }
+
+    setRegName('');
+    setRegPassword('');
+    setShowRegisterForm(false);
+    triggerSuccess(`Registered and activated credentials for ${newFaculty.name} successfully!`);
+  };
+
   // Staff Login action
-  const handleLogin = (profile: FacultyProfile) => {
-    setCurrentUser(profile);
-    triggerSuccess(`Successfully authorized as ${profile.name}`);
+  const handleVerifyTeacherLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pendingLoginUser) return;
+
+    const correctPassword = pendingLoginUser.password || 'admin';
+    if (teacherPasswordInput === correctPassword) {
+      setCurrentUser(pendingLoginUser);
+      setPendingLoginUser(null);
+      setTeacherPasswordInput('');
+      setTeacherLoginError('');
+      triggerSuccess(`Successfully authorized as ${pendingLoginUser.name}`);
+    } else {
+      setTeacherLoginError('Incorrect faculty access password code.');
+    }
   };
 
   const handleLogout = () => {
@@ -90,6 +190,7 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
     const added = createStudent(newStudentName.trim(), selectedClass, newIdx);
     added.age = newStudentAge;
     added.sex = newStudentSex;
+    added.password = newStudentPassword || '123456';
     
     // Add student, trigger ranking refresh
     let refreshed = [...students, added];
@@ -97,6 +198,7 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
     
     onUpdateStudents(refreshed);
     setNewStudentName('');
+    setNewStudentPassword('123456');
     setShowAddForm(false);
     triggerSuccess(`Added ${added.name} of school standard JSS1-SS3 registration catalog!`);
   };
@@ -106,6 +208,7 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
     setEditingStudent(student);
     setEditAge(student.age);
     setEditSex(student.sex);
+    setEditPassword(student.password || '123456');
     setEditAttendancePresent(student.attendancePresent);
     setEditAttendanceTotal(student.attendanceTotal);
     setEditSubjects([...student.subjects]);
@@ -146,6 +249,7 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
       ...editingStudent,
       age: editAge,
       sex: editSex,
+      password: editPassword,
       attendancePresent: editAttendancePresent,
       attendanceTotal: editAttendanceTotal,
       subjects: editSubjects,
@@ -190,44 +294,188 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
           </button>
 
           <div className="flex justify-center">
-            <div className="bg-amber-400/10 border border-amber-400/30 font-bold text-amber-400 p-4 rounded-2xl">
-              <School className="w-10 h-10" />
+            <div className="bg-indigo-450/10 border border-indigo-400/30 font-bold text-indigo-400 p-4 rounded-2xl">
+              <School className="w-10 h-10 animate-pulse" />
             </div>
           </div>
 
           <div>
-            <h1 className="text-xl font-black tracking-tight uppercase leading-none">EZIBECK STAFF DESK</h1>
-            <p className="text-[10px] tracking-widest text-amber-400 font-extrabold uppercase mt-1">Authorized Entry Workspace</p>
+            <h1 className="text-xl font-black tracking-tight uppercase leading-none text-white">EZIBECK STAFF DESK</h1>
+            <p className="text-[10px] tracking-widest text-indigo-400 font-extrabold uppercase mt-1">Authorized Entry Workspace</p>
           </div>
 
-          <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl text-left text-xs text-slate-400 space-y-1">
-            <span className="font-extrabold text-slate-200 block text-[11px] uppercase tracking-wider mb-1 text-amber-500">
-              Staff Desk Policy
-            </span>
-            <p>Welcome, Educators! Sign in securely by selecting your authorized academic profile. You can edit marks and print report cards instantly.</p>
-          </div>
+          {/* Real-time Alerts popups inside login */}
+          {successMsg && (
+            <div className="bg-emerald-900/30 border border-emerald-500/50 rounded-xl p-3 text-emerald-300 text-xs text-left font-semibold">
+              ✓ {successMsg}
+            </div>
+          )}
 
-          <div className="space-y-2 pt-2">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Choose Faculty profile:</span>
-            {FACULTY_LIST.map(p => (
+          {/* Conditional view: Teacher Password Challenge */}
+          {pendingLoginUser ? (
+            <form onSubmit={handleVerifyTeacherLogin} className="space-y-4 text-left animate-fade-in bg-slate-950 border border-slate-850 p-5 rounded-2xl">
+              <div className="flex items-center gap-2 border-b border-slate-800 pb-2.5">
+                <span className="text-2xl">{pendingLoginUser.avatar}</span>
+                <div>
+                  <h4 className="font-bold text-xs text-white">{pendingLoginUser.name}</h4>
+                  <p className="text-[9px] text-slate-400">{pendingLoginUser.role}</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Enter Faculty Passcode:</label>
+                <input
+                  type="password"
+                  required
+                  autoFocus
+                  placeholder="Profile security password"
+                  value={teacherPasswordInput}
+                  onChange={(e) => {
+                    setTeacherPasswordInput(e.target.value);
+                    setTeacherLoginError('');
+                  }}
+                  className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2 text-xs font-mono tracking-widest text-white outline-none"
+                />
+                {teacherLoginError && (
+                  <p className="text-[10px] text-red-400 font-semibold mt-1">{teacherLoginError}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingLoginUser(null);
+                    setTeacherPasswordInput('');
+                    setTeacherLoginError('');
+                  }}
+                  className="bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-lg py-2 text-[10px] font-bold text-slate-400 tracking-wider uppercase transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-indigo-900 hover:bg-indigo-950 text-white rounded-lg py-2 text-[10px] font-bold tracking-wider uppercase transition-all"
+                >
+                  Unlock Access
+                </button>
+              </div>
+            </form>
+          ) : showRegisterForm ? (
+            /* Conditional view: Teacher Registration form */
+            <form onSubmit={handleRegisterStaff} className="space-y-4 text-left animate-fade-in bg-slate-950 border border-slate-850 p-5 rounded-2xl">
+              <h3 className="text-xs font-black text-white uppercase tracking-wider border-b border-slate-800 pb-2">Register New Educator Desk</h3>
+              
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Full Educator Name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Prof. Sarah Alao"
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Staff Office Role</label>
+                  <select
+                    value={regRole}
+                    onChange={(e) => setRegRole(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white outline-none font-bold"
+                  >
+                    <option value="Senior College Administrator">Senior College Administrator</option>
+                    <option value="Junior Secondary Form Lead">Junior Secondary Form Lead</option>
+                    <option value="Senior Secondary Form Lead">Senior Secondary Form Lead</option>
+                    <option value="Subject Special Educator">Subject Special Educator</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Passcode Password</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Enter secure staff layout key"
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white outline-none font-mono tracking-widest"
+                  />
+                </div>
+
+                <div className="grid grid-cols-5 gap-2">
+                  <label className="col-span-5 block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Select Emoji Avatar</label>
+                  {["👩‍🏫", "👨‍🏫", "👩‍💻", "👨‍💻", "🎓"].map(emoji => (
+                    <button
+                      type="button"
+                      key={emoji}
+                      onClick={() => setRegAvatar(emoji)}
+                      className={`text-2xl p-1 rounded-md transition-all ${regAvatar === emoji ? 'bg-indigo-900 scale-110 border border-indigo-500' : 'bg-slate-900 hover:bg-slate-800'}`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-900">
+                <button
+                  type="button"
+                  onClick={() => setShowRegisterForm(false)}
+                  className="bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-lg py-2 text-[10px] font-bold text-slate-400 tracking-wider uppercase transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-indigo-900 hover:bg-indigo-950 text-white rounded-lg py-2 text-[10px] font-bold tracking-wider uppercase transition-all"
+                >
+                  Enroll Staff
+                </button>
+              </div>
+            </form>
+          ) : (
+            /* Select profile block */
+            <>
+              <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl text-left text-xs text-slate-400 space-y-1">
+                <span className="font-extrabold text-slate-200 block text-[11px] uppercase tracking-wider mb-1 text-indigo-400">
+                  Staff Desk Policy
+                </span>
+                <p>Welcome, Educators! Sign in securely by selecting your authorized academic profile. Enter your dynamic password key to configure classes and reports.</p>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Choose Faculty profile:</span>
+                {facultyProfiles.map(p => (
+                  <button
+                    key={p.name}
+                    onClick={() => setPendingLoginUser(p)}
+                    className="w-full bg-slate-800/40 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 rounded-xl p-3 flex items-center justify-between transition-all group"
+                  >
+                    <div className="flex items-center gap-3 text-left">
+                      <span className="text-xl">{p.avatar}</span>
+                      <div>
+                        <h4 className="font-bold text-xs text-slate-200 group-hover:text-white leading-none">{p.name}</h4>
+                        <span className="text-[10px] text-slate-400 leading-none">{p.role}</span>
+                      </div>
+                    </div>
+                    <div className="text-[10px] bg-indigo-950 text-indigo-400 border border-indigo-900 px-2 py-1 rounded font-bold">
+                      Authenticate
+                    </div>
+                  </button>
+                ))}
+              </div>
+
               <button
-                key={p.name}
-                onClick={() => handleLogin(p)}
-                className="w-full bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl p-3 flex items-center justify-between transition-all group"
+                onClick={() => setShowRegisterForm(true)}
+                className="w-full border border-dashed border-slate-850 hover:bg-slate-800/40 hover:border-slate-700 transition-all rounded-xl py-2 px-4 text-xs font-bold text-slate-400 hover:text-white flex items-center justify-center gap-1.5"
               >
-                <div className="flex items-center gap-3 text-left">
-                  <span className="text-xl">{p.avatar}</span>
-                  <div>
-                    <h4 className="font-bold text-xs text-slate-200 group-hover:text-white leading-none">{p.name}</h4>
-                    <span className="text-[10px] text-slate-400 leading-none">{p.role}</span>
-                  </div>
-                </div>
-                <div className="text-[10px] bg-slate-900 border border-slate-700 px-2 py-1 rounded text-slate-400 font-bold">
-                  Bypass Lock
-                </div>
+                <Plus className="w-3.5 h-3.5" /> Register New staff profile
               </button>
-            ))}
-          </div>
+            </>
+          )}
 
           <p className="text-[9px] text-slate-500">
             Secure administrative console. EZIBECK'S ACADEMY Academic Office delta-terminal.
@@ -280,13 +528,31 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
         </div>
       )}
 
+      {/* Roster & Editable Workspace Template navigation bar */}
+      {!viewingReportStudent && !editingStudent && (
+        <div className="max-w-6xl mx-auto mb-6 flex gap-2 border-b border-slate-200 pb-px print:hidden">
+          <button
+            onClick={() => setActiveSubTab('roster')}
+            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${activeSubTab === 'roster' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+          >
+            📂 Students Registry Roster
+          </button>
+          <button
+            onClick={() => setActiveSubTab('workspace')}
+            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${activeSubTab === 'workspace' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-650'}`}
+          >
+            ⚙️ Workspace Config Template (15 properties)
+          </button>
+        </div>
+      )}
+
       {/* Main Container Workspace */}
       <div className="max-w-6xl mx-auto grid grid-cols-1 gap-8">
         
         {/* VIEW 1: ACTIVE STUDENT ROW EDITOR MODE */}
         {viewingReportStudent ? (
           <div className="space-y-6">
-            <div className="flex justify-between items-center bg-white border border-slate-100 rounded-2xl px-5 py-4 print:hidden shadow-xs">
+            <div className="flex justify-between items-center bg-white border border-slate-100 rounded-2xl px-5 py-4 print:hidden shadow-xs border-slate-200">
               <button
                 onClick={() => setViewingReportStudent(null)}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all hover:bg-slate-50 border cursor-pointer text-slate-700"
@@ -306,14 +572,14 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
               const stats = calculateStudentStats(viewingReportStudent);
               return (
                 <div 
-                  className="bg-white border border-slate-200/80 rounded-3xl shadow-xl p-6 sm:p-12 space-y-8 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in text-slate-800"
+                  className="bg-white border border-slate-205 rounded-3xl shadow-xl p-6 sm:p-12 space-y-8 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in text-slate-800"
                 >
                   {/* Print layout decorator line */}
                   <div className="absolute inset-3 border border-slate-100 rounded-2xl pointer-events-none print:hidden"></div>
 
                   {/* Notion Style Header Breadcrumbs */}
                   <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-slate-400 border-b border-slate-100/70 pb-3 mb-2 relative z-10 select-none">
-                    <span>🏫 {SCHOOL_INFO.motto ? SCHOOL_INFO.name : "EZIBECK’S ACADEMY"}</span>
+                    <span>🏫 {template.schoolName}</span>
                     <span>/</span>
                     <span>📁 Report Registry</span>
                     <span>/</span>
@@ -338,14 +604,14 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
 
                     <div className="space-y-1.5">
                       <h1 className="text-2xl sm:text-3.5xl font-black text-slate-900 tracking-tight leading-none uppercase">
-                        {SCHOOL_INFO.name}
+                        {template.schoolName}
                       </h1>
                       <p className="text-[11px] uppercase tracking-wider text-indigo-700 font-bold flex items-center gap-1.5 select-none">
                         <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
-                        Motto: {SCHOOL_INFO.motto}
+                        Motto: {template.motto}
                       </p>
                       <p className="text-slate-500 text-[10px] sm:text-[11px] leading-relaxed">
-                        <strong>Registered Address:</strong> {SCHOOL_INFO.address}
+                        <strong>Registered Address:</strong> {template.address} | <strong>Phone:</strong> {template.phone} | <strong>Email:</strong> {template.email}
                       </p>
                     </div>
 
@@ -405,14 +671,14 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
                         <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
                           <span>📅</span> Report Date
                         </span>
-                        <span className="font-bold text-slate-800 text-right w-1/2">{viewingReportStudent.termDate}</span>
+                        <span className="font-bold text-slate-800 text-right w-1/2">{template.termDate}</span>
                       </div>
 
                       <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 lg:border-0 lg:pb-0">
                         <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
                           <span>🗓️</span> Academic Session
                         </span>
-                        <span className="font-extrabold text-slate-900 text-right w-1/2">{viewingReportStudent.session}</span>
+                        <span className="font-extrabold text-slate-900 text-right w-1/2">{template.session}</span>
                       </div>
 
                       <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 lg:border-0 lg:pb-0">
@@ -426,7 +692,7 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
                         <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
                           <span>🔄</span> Resumption Date
                         </span>
-                        <span className="font-extrabold text-indigo-750 text-right w-1/2">{viewingReportStudent.resumptionDate}</span>
+                        <span className="font-extrabold text-indigo-750 text-right w-1/2">{template.resumptionDate}</span>
                       </div>
                     </div>
                   </div>
@@ -700,58 +966,66 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
                   {/* Part C: Remarks & Signatures Segment */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10 pt-6 border-t border-dashed border-slate-200">
                     {/* Form Teacher Remark Callout */}
-                    <div className="bg-[#FAF9F9] border border-slate-200 p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-3xs text-slate-800 text-xs">
-                      <div>
-                        <h4 className="font-black text-slate-900 text-xs uppercase tracking-widest border-b border-slate-200/50 pb-1.5 select-none flex items-center gap-1.5">
-                          <span>💬 Form Teacher's Appraisal</span>
-                        </h4>
-                        <p className="italic text-slate-600 pt-3 leading-relaxed">
-                          "{viewingReportStudent.formTeacherRemark}"
-                        </p>
-                      </div>
-                      
-                      <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
-                        <div>
-                          <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold select-none font-sans">Appraiser</span>
-                          <p className="font-black text-slate-900 font-sans">{viewingReportStudent.formTeacherName}</p>
-                        </div>
-                        <div className="text-right select-none">
-                          <div className="text-sm font-serif italic text-indigo-950 font-semibold h-5 tracking-wide">
-                            {viewingReportStudent.formTeacherName.replace("Mrs.", "").replace("Mr.","").trim()}
+                    {(() => {
+                      const displayTeacherName = viewingReportStudent.className.startsWith('JSS') ? template.formTeacherJunior : template.formTeacherSenior;
+                      const displayPrincipalName = template.principalName;
+                      return (
+                        <>
+                          <div className="bg-[#FAF9F9] border border-slate-200 p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-3xs text-slate-800 text-xs">
+                            <div>
+                              <h4 className="font-black text-slate-900 text-xs uppercase tracking-widest border-b border-slate-200/50 pb-1.5 select-none flex items-center gap-1.5">
+                                <span>💬 Form Teacher's Appraisal</span>
+                              </h4>
+                              <p className="italic text-slate-600 pt-3 leading-relaxed">
+                                "{viewingReportStudent.formTeacherRemark}"
+                              </p>
+                            </div>
+                            
+                            <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
+                              <div>
+                                <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold select-none font-sans">Appraiser</span>
+                                <p className="font-black text-slate-900 font-sans">{displayTeacherName}</p>
+                              </div>
+                              <div className="text-right select-none">
+                                <div className="text-sm font-serif italic text-indigo-950 font-semibold h-5 tracking-wide">
+                                  {displayTeacherName.replace("Mrs.", "").replace("Mr.","").trim()}
+                                </div>
+                                <span className="text-[8px] text-slate-400 uppercase tracking-wider block border-t border-slate-200 pt-0.5 mt-0.5">Signature & Stamp</span>
+                              </div>
+                            </div>
                           </div>
-                          <span className="text-[8px] text-slate-400 uppercase tracking-wider block border-t border-slate-200 pt-0.5 mt-0.5">Signature & Stamp</span>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Principal Assessment Callout */}
-                    <div className="bg-[#FAF9F9] border border-slate-200 p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-3xs text-slate-800 text-xs">
-                      <div>
-                        <h4 className="font-black text-slate-900 text-xs uppercase tracking-widest border-b border-slate-200/50 pb-1.5 select-none flex items-center gap-1.5">
-                          <span>🎓 Principal's Performance Assessment</span>
-                        </h4>
-                        <p className="italic text-slate-600 pt-3 leading-relaxed">
-                          {viewingReportStudent.formTeacherRemark.includes("outstanding") || stats.avgScore >= 75
-                            ? `"Highly commendable academic and behavioral character shown during the term session. Excellent candidate. Promoted with honor."`
-                            : stats.avgScore >= 50
-                              ? `"Satisfactory progress. Continued focus on core concepts will serve candidate well. Promoted."`
-                              : `"Needs close guidance and study supervision in future sessions to ensure passing criteria."`}
-                        </p>
-                      </div>
+                          {/* Principal Assessment Callout */}
+                          <div className="bg-[#FAF9F9] border border-slate-200 p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-3xs text-slate-800 text-xs">
+                            <div>
+                              <h4 className="font-black text-slate-900 text-xs uppercase tracking-widest border-b border-slate-200/50 pb-1.5 select-none flex items-center gap-1.5">
+                                <span>🎓 Principal's Performance Assessment</span>
+                              </h4>
+                              <p className="italic text-slate-600 pt-3 leading-relaxed">
+                                {viewingReportStudent.formTeacherRemark.includes("outstanding") || stats.avgScore >= (template.distinctionThreshold || 90)
+                                  ? `"Highly commendable academic and behavioral character shown during the term session. Excellent candidate. Promoted with honor."`
+                                  : stats.avgScore >= (template.passThreshold || 50)
+                                    ? `"Satisfactory progress. Continued focus on core concepts will serve candidate well. Promoted."`
+                                    : `"Needs close guidance and study supervision in future sessions to ensure passing criteria."`}
+                              </p>
+                            </div>
 
-                      <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
-                        <div>
-                          <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold select-none">Authorized Principal</span>
-                          <p className="font-black text-slate-900">{viewingReportStudent.principalName}</p>
-                        </div>
-                        <div className="text-right select-none">
-                          <div className="text-sm font-serif italic text-indigo-950 font-semibold h-5 tracking-wide">
-                            {viewingReportStudent.principalName.replace("Dr.","").trim()}
+                            <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
+                              <div>
+                                <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold select-none">Authorized Principal</span>
+                                <p className="font-black text-slate-900">{displayPrincipalName}</p>
+                              </div>
+                              <div className="text-right select-none">
+                                <div className="text-sm font-serif italic text-indigo-950 font-semibold h-5 tracking-wide">
+                                  {displayPrincipalName.replace("Dr.","").trim()}
+                                </div>
+                                <span className="text-[8px] text-slate-400 uppercase tracking-wider block border-t border-slate-200 pt-0.5 mt-0.5">Seal & Signature</span>
+                              </div>
+                            </div>
                           </div>
-                          <span className="text-[8px] text-slate-400 uppercase tracking-wider block border-t border-slate-200 pt-0.5 mt-0.5">Seal & Signature</span>
-                        </div>
-                      </div>
-                    </div>
+                        </>
+                      );
+                    })()}
                   </div>
 
                   {/* Bottom Status bar stamp */}
@@ -789,7 +1063,7 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
             </div>
 
             {/* Profile detail inputs */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-slate-50 border p-4 rounded-xl text-xs mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 bg-slate-50 border p-4 rounded-xl text-xs mb-8">
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Student Gender Sex</label>
                 <select
@@ -829,6 +1103,16 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
                   value={editAttendanceTotal}
                   onChange={(e) => setEditAttendanceTotal(Math.max(1, parseInt(e.target.value) || 1))}
                   className="bg-white border rounded p-1.5 w-full font-bold text-slate-700 outline-none text-center font-mono"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Student Access Password</label>
+                <input
+                  type="text"
+                  placeholder="Default: 123456"
+                  value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  className="bg-white border rounded p-1.5 w-full font-bold text-indigo-700 outline-none text-center font-mono"
                 />
               </div>
             </div>
@@ -1282,6 +1566,249 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
               })()}
             </div>
           </div>
+        ) : activeSubTab === 'workspace' ? (
+          /* VIEW 3: WORKSPACE 15 PROPERTIES EDITABLE TEMPLATE FOR TEACHERS */
+          <div className="bg-white border rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm animate-fade-in text-slate-800">
+            <div className="border-b pb-4">
+              <span className="text-[10px] bg-indigo-50 border border-indigo-200 text-indigo-700 font-extrabold tracking-widest uppercase px-2.5 py-1 rounded-md">
+                Workspace Configuration Panel
+              </span>
+              <h2 className="text-sm font-extrabold text-slate-900 mt-3 flex items-center gap-1.5 uppercase tracking-tight">
+                🏫 Edit School Info & Report Card Template
+              </h2>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Configure EZIBECK'S dynamic academic template. There are 15 dynamic properties customizable here.
+              </p>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                onUpdateTemplate({
+                  schoolName: tempSchoolName,
+                  motto: tempMotto,
+                  address: tempAddress,
+                  phone: tempPhone,
+                  email: tempEmail,
+                  resumptionDate: tempResumptionDate,
+                  termDate: tempTermDate,
+                  session: tempSession,
+                  currentTerm: tempCurrentTerm,
+                  principalName: tempPrincipalName,
+                  formTeacherJunior: tempFormTeacherJunior,
+                  formTeacherSenior: tempFormTeacherSenior,
+                  nextTermFee: tempNextTermFee,
+                  distinctionThreshold: Number(tempDistinctionThreshold),
+                  passThreshold: Number(tempPassThreshold),
+                });
+                triggerSuccess('Scholastic report template settings (15 properties) successfully saved!');
+              }}
+              className="space-y-6 text-xs"
+            >
+              {/* Row A: General Scholastic Metadata */}
+              <div className="space-y-3.5">
+                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-l-4 border-slate-900 pl-2">
+                  Section A: General Academic Information
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">School Campus Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={tempSchoolName}
+                      onChange={(e) => setTempSchoolName(e.target.value)}
+                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-slate-800"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Official School Motto Slogan</label>
+                    <input
+                      type="text"
+                      required
+                      value={tempMotto}
+                      onChange={(e) => setTempMotto(e.target.value)}
+                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-slate-800"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Registered Campus Address</label>
+                    <input
+                      type="text"
+                      required
+                      value={tempAddress}
+                      onChange={(e) => setTempAddress(e.target.value)}
+                      className="w-full bg-[#FCFCFC] border rounded-lg p-2.5 outline-none font-medium text-slate-800"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Contact Office Phone</label>
+                    <input
+                      type="text"
+                      required
+                      value={tempPhone}
+                      onChange={(e) => setTempPhone(e.target.value)}
+                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-slate-800"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Scholastic E-Mail Address</label>
+                    <input
+                      type="email"
+                      required
+                      value={tempEmail}
+                      onChange={(e) => setTempEmail(e.target.value)}
+                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-medium text-slate-800"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Row B: Calendar & Term Logistics */}
+              <div className="space-y-3.5 pt-4 border-t">
+                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-l-4 border-slate-900 pl-2">
+                  Section B: Calendar & Terms Scheduling
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Academic Session Period</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. 2025/2026 Session"
+                      value={tempSession}
+                      onChange={(e) => setTempSession(e.target.value)}
+                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-slate-800"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Current Term</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Third Term"
+                      value={tempCurrentTerm}
+                      onChange={(e) => setTempCurrentTerm(e.target.value)}
+                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-slate-800"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Next Term School Fees (₦)</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. ₦120,000"
+                      value={tempNextTermFee}
+                      onChange={(e) => setTempNextTermFee(e.target.value)}
+                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-indigo-700 font-mono text-center"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Report Card Issue Date</label>
+                    <input
+                      type="text"
+                      required
+                      value={tempTermDate}
+                      onChange={(e) => setTempTermDate(e.target.value)}
+                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-slate-800"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Next Term Resumption Date</label>
+                    <input
+                      type="text"
+                      required
+                      value={tempResumptionDate}
+                      onChange={(e) => setTempResumptionDate(e.target.value)}
+                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-slate-800"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Row C: Academic Governance Officers */}
+              <div className="space-y-3.5 pt-4 border-t">
+                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-l-4 border-slate-900 pl-2">
+                  Section C: Scholastic Appraisers & Signatories
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Authorized Principal Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={tempPrincipalName}
+                      onChange={(e) => setTempPrincipalName(e.target.value)}
+                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-slate-800"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Junior College Advisor (JSS)</label>
+                    <input
+                      type="text"
+                      required
+                      value={tempFormTeacherJunior}
+                      onChange={(e) => setTempFormTeacherJunior(e.target.value)}
+                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-slate-800"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Senior College Advisor (SS)</label>
+                    <input
+                      type="text"
+                      required
+                      value={tempFormTeacherSenior}
+                      onChange={(e) => setTempFormTeacherSenior(e.target.value)}
+                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-slate-800"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Row D: Syllabus Grading Rubrics */}
+              <div className="space-y-3.5 pt-4 border-t">
+                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-l-4 border-slate-900 pl-2">
+                  Section D: Grading Performance Boundaries
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Distinction Threshold Rating (%)</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      max="100"
+                      value={tempDistinctionThreshold}
+                      onChange={(e) => setTempDistinctionThreshold(parseInt(e.target.value) || 90)}
+                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-emerald-600 font-mono text-center"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Pass / Promotion Threshold Rating (%)</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      max="100"
+                      value={tempPassThreshold}
+                      onChange={(e) => setTempPassThreshold(parseInt(e.target.value) || 50)}
+                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-amber-500 font-mono text-center"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Form submit/save button */}
+              <div className="pt-4 border-t flex justify-end">
+                <button
+                  type="submit"
+                  className="bg-indigo-900 hover:bg-indigo-950 text-white font-extrabold text-[10px] tracking-wider uppercase px-6 py-3 rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                >
+                  ⚡ Save & Publish Workspace Template
+                </button>
+              </div>
+            </form>
+          </div>
         ) : (
           
           // VIEW 2: ROSTER DIRECTORY FOR SELECTED CLASS
@@ -1357,7 +1884,7 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
                     Register New Student Record ({selectedClass})
                   </h4>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                     <div>
                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Full Student Name Name</label>
                       <input
@@ -1391,6 +1918,17 @@ export default function TeacherDashboard({ students, onBack, onUpdateStudents }:
                           <option key={y} value={y}>{y} Years Old</option>
                         ))}
                       </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Student Portal Password</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Default: 123456"
+                        value={newStudentPassword}
+                        onChange={(e) => setNewStudentPassword(e.target.value)}
+                        className="w-full bg-white border p-2 text-xs rounded-lg outline-none font-mono font-black text-indigo-700 text-center"
+                      />
                     </div>
                   </div>
 
