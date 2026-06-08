@@ -1,0 +1,6 @@
+{
+  "name": "Ezibeck Academy",
+  "description": "Student portal and academic report sheet manager for Ezibeck's Academy.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

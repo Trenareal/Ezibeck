@@ -1,0 +1,87 @@
+=== ALL COLLECTIONS AND SCHEMAS ===
+
+==============================================
+Collection ID: 7fffc902-a14b-82bf-8905-872552241de5
+Table Name: [["Student Info"]]
+Schema:
+  - Key: E[:;
+    Name: Term Date
+    Type: date
+  - Key: QrDD
+    Name: Sex
+    Type: select
+    Options: Male, Female
+  - Key: WjIG
+    Name: Class
+    Type: select
+    Options: JSS1, JSS2, JSS3
+  - Key: jDMj
+    Name: Age
+    Type: select
+    Options: 8 years, 9 years, 10 years, 11 years, 12 years, 13 years, 14 years, 15 years, 16 years
+  - Key: title
+    Name: Student Name
+    Type: title
+
+==============================================
+Collection ID: 865fc902-a14b-8288-9871-876a49684775
+Table Name: [["SUBJECTS"]]
+Schema:
+  - Key: JKe?
+    Name: POSITION
+    Type: number
+  - Key: Zm[x
+    Name: SESSION AVERAGE SCORE 100%
+    Type: formula
+  - Key: _DHb
+    Name: TERM EXAM 70%
+    Type: number
+  - Key: dUmS
+    Name: TEST 30%
+    Type: number
+    Options: Not started, In progress, Done
+  - Key: k;tF
+    Name: LETTER GRADE
+    Type: formula
+  - Key: kQ[B
+    Name: FIRST TERM SUMMARY 20%
+    Type: number
+  - Key: tH]S
+    Name: SECOND TERM SUMMARY 20%
+    Type: number
+  - Key: uj\U
+    Name: THIRD TERM SUMMARY 60%
+    Type: number
+  - Key: yHO~
+    Name: TERM AVERAGE SCORE 100%
+    Type: formula
+  - Key: |l=u
+    Name: TEACHER'S REMARK
+    Type: formula
+  - Key: title
+    Name: Subjects
+    Type: title
+
+==============================================
+Collection ID: 45afc902-a14b-8357-9f40-879d7e7d52ed
+Table Name: [["School resumes "]]
+Schema:
+  - Key: `?Q?
+    Name: Resumption Date
+    Type: date
+  - Key: title
+    Name: Date of Resumption
+    Type: title
+
+==============================================
+Collection ID: 999fc902-a14b-8283-b87f-071d69c66f3e
+Table Name: [["Behaviour"]]
+Schema:
+  - Key: XocC
+    Name: Rating 
+    Type: select
+    Options: 1, 2, 3, 4, 5
+  - Key: title
+    Name: Name
+    Type: title
+

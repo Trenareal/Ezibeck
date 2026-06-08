@@ -1,0 +1,20 @@
+=== COLLECTIONS & SCHEMAS ===
+
+Collection ID: 7fffc902-a14b-82bf-8905-872552241de5
+Name: No Name
+Schema: undefined
+
+Collection ID: 865fc902-a14b-8288-9871-876a49684775
+Name: No Name
+Schema: undefined
+
+Collection ID: 45afc902-a14b-8357-9f40-879d7e7d52ed
+Name: No Name
+Schema: undefined
+
+Collection ID: 999fc902-a14b-8283-b87f-071d69c66f3e
+Name: No Name
+Schema: undefined
+
+=== ROW / DATA BLOCKS ===
+

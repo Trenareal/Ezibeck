@@ -1,0 +1,182 @@
+=== EZIBECK ACADEMY NOTION PAGE CONTENT ===
+
+[Block ID: 89bfc902-a14b-83a4-9ea3-01ff76bd118b] [Type: page] [Text: EZIBECK’S ACADEMY]
+  Format: {"metadata":{"ai_run_id":"e264fb26-a615-4b44-88fd-d6e729e2c471"},"copied_from_pointer":{"id":"367fc902-a14b-8025-847d-ff816972bcc5","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 371fc902-a14b-8068-adb0-e99c0a755870] [Type: page] [Text: JSS1]
+  Format: {"metadata":{"ai_run_id":"e264fb26-a615-4b44-88fd-d6e729e2c471"},"page_icon":"📒"}
+
+[Block ID: 371fc902-a14b-8008-b853-e82e8f13d476] [Type: page] [Text: EZIBECK’S ACADEMY]
+  Format: {"site_id":"376fc902-a14b-807a-badb-00790477bf7a"}
+
+[Block ID: 860fc902-a14b-83d2-bc8d-81e8964be588] [Type: text] [Text: Address: No, 5 Ezibeck’s Crescent, Behind Udu Motor Park Ovwian, Delta State ]
+  Format: {"copied_from_pointer":{"id":"367fc902-a14b-80dd-8222-ced6c54635fd","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: d76fc902-a14b-83cb-a1bd-814a9334e6b7] [Type: text] [Text: Motto: Knowledge  is Power ]
+  Format: {"copied_from_pointer":{"id":"367fc902-a14b-802b-8bd4-ce6510edfdf6","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: f6efc902-a14b-83c0-8e88-01c7ff112206] [Type: text] [Text: STUDENT’S TERMLY REPORT SHEET FOR JUNIOR SECONDARY SCHOOL]
+  Format: {"copied_from_pointer":{"id":"367fc902-a14b-80ec-b3ff-fa1744e8d1aa","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 9d3fc902-a14b-825d-8bcb-01c121d76c42] [Type: collection_view] [Text: ]
+  Format: {"metadata":{"ai_run_id":"ef98b067-04fb-4134-b3bb-e9c4c6ece608"},"collection_pointer":{"id":"7fffc902-a14b-82bf-8905-872552241de5","table":"collection","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"},"collection_pointers":[{"id":"7fffc902-a14b-82bf-8905-872552241de5","table":"collection","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}],"copied_from_pointer":{"id":"a3fb357a-85cd-46ba-9f0f-547948588ac1","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"},"source_collection_page_count":1}
+
+[Block ID: de9fc902-a14b-83b2-8fb2-81a0fb5be035] [Type: column_list] [Text: ]
+  Format: {"metadata":{"ai_run_id":"01a457cb-bfae-42f4-8540-95aebfd3d4f7"},"block_width":720,"block_full_width":false,"block_page_width":true,"copied_from_pointer":{"id":"9d8d8f37-43b8-41e2-8177-dbd478489592","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: f57fc902-a14b-8353-983c-0144b007ad7a] [Type: collection_view] [Text: ]
+  Format: {"collection_pointer":{"id":"865fc902-a14b-8288-9871-876a49684775","table":"collection","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"},"collection_pointers":[{"id":"865fc902-a14b-8288-9871-876a49684775","table":"collection","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}],"copied_from_pointer":{"id":"369fc902-a14b-8019-a0e2-c61b0985d352","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"},"source_collection_page_count":7}
+
+[Block ID: 05bfc902-a14b-838c-b14f-01c742ece868] [Type: text] [Text: ]
+  Format: {"metadata":{"ai_run_id":"6c6b7a33-bc23-49b6-8d43-d1a5bbddb081"},"toggleable":false,"copied_from_pointer":{"id":"36bfc902-a14b-8048-ba6b-c3921bfcdd49","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: c43fc902-a14b-8266-b809-8168fb08f4f6] [Type: column_list] [Text: ]
+  Format: {"metadata":{"ai_run_id":"6c6b7a33-bc23-49b6-8d43-d1a5bbddb081"},"block_width":1008,"block_full_width":false,"block_page_width":false,"copied_from_pointer":{"id":"d46a4669-d1ad-4ac1-96fe-696bac2ceaa2","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 73cfc902-a14b-8201-8078-81fa457d31a7] [Type: column_list] [Text: ]
+  Format: {"metadata":{"ai_run_id":"c8c1350e-c64e-4cd3-8e7c-f2a678fce36e"},"block_width":1008,"block_full_width":false,"block_page_width":false,"copied_from_pointer":{"id":"80bdb5ee-43dc-46bd-be5d-1f6b6355af42","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: a7bfc902-a14b-8308-9b55-0152c6a2112b] [Type: text] [Text: Overall Grading/Remark: ]
+  Format: {"copied_from_pointer":{"id":"36bfc902-a14b-8021-8cb4-e1623bbb81d9","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: badfc902-a14b-83f9-b848-81a268f74cd8] [Type: text] [Text: Form Teacher Remarks:]
+  Format: {"copied_from_pointer":{"id":"36bfc902-a14b-8000-8728-ea4eb11416d9","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: fd9fc902-a14b-82a8-8ab1-81f40d130184] [Type: column_list] [Text: ]
+  Format: {"metadata":{"ai_run_id":"ced6518b-f38c-4a6d-b04e-4496d84a015c"},"block_width":960,"block_full_width":false,"block_page_width":false,"copied_from_pointer":{"id":"0dfe67a1-d244-4186-b2c9-fa64b10690c6","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 327fc902-a14b-828e-8974-016d614e8ba0] [Type: text] [Text: Principal::]
+  Format: {"copied_from_pointer":{"id":"36bfc902-a14b-808a-b430-ea5b6022f5db","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 82efc902-a14b-83dc-8424-0161a4f2c22c] [Type: text] [Text: Principal’s Name: ]
+  Format: {"copied_from_pointer":{"id":"36bfc902-a14b-80bd-806a-df8b2d7ce0c7","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 68afc902-a14b-8222-a26d-01252aca7226] [Type: text] [Text: ]
+  Format: {"copied_from_pointer":{"id":"36bfc902-a14b-80cd-94b3-dcf978784a2b","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 630fc902-a14b-8219-a7a5-8100718fb876] [Type: collection_view] [Text: ]
+  Format: {"metadata":{"ai_run_id":"699ba7fa-a57c-4a7b-8a7b-fb6716d56cc4"},"collection_pointer":{"id":"45afc902-a14b-8357-9f40-879d7e7d52ed","table":"collection","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"},"collection_pointers":[{"id":"45afc902-a14b-8357-9f40-879d7e7d52ed","table":"collection","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}],"copied_from_pointer":{"id":"901881cc-8210-42b0-9c81-fcd2074c56ef","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"},"source_collection_page_count":1}
+
+[Block ID: a61fc902-a14b-82b4-8e75-815df9e79876] [Type: collection_view] [Text: ]
+  Format: {"copied_from_pointer":{"id":"36afc902-a14b-80f9-b1bb-c3c2a6239125","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 8b8fc902-a14b-822e-8458-01599528a854] [Type: column] [Text: ]
+  Format: {"metadata":{"ai_run_id":"01a457cb-bfae-42f4-8540-95aebfd3d4f7"},"column_ratio":1.1666666666666665,"copied_from_pointer":{"id":"b9cede97-1c42-4576-b935-9ed4ea937b0f","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 7e7fc902-a14b-82d4-9943-8162b3e21c53] [Type: column] [Text: ]
+  Format: {"metadata":{"ai_run_id":"01a457cb-bfae-42f4-8540-95aebfd3d4f7"},"column_ratio":0.7499999999999999,"copied_from_pointer":{"id":"0a9d575a-fcc3-49d1-a93a-52af054e9b37","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 94afc902-a14b-8286-99a7-814f4ede0707] [Type: column] [Text: ]
+  Format: {"metadata":{"ai_run_id":"01a457cb-bfae-42f4-8540-95aebfd3d4f7"},"column_ratio":0.4583333333333333,"copied_from_pointer":{"id":"d18c24c2-2e16-4e79-b45e-58541ebb6902","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 644fc902-a14b-83fd-a969-8199576c01ca] [Type: text] [Text: STUDENT ATTENDANCE:]
+  Format: {"metadata":{"ai_run_id":"01a457cb-bfae-42f4-8540-95aebfd3d4f7"},"toggleable":false,"copied_from_pointer":{"id":"43986d19-bfb4-4eba-89e2-d9cbfc7086d9","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 439fc902-a14b-83e5-806d-01d70cf3ec75] [Type: text] [Text: TOTAL ATTENDANCE:]
+  Format: {"metadata":{"ai_run_id":"01a457cb-bfae-42f4-8540-95aebfd3d4f7"},"copied_from_pointer":{"id":"13913ecc-1e79-476c-8d7a-4b467ff0229e","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: f47fc902-a14b-8231-ba19-019494b51acd] [Type: text] [Text: SESSION:]
+  Format: {"metadata":{"ai_run_id":"01a457cb-bfae-42f4-8540-95aebfd3d4f7"},"copied_from_pointer":{"id":"c264f2ea-00be-4254-beaa-929b3ae314df","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: debfc902-a14b-82bf-97cb-81e2fb296d8e] [Type: column] [Text: ]
+  Format: {"metadata":{"ai_run_id":"6c6b7a33-bc23-49b6-8d43-d1a5bbddb081"},"copied_from_pointer":{"id":"dc529d3e-6aa0-4f2e-afe0-c5109d1b9bad","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: ebffc902-a14b-82c0-99ca-01cc65462621] [Type: column] [Text: ]
+  Format: {"metadata":{"ai_run_id":"6c6b7a33-bc23-49b6-8d43-d1a5bbddb081"},"copied_from_pointer":{"id":"716d3db4-1e0a-4090-8b48-ab6d3c301834","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 663fc902-a14b-82ad-a938-819a79125624] [Type: text] [Text: Grades]
+  Format: {"copied_from_pointer":{"id":"36afc902-a14b-80e0-9d50-fc10f6dac638","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: a75fc902-a14b-83fa-8d43-81dd47b20da5] [Type: table] [Text: ]
+  Format: {"copied_from_pointer":{"id":"36bfc902-a14b-8019-b6ea-f546e5ec8be0","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"},"table_block_column_order":["Wt?d","Eb<O"],"table_block_column_format":{"Eb<O":{"width":160.66250610351562},"Wt?d":{"width":60.662506103515625},"dWQT":{"width":134.66666666666666}}}
+
+[Block ID: f89fc902-a14b-83c0-918d-813080a1fc89] [Type: text] [Text: Behaviour rating guide]
+  Format: {"metadata":{"ai_run_id":"6c6b7a33-bc23-49b6-8d43-d1a5bbddb081"},"copied_from_pointer":{"id":"f722e0ee-c915-4397-aea0-1b8abff1ba73","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: a19fc902-a14b-82dd-9e4d-01b1ddf53afd] [Type: bulleted_list] [Text: 5 = Excellent]
+  Format: {"metadata":{"ai_run_id":"6c6b7a33-bc23-49b6-8d43-d1a5bbddb081"},"copied_from_pointer":{"id":"4031b72a-a293-4b9d-ad10-1b3978d1345d","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 5cafc902-a14b-820d-afa0-81c0f3d00d20] [Type: bulleted_list] [Text: 4 = Very good]
+  Format: {"metadata":{"ai_run_id":"6c6b7a33-bc23-49b6-8d43-d1a5bbddb081"},"copied_from_pointer":{"id":"7b1ae4d4-ce70-41ce-9233-6e0ac637d7a2","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 2bcfc902-a14b-83c8-b49f-81254ff936a1] [Type: bulleted_list] [Text: 3 = Good]
+  Format: {"metadata":{"ai_run_id":"6c6b7a33-bc23-49b6-8d43-d1a5bbddb081"},"copied_from_pointer":{"id":"e9456d54-be6a-4e60-b9b3-8c8142bad4ba","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: a40fc902-a14b-82d8-b9f8-0122338b52e0] [Type: bulleted_list] [Text: 2 = Fair]
+  Format: {"metadata":{"ai_run_id":"6c6b7a33-bc23-49b6-8d43-d1a5bbddb081"},"copied_from_pointer":{"id":"ff9bd1ec-0c24-4655-b586-e8d3482e519d","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 9b0fc902-a14b-8375-b715-8195cdab85bf] [Type: bulleted_list] [Text: 1 = Poor]
+  Format: {"metadata":{"ai_run_id":"6c6b7a33-bc23-49b6-8d43-d1a5bbddb081"},"copied_from_pointer":{"id":"cc4b8ec1-2fc0-4c8c-9159-5467c0693ebc","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 522fc902-a14b-8239-8b66-01f7c02db9dd] [Type: collection_view] [Text: ]
+  Format: {"collection_pointer":{"id":"999fc902-a14b-8283-b87f-071d69c66f3e","table":"collection","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"},"collection_pointers":[{"id":"999fc902-a14b-8283-b87f-071d69c66f3e","table":"collection","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}],"copied_from_pointer":{"id":"369fc902-a14b-80e4-86de-eb5e662bc425","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"},"source_collection_page_count":9}
+
+[Block ID: d0efc902-a14b-826a-b507-01eece4baf37] [Type: text] [Text: ]
+  Format: {"copied_from_pointer":{"id":"36bfc902-a14b-801e-a4c0-efaef89a544c","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 2ecfc902-a14b-8207-bea2-0174fac5aab4] [Type: table_row] [Text: ]
+  Format: {"copied_from_pointer":{"id":"36bfc902-a14b-8073-909c-e7b3967d27d6","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+  Property [Eb<O]: [[" Distinction 90 - 100"]]
+  Property [Wt?d]: [["A+"]]
+
+[Block ID: 68bfc902-a14b-8360-8c91-813781da7f88] [Type: table_row] [Text: ]
+  Format: {"copied_from_pointer":{"id":"36bfc902-a14b-8052-a669-f4a4df5eb052","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+  Property [Eb<O]: [["Excellent 80 - 89"]]
+  Property [Wt?d]: [["A"]]
+
+[Block ID: 59ffc902-a14b-831c-9ecd-810a7c8e7cc6] [Type: table_row] [Text: ]
+  Format: {"copied_from_pointer":{"id":"36bfc902-a14b-80a7-b792-ed2ca5010844","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+  Property [Eb<O]: [["Very Good"]]
+  Property [Wt?d]: [["B"]]
+
+[Block ID: 0effc902-a14b-826e-84ca-814a7462da25] [Type: table_row] [Text: ]
+  Format: {"copied_from_pointer":{"id":"36bfc902-a14b-80e3-89fc-e0715341083b","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+  Property [Eb<O]: [["Good"]]
+  Property [Wt?d]: [["C"]]
+
+[Block ID: 87efc902-a14b-83f7-b153-8194c4aa9a7e] [Type: table_row] [Text: ]
+  Format: {"copied_from_pointer":{"id":"36bfc902-a14b-808f-8f02-de4cd109b60f","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+  Property [Eb<O]: [["Pass"]]
+  Property [Wt?d]: [["D"]]
+
+[Block ID: 467fc902-a14b-8351-8057-8151db81f9ac] [Type: table_row] [Text: ]
+  Format: {"copied_from_pointer":{"id":"36bfc902-a14b-807f-81ef-e2ecf4464b0d","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+  Property [Eb<O]: [["Fail"]]
+  Property [Wt?d]: [["F"]]
+
+[Block ID: 15ffc902-a14b-83eb-9de4-01ece9e35f41] [Type: column] [Text: ]
+  Format: {"metadata":{"ai_run_id":"c8c1350e-c64e-4cd3-8e7c-f2a678fce36e"},"copied_from_pointer":{"id":"993ae10d-84ca-4d16-bbb3-68d1b2295975","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 596fc902-a14b-825d-b972-016a634f5057] [Type: column] [Text: ]
+  Format: {"metadata":{"ai_run_id":"c8c1350e-c64e-4cd3-8e7c-f2a678fce36e"},"copied_from_pointer":{"id":"9d5969fc-1848-41c0-a96f-058936622cab","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 79bfc902-a14b-825f-9af3-012c37883df4] [Type: column] [Text: ]
+  Format: {"metadata":{"ai_run_id":"c8c1350e-c64e-4cd3-8e7c-f2a678fce36e"},"copied_from_pointer":{"id":"70b7645c-6490-4d0c-b0f6-34050baf6331","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: c9ffc902-a14b-82f2-b212-01f74827337e] [Type: text] [Text: No of Credits/Above:]
+  Format: {"metadata":{"ai_run_id":"c8c1350e-c64e-4cd3-8e7c-f2a678fce36e"},"copied_from_pointer":{"id":"6568f501-a591-41da-a2cb-62499975dff4","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 813fc902-a14b-8281-8f99-01fc647da454] [Type: text] [Text: No of Passes:]
+  Format: {"metadata":{"ai_run_id":"c8c1350e-c64e-4cd3-8e7c-f2a678fce36e"},"copied_from_pointer":{"id":"5d5d418c-e047-4afe-994b-a80d1f640be7","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 299fc902-a14b-820a-8428-81ad283c5f87] [Type: text] [Text: No of Failure:]
+  Format: {"metadata":{"ai_run_id":"c8c1350e-c64e-4cd3-8e7c-f2a678fce36e"},"copied_from_pointer":{"id":"e3603dc5-81c9-41a3-af63-d37e250d3b5c","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: e78fc902-a14b-83c9-888e-8136162610e9] [Type: column] [Text: ]
+  Format: {"metadata":{"ai_run_id":"ced6518b-f38c-4a6d-b04e-4496d84a015c"},"column_ratio":1.4583333333333333,"copied_from_pointer":{"id":"1d4829dd-a16c-4223-b04c-27f3d5758e66","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 194fc902-a14b-839b-91ca-8142a0da82fc] [Type: column] [Text: ]
+  Format: {"metadata":{"ai_run_id":"ced6518b-f38c-4a6d-b04e-4496d84a015c"},"column_ratio":0.5416666666666666,"copied_from_pointer":{"id":"9315264e-7232-4a5b-a156-4334f79b278c","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 0d1fc902-a14b-8265-99f8-01711c71e821] [Type: column] [Text: ]
+  Format: {"metadata":{"ai_run_id":"ced6518b-f38c-4a6d-b04e-4496d84a015c"},"column_ratio":0.9999999999999999,"copied_from_pointer":{"id":"3bfbcd49-8b9c-4ee1-ad5d-81cc2d7e46b8","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 2bcfc902-a14b-83d9-82d1-81499ccde393] [Type: text] [Text: Form Teacher’s Name:]
+  Format: {"metadata":{"ai_run_id":"ced6518b-f38c-4a6d-b04e-4496d84a015c"},"copied_from_pointer":{"id":"6970363a-fc3d-46bb-bfa4-61b0f2ad6c21","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 2ccfc902-a14b-83c1-b6ba-8174933ab79b] [Type: text] [Text: sign:]
+  Format: {"metadata":{"ai_run_id":"ced6518b-f38c-4a6d-b04e-4496d84a015c"},"copied_from_pointer":{"id":"ce17013e-3b2d-470d-8c21-5e9a4a679c54","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
+[Block ID: 3ccfc902-a14b-8308-8b51-8156d6a9f20a] [Type: text] [Text: ]
+  Format: {"metadata":{"ai_run_id":"ced6518b-f38c-4a6d-b04e-4496d84a015c"},"copied_from_pointer":{"id":"9d3d7e55-fd9c-431b-8076-e5a54f1ff14f","table":"block","spaceId":"cfbfc902-a14b-8190-9a90-00033c5c184b"}}
+
