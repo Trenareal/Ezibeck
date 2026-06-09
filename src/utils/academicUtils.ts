@@ -46,7 +46,13 @@ export const BEHAVIOUR_TRAITS = [
   "Self-reliance"
 ];
 
-export function getLetterAndRemark(score: number): { letter: string; remark: string; ratingClass: string } {
+export function getLetterAndRemark(score: number | undefined | null): { letter: string; remark: string; ratingClass: string } {
+  if (score === undefined || score === null || isNaN(score)) {
+    return { letter: "No Score", remark: "No Score", ratingClass: "text-slate-500 bg-slate-50 border-slate-200" };
+  }
+  if (score < 0 || score > 100) {
+    return { letter: "Invalid Score", remark: "Invalid Score", ratingClass: "text-red-500 bg-red-50 border-red-200" };
+  }
   if (score >= 90) return { letter: "A+", remark: "Distinction", ratingClass: "text-emerald-600 bg-emerald-50 border-emerald-200" };
   if (score >= 80) return { letter: "A", remark: "Excellent", ratingClass: "text-green-600 bg-green-50 border-green-200" };
   if (score >= 70) return { letter: "B", remark: "Very Good", ratingClass: "text-sky-600 bg-sky-50 border-sky-200" };

@@ -220,15 +220,24 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
   };
 
   // Handle Score Input Key Change
-  const handleScoreChange = (sid: string, type: 'test' | 'exam', val: number) => {
+  const handleScoreChange = (sid: string, type: 'test' | 'exam' | 'firstTerm' | 'secondTerm' | 'thirdTerm', val: number) => {
     setEditSubjects(prev => prev.map(s => {
       if (s.id !== sid) return s;
       if (type === 'test') {
         const validated = Math.max(0, Math.min(30, val));
         return { ...s, testScore: validated };
-      } else {
+      } else if (type === 'exam') {
         const validated = Math.max(0, Math.min(70, val));
         return { ...s, examScore: validated };
+      } else if (type === 'firstTerm') {
+        const validated = Math.max(0, Math.min(100, val));
+        return { ...s, firstTermSummary: validated };
+      } else if (type === 'secondTerm') {
+        const validated = Math.max(0, Math.min(100, val));
+        return { ...s, secondTermSummary: validated };
+      } else {
+        const validated = Math.max(0, Math.min(100, val));
+        return { ...s, thirdTermSummary: validated };
       }
     }));
   };
@@ -1124,42 +1133,78 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                   Academic Subject Grades Record
                 </h4>
 
-                <div className="space-y-2 border rounded-2xl overflow-hidden shadow-inner">
-                  <div className="bg-slate-100 border-b p-3 grid grid-cols-12 text-[10px] font-bold uppercase text-slate-500 tracking-wider">
-                    <span className="col-span-6">Subject Course Title</span>
-                    <span className="col-span-2 text-center">Test Score (30)</span>
-                    <span className="col-span-2 text-center">Exam Score (70)</span>
-                    <span className="col-span-2 text-center">Live Total (100)</span>
+                <div className="space-y-2 border rounded-2xl overflow-x-auto shadow-inner">
+                  <div className="bg-slate-100 border-b p-3 grid grid-cols-12 text-[10px] font-bold uppercase text-slate-500 tracking-wider min-w-[850px]">
+                    <span className="col-span-3">Subject Course Title</span>
+                    <span className="col-span-1 text-center">Test (30)</span>
+                    <span className="col-span-1 text-center">Exam (70)</span>
+                    <span className="col-span-1 text-center">Live Total (100)</span>
+                    <span className="col-span-2 text-center text-blue-700 font-bold">1st Term# (20)</span>
+                    <span className="col-span-2 text-center text-emerald-700 font-bold">2nd Term# (20)</span>
+                    <span className="col-span-2 text-center text-indigo-700 font-bold">3rd Term# (60)</span>
                   </div>
 
-                  <div className="divide-y max-h-96 overflow-y-auto">
+                  <div className="divide-y max-h-96 overflow-y-auto min-w-[850px]">
                     {editSubjects.map(subj => {
                       const subjTotal = subj.testScore + subj.examScore;
+                      const fTermVal = subj.firstTermSummary !== undefined ? subj.firstTermSummary : Math.round(subjTotal * 0.18);
+                      const sTermVal = subj.secondTermSummary !== undefined ? subj.secondTermSummary : Math.round(subjTotal * 0.19);
+                      const tTermVal = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : Math.round(subjTotal * 0.60);
                       return (
                         <div key={subj.id} className="p-3 grid grid-cols-12 items-center text-xs font-semibold text-slate-800 hover:bg-slate-50">
-                          <span className="col-span-6 font-bold">{subj.name}</span>
-                          <span className="col-span-2 flex justify-center px-2">
+                          <span className="col-span-3 font-bold">{subj.name}</span>
+                          <span className="col-span-1 flex justify-center px-1">
                             <input
                               type="number"
                               min={0}
                               max={30}
                               value={subj.testScore}
                               onChange={(e) => handleScoreChange(subj.id, 'test', parseInt(e.target.value) || 0)}
-                              className="w-16 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-indigo-800 font-bold font-mono"
+                              className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-indigo-805 font-bold font-mono"
                             />
                           </span>
-                          <span className="col-span-2 flex justify-center px-2">
+                          <span className="col-span-1 flex justify-center px-1">
                             <input
                               type="number"
                               min={0}
                               max={70}
                               value={subj.examScore}
                               onChange={(e) => handleScoreChange(subj.id, 'exam', parseInt(e.target.value) || 0)}
-                              className="w-16 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-indigo-800 font-bold font-mono"
+                              className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-indigo-805 font-bold font-mono"
                             />
                           </span>
-                          <span className="col-span-2 text-center font-extrabold font-mono text-indigo-900 bg-indigo-50/50 py-1 rounded border">
+                          <span className="col-span-1 text-center font-extrabold font-mono text-indigo-900 bg-indigo-50/50 py-1 rounded border">
                             {subjTotal}
+                          </span>
+                          <span className="col-span-2 flex justify-center px-1">
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              value={fTermVal}
+                              onChange={(e) => handleScoreChange(subj.id, 'firstTerm', parseInt(e.target.value) || 0)}
+                              className="w-16 bg-blue-50 border border-blue-200 focus:border-blue-500 py-1 rounded text-center outline-none font-bold font-mono text-blue-900"
+                            />
+                          </span>
+                          <span className="col-span-2 flex justify-center px-1">
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              value={sTermVal}
+                              onChange={(e) => handleScoreChange(subj.id, 'secondTerm', parseInt(e.target.value) || 0)}
+                              className="w-16 bg-emerald-50 border border-emerald-200 focus:border-emerald-500 py-1 rounded text-center outline-none font-bold font-mono text-emerald-900"
+                            />
+                          </span>
+                          <span className="col-span-2 flex justify-center px-1">
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              value={tTermVal}
+                              onChange={(e) => handleScoreChange(subj.id, 'thirdTerm', parseInt(e.target.value) || 0)}
+                              className="w-16 bg-indigo-50 border border-indigo-200 focus:border-indigo-500 py-1 rounded text-center outline-none font-bold font-mono text-indigo-900"
+                            />
                           </span>
                         </div>
                       );
