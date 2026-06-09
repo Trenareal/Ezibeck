@@ -14,6 +14,7 @@ export interface SubjectGrade {
   secondTermSummary?: number; // Max 20, alternative summary for annual sheets
   thirdTermSummary?: number; // Max 60, alternative summary for annual sheets
   position?: number;
+  isPositionManual?: boolean;
 }
 
 export interface BehaviourRating {

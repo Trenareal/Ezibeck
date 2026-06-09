@@ -505,9 +505,9 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                           const tot = calculateSubjectTotal(subj);
                           
                           // Formulate annual / session average data realistically matching the 20/20/60 formula of Notion
-                          const firstTerm = subj.firstTermSummary !== undefined ? subj.firstTermSummary : Math.round(tot * 0.18);
-                          const secondTerm = subj.secondTermSummary !== undefined ? subj.secondTermSummary : Math.round(tot * 0.19);
-                          const thirdTerm = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : Math.round(tot * 0.60);
+                          const firstTerm = subj.firstTermSummary !== undefined ? subj.firstTermSummary : 0;
+                          const secondTerm = subj.secondTermSummary !== undefined ? subj.secondTermSummary : 0;
+                          const thirdTerm = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
                           const sessionAvg = firstTerm + secondTerm + thirdTerm;
 
                           const { letter, remark, ratingClass } = getLetterAndRemark(sessionAvg);
@@ -517,7 +517,7 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                               <td className="py-2.5 px-3 border-r border-slate-100 font-extrabold text-slate-900 bg-slate-50/20">{subj.name}</td>
                               <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-500">{subj.testScore}</td>
                               <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-500">{subj.examScore}</td>
-                              <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-indigo-750 bg-indigo-50/20">{tot}</td>
+                              <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-indigo-755 bg-indigo-50/20">{tot}</td>
                               <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{firstTerm}</td>
                               <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-455">{secondTerm}</td>
                               <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-455">{thirdTerm}</td>
@@ -528,7 +528,7 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                                 </span>
                               </td>
                               <td className="py-2.5 px-3 border-r border-slate-100 text-center font-bold text-slate-600 bg-slate-50/20">{subj.position ? `${subj.position}` : '-'}</td>
-                              <td className="py-2.5 px-4 italic text-slate-500 text-[11px] font-normal leading-tight">{remark} performance</td>
+                              <td className="py-2.5 px-4 italic text-slate-500 text-[11px] font-normal leading-tight">{remark}</td>
                             </tr>
                           );
                         })}
@@ -558,21 +558,21 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                           <td className="py-2 px-3 text-center font-bold">
                             Average: {(() => {
                               const tCount = selectedStudent.subjects.length || 1;
-                              const fSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : Math.round(calculateSubjectTotal(s) * 0.18)), 0);
+                              const fSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
                               return (fSum / tCount).toFixed(1);
                             })()}
                           </td>
                           <td className="py-2 px-3 text-center font-bold">
                             Average: {(() => {
                               const tCount = selectedStudent.subjects.length || 1;
-                              const sSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : Math.round(calculateSubjectTotal(s) * 0.19)), 0);
+                              const sSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
                               return (sSum / tCount).toFixed(1);
                             })()}
                           </td>
                           <td className="py-2 px-3 text-center font-bold">
                             Average: {(() => {
                               const tCount = selectedStudent.subjects.length || 1;
-                              const thSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : Math.round(calculateSubjectTotal(s) * 0.60)), 0);
+                              const thSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
                               return (thSum / tCount).toFixed(1);
                             })()}
                           </td>
@@ -580,10 +580,9 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                             Average: {(() => {
                               const tCount = selectedStudent.subjects.length || 1;
                               const sessionSum = selectedStudent.subjects.reduce((sum, s) => {
-                                const totVal = calculateSubjectTotal(s);
-                                const f = s.firstTermSummary !== undefined ? s.firstTermSummary : Math.round(totVal * 0.18);
-                                const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : Math.round(totVal * 0.19);
-                                const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : Math.round(totVal * 0.60);
+                                const f = s.firstTermSummary !== undefined ? s.firstTermSummary : 0;
+                                const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : 0;
+                                const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0;
                                 return sum + (f + sec + th);
                               }, 0);
                               return (sessionSum / tCount).toFixed(1);
@@ -683,7 +682,7 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                             </tr>
                             <tr className="hover:bg-slate-50/50">
                               <td className="py-1.5 px-2.5 border-r border-slate-150 font-bold text-slate-800 bg-orange-50 text-[10px] text-orange-700">D</td>
-                              <td className="py-1.5 px-2.5 text-slate-500">Pass 50 - 59</td>
+                              <td className="py-1.5 px-2.5 text-slate-500">Fair 50 - 59</td>
                             </tr>
                             <tr className="hover:bg-slate-50/50">
                               <td className="py-1.5 px-2.5 border-r border-slate-150 font-bold text-slate-800 bg-red-50 text-[10px] text-red-500">F</td>

@@ -6,7 +6,7 @@
 import React, { useState, useRef } from 'react';
 import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, Printer, UserCheck, LogOut } from 'lucide-react';
 import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile } from '../types';
-import { createStudent, calculateStudentStats, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal } from '../utils/academicUtils';
+import { createStudent, calculateStudentStats, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal } from '../utils/academicUtils';
 
 interface TeacherDashboardProps {
   students: Student[];
@@ -275,7 +275,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
   };
 
   // Handle Score Input Key Change
-  const handleScoreChange = (sid: string, type: 'test' | 'exam' | 'firstTerm' | 'secondTerm' | 'thirdTerm', val: number) => {
+  const handleScoreChange = (sid: string, type: 'test' | 'exam' | 'firstTerm' | 'secondTerm' | 'thirdTerm' | 'position', val: number) => {
     setEditSubjects(prev => prev.map(s => {
       if (s.id !== sid) return s;
       if (type === 'test') {
@@ -290,9 +290,12 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
       } else if (type === 'secondTerm') {
         const validated = Math.max(0, Math.min(100, val));
         return { ...s, secondTermSummary: validated };
-      } else {
+      } else if (type === 'thirdTerm') {
         const validated = Math.max(0, Math.min(100, val));
         return { ...s, thirdTermSummary: validated };
+      } else {
+        const validated = Math.max(1, Math.min(150, val));
+        return { ...s, position: validated, isPositionManual: true };
       }
     }));
   };
@@ -872,9 +875,9 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                             const tot = calculateSubjectTotal(subj);
                             
                             // Formulate annual / session average data realistically matching the 20/20/60 formula of Notion
-                            const firstTerm = subj.firstTermSummary !== undefined ? subj.firstTermSummary : Math.round(tot * 0.18);
-                            const secondTerm = subj.secondTermSummary !== undefined ? subj.secondTermSummary : Math.round(tot * 0.19);
-                            const thirdTerm = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : Math.round(tot * 0.60);
+                            const firstTerm = subj.firstTermSummary !== undefined ? subj.firstTermSummary : 0;
+                            const secondTerm = subj.secondTermSummary !== undefined ? subj.secondTermSummary : 0;
+                            const thirdTerm = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
                             const sessionAvg = firstTerm + secondTerm + thirdTerm;
 
                             const { letter, remark, ratingClass } = getLetterAndRemark(sessionAvg);
@@ -894,8 +897,8 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                                     {letter}
                                   </span>
                                 </td>
-                                <td className="py-2.5 px-3 border-r border-slate-100 text-center font-bold text-slate-600 bg-slate-50/20">{subj.position ? `${subj.position}` : '-'}</td>
-                                <td className="py-2.5 px-4 italic text-slate-500 text-[11px] font-normal leading-tight">{remark} performance</td>
+                                <td className="py-2.5 px-3 border-r border-slate-100 text-center font-bold text-slate-800 bg-slate-50/20">{formatOrdinal(subj.position)}</td>
+                                <td className="py-2.5 px-4 italic text-slate-500 text-[11px] font-normal leading-tight">{remark}</td>
                               </tr>
                             );
                           })}
@@ -925,21 +928,21 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                             <td className="py-2 px-3 text-center font-bold">
                               Average: {(() => {
                                 const tCount = viewingReportStudent.subjects.length || 1;
-                                const fSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : Math.round(calculateSubjectTotal(s) * 0.18)), 0);
+                                const fSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
                                 return (fSum / tCount).toFixed(1);
                               })()}
                             </td>
                             <td className="py-2 px-3 text-center font-bold">
                               Average: {(() => {
                                 const tCount = viewingReportStudent.subjects.length || 1;
-                                const sSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : Math.round(calculateSubjectTotal(s) * 0.19)), 0);
+                                const sSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
                                 return (sSum / tCount).toFixed(1);
                               })()}
                             </td>
                             <td className="py-2 px-3 text-center font-bold">
                               Average: {(() => {
                                 const tCount = viewingReportStudent.subjects.length || 1;
-                                const thSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : Math.round(calculateSubjectTotal(s) * 0.60)), 0);
+                                const thSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
                                 return (thSum / tCount).toFixed(1);
                               })()}
                             </td>
@@ -947,10 +950,9 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                               Average: {(() => {
                                 const tCount = viewingReportStudent.subjects.length || 1;
                                 const sessionSum = viewingReportStudent.subjects.reduce((sum, s) => {
-                                  const totVal = calculateSubjectTotal(s);
-                                  const f = s.firstTermSummary !== undefined ? s.firstTermSummary : Math.round(totVal * 0.18);
-                                  const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : Math.round(totVal * 0.19);
-                                  const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : Math.round(totVal * 0.60);
+                                  const f = s.firstTermSummary !== undefined ? s.firstTermSummary : 0;
+                                  const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : 0;
+                                  const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0;
                                   return sum + (f + sec + th);
                                 }, 0);
                                 return (sessionSum / tCount).toFixed(1);
@@ -1046,7 +1048,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                               </tr>
                               <tr className="hover:bg-slate-50/50">
                                 <td className="py-1.5 px-2.5 border-r border-slate-155 font-bold text-slate-800 bg-orange-50 text-[10px] text-orange-600">D</td>
-                                <td className="py-1.5 px-2.5">Pass 50 - 59</td>
+                                <td className="py-1.5 px-2.5">Fair 50 - 59</td>
                               </tr>
                               <tr className="hover:bg-slate-50/50">
                                 <td className="py-1.5 px-2.5 border-r border-slate-155 font-bold text-slate-800 bg-red-50 text-[10px] text-red-500">F</td>
@@ -1266,18 +1268,21 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
 
                 <div className="space-y-2 border rounded-2xl overflow-x-auto shadow-inner">
                   <div className="bg-slate-100 border-b p-3 grid grid-cols-12 text-[10px] font-bold uppercase text-slate-500 tracking-wider min-w-[850px] items-center">
-                    <span className="col-span-2">Subject Course Title</span>
+                    <span className="col-span-3">Subject Course Title</span>
                     <span className="col-span-1 text-center font-bold">Test (30)</span>
                     <span className="col-span-1 text-center font-bold">Exam (70)</span>
                     <span className="col-span-1 text-center font-bold">Live Total (100)</span>
-                    <span className="col-span-2 text-center font-bold font-sans py-1 rounded text-blue-900 bg-blue-150 border border-blue-300">
+                    <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-blue-900 bg-blue-150 border border-blue-300">
                       1st Term# (20)
                     </span>
-                    <span className="col-span-2 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300">
+                    <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300">
                       2nd Term# (20)
                     </span>
-                    <span className="col-span-2 text-center font-bold font-sans py-1 rounded text-indigo-900 bg-indigo-150 border border-indigo-300">
+                    <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-indigo-900 bg-indigo-150 border border-indigo-300">
                       3rd Term# (60)
+                    </span>
+                    <span className="col-span-2 text-center font-bold font-sans py-1 rounded text-indigo-900 bg-indigo-150 border border-indigo-300">
+                      # Position
                     </span>
                     <span className="col-span-1 text-center font-bold text-slate-400">Action</span>
                   </div>
@@ -1285,12 +1290,12 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                   <div className="divide-y max-h-96 overflow-y-auto min-w-[850px]">
                     {editSubjects.map(subj => {
                       const subjTotal = subj.testScore + subj.examScore;
-                      const fTermVal = subj.firstTermSummary !== undefined ? subj.firstTermSummary : Math.round(subjTotal * 0.18);
-                      const sTermVal = subj.secondTermSummary !== undefined ? subj.secondTermSummary : Math.round(subjTotal * 0.19);
-                      const tTermVal = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : Math.round(subjTotal * 0.60);
+                      const fTermVal = subj.firstTermSummary !== undefined ? subj.firstTermSummary : 0;
+                      const sTermVal = subj.secondTermSummary !== undefined ? subj.secondTermSummary : 0;
+                      const tTermVal = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
                       return (
                         <div key={subj.id} className="p-3 grid grid-cols-12 items-center text-xs font-semibold text-slate-800 hover:bg-slate-50">
-                          <div className="col-span-2 flex items-center pr-2">
+                          <div className="col-span-3 flex items-center pr-2">
                             <input
                               type="text"
                               required
@@ -1325,39 +1330,56 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                           </span>
                           
                           {/* First Term Summary */}
-                          <span className="col-span-2 flex justify-center px-2 relative group">
+                          <span className="col-span-1 flex justify-center px-1">
                             <input
                               type="number"
                               min={0}
                               max={100}
                               value={fTermVal}
                               onChange={(e) => handleScoreChange(subj.id, 'firstTerm', parseInt(e.target.value) || 0)}
-                              className="w-16 py-1 rounded text-center outline-none font-bold font-mono transition-all bg-blue-50 border border-blue-200 focus:border-blue-500 text-blue-900 font-extrabold scale-[1.03]"
+                              className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-blue-50 border border-blue-200 focus:border-blue-500 text-blue-900 font-extrabold scale-[1.03]"
                             />
                           </span>
 
                           {/* Second Term Summary */}
-                          <span className="col-span-2 flex justify-center px-2 relative group">
+                          <span className="col-span-1 flex justify-center px-1">
                             <input
                               type="number"
                               min={0}
                               max={100}
                               value={sTermVal}
                               onChange={(e) => handleScoreChange(subj.id, 'secondTerm', parseInt(e.target.value) || 0)}
-                              className="w-16 py-1 rounded text-center outline-none font-bold font-mono transition-all bg-emerald-50 border border-emerald-200 focus:border-emerald-500 text-emerald-990 font-extrabold scale-[1.03]"
+                              className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50 border border-emerald-200 focus:border-emerald-500 text-emerald-990 font-extrabold scale-[1.03]"
                             />
                           </span>
 
                           {/* Third Term Summary */}
-                          <span className="col-span-2 flex justify-center px-2 relative group">
+                          <span className="col-span-1 flex justify-center px-1">
                             <input
                               type="number"
                               min={0}
                               max={100}
                               value={tTermVal}
                               onChange={(e) => handleScoreChange(subj.id, 'thirdTerm', parseInt(e.target.value) || 0)}
-                              className="w-16 py-1 rounded text-center outline-none font-bold font-mono transition-all bg-indigo-50 border border-indigo-200 focus:border-indigo-500 text-indigo-900 font-extrabold scale-[1.03]"
+                              className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-indigo-50 border border-indigo-200 focus:border-indigo-500 text-indigo-900 font-extrabold scale-[1.03]"
                             />
+                          </span>
+
+                          {/* Position (Editable Rank) */}
+                          <span className="col-span-2 flex justify-center px-2">
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="number"
+                                min={1}
+                                max={150}
+                                value={subj.position || 1}
+                                onChange={(e) => handleScoreChange(subj.id, 'position', parseInt(e.target.value) || 1)}
+                                className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-indigo-600 font-bold font-mono text-slate-800"
+                              />
+                              {subj.isPositionManual && (
+                                <span className="text-[10px] text-indigo-600 font-black select-none" title="Manually edited position">✍️</span>
+                              )}
+                            </div>
                           </span>
 
                           {/* Action Button */}
@@ -1533,7 +1555,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
 
                     {/* Notion Style Header Breadcrumbs */}
                     <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-slate-400 border-b border-slate-100/70 pb-3 mb-2 relative z-10">
-                      <span>🏫 {SCHOOL_INFO.name}</span>
+                      <span>🏫 {template.schoolName}</span>
                       <span>/</span>
                       <span>📁 Draft Sandbox</span>
                       <span>/</span>
@@ -1557,14 +1579,14 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
 
                       <div className="space-y-1.5 text-left">
                         <h1 className="text-xl sm:text-2.5xl font-black text-slate-900 tracking-tight leading-none uppercase">
-                          {SCHOOL_INFO.name}
+                          {template.schoolName}
                         </h1>
                         <p className="text-[10px] uppercase tracking-wider text-indigo-700 font-bold flex items-center gap-1.5">
                           <span className="w-1.5 h-1.5 rounded-full bg-indigo-650"></span>
-                          Motto: {SCHOOL_INFO.motto}
+                          Motto: {template.motto}
                         </p>
                         <p className="text-slate-500 text-[10px] leading-relaxed">
-                          <strong>Registered Address:</strong> {SCHOOL_INFO.address}
+                          <strong>Registered Address:</strong> {template.address}
                         </p>
                       </div>
 
@@ -1621,14 +1643,14 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                           <span className="font-semibold text-slate-400 flex items-center gap-1.5 w-1/2">
                             <span>📅</span> Report Date
                           </span>
-                          <span className="font-bold text-slate-805 text-right w-1/2">{previewStudent.termDate}</span>
+                          <span className="font-bold text-slate-805 text-right w-1/2">{template.termDate}</span>
                         </div>
 
                         <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 lg:border-0 lg:pb-0">
                           <span className="font-semibold text-slate-400 flex items-center gap-1.5 w-1/2">
                             <span>🗓️</span> Academic Session
                           </span>
-                          <span className="font-extrabold text-slate-900 text-right w-1/2">{previewStudent.session}</span>
+                          <span className="font-extrabold text-slate-900 text-right w-1/2">{template.session}</span>
                         </div>
 
                         <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 lg:border-0 lg:pb-0">
@@ -1642,7 +1664,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                           <span className="font-semibold text-slate-400 flex items-center gap-1.5 w-1/2">
                             <span>🔄</span> Resumption Date
                           </span>
-                          <span className="font-extrabold text-indigo-750 text-right w-1/2">{previewStudent.resumptionDate}</span>
+                          <span className="font-extrabold text-indigo-750 text-right w-1/2">{template.resumptionDate}</span>
                         </div>
                       </div>
                     </div>
@@ -1675,9 +1697,9 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                             {previewStudent.subjects.map(subj => {
                               const tot = calculateSubjectTotal(subj);
                               
-                              const firstTerm = subj.firstTermSummary !== undefined ? subj.firstTermSummary : Math.round(tot * 0.18);
-                              const secondTerm = subj.secondTermSummary !== undefined ? subj.secondTermSummary : Math.round(tot * 0.19);
-                              const thirdTerm = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : Math.round(tot * 0.60);
+                              const firstTerm = subj.firstTermSummary !== undefined ? subj.firstTermSummary : 0;
+                              const secondTerm = subj.secondTermSummary !== undefined ? subj.secondTermSummary : 0;
+                              const thirdTerm = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
                               const sessionAvg = firstTerm + secondTerm + thirdTerm;
 
                               const { letter, remark, ratingClass } = getLetterAndRemark(sessionAvg);
@@ -1697,8 +1719,8 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                                       {letter}
                                     </span>
                                   </td>
-                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-bold text-slate-600 bg-slate-50/20">{subj.position ? `${subj.position}` : '-'}</td>
-                                  <td className="py-2.5 px-4 italic text-slate-500 text-[11px] font-normal leading-tight">{remark} performance</td>
+                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-bold text-slate-800 bg-slate-50/20">{formatOrdinal(subj.position)}</td>
+                                  <td className="py-2.5 px-4 italic text-slate-500 text-[11px] font-normal leading-tight">{remark}</td>
                                 </tr>
                               );
                             })}
@@ -1773,8 +1795,8 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                         
                         <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
                           <div>
-                            <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold">Appraiser</span>
-                            <p className="font-black text-slate-900">{previewStudent.formTeacherName}</p>
+                            <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold font-sans">Appraiser</span>
+                            <p className="font-black text-slate-900 font-sans">{previewStudent.className.startsWith('JSS') ? template.formTeacherJunior : template.formTeacherSenior}</p>
                           </div>
                         </div>
                       </div>
@@ -1786,9 +1808,9 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                             <span>🎓 Principal's Performance Assessment</span>
                           </h4>
                           <p className="italic text-slate-600 pt-3 leading-relaxed">
-                            {previewStudent.formTeacherRemark.includes("outstanding") || stats.avgScore >= 75
+                            {previewStudent.formTeacherRemark.includes("outstanding") || stats.avgScore >= (template.distinctionThreshold || 90)
                               ? `"Highly commendable academic and behavioral character shown during the term session. Excellent candidate. Promoted with honor."`
-                              : stats.avgScore >= 50
+                              : stats.avgScore >= (template.passThreshold || 50)
                                 ? `"Satisfactory progress. Continued focus on core concepts will serve candidate well. Promoted."`
                                 : `"Needs close guidance and study supervision in future sessions to ensure passing criteria."`}
                           </p>
@@ -1797,7 +1819,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                         <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
                           <div>
                             <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold">Authorized Principal</span>
-                            <p className="font-black text-slate-900">{previewStudent.principalName}</p>
+                            <p className="font-black text-slate-900">{template.principalName}</p>
                           </div>
                         </div>
                       </div>

@@ -60,7 +60,7 @@ export function getLetterAndRemark(score: number | undefined | null): { letter: 
   if (score >= 80) return { letter: "A", remark: "Excellent", ratingClass: "text-green-600 bg-green-50 border-green-200" };
   if (score >= 70) return { letter: "B", remark: "Very Good", ratingClass: "text-sky-600 bg-sky-50 border-sky-200" };
   if (score >= 60) return { letter: "C", remark: "Good", ratingClass: "text-amber-600 bg-amber-50 border-amber-200" };
-  if (score >= 50) return { letter: "D", remark: "Pass", ratingClass: "text-orange-600 bg-orange-50 border-orange-200" };
+  if (score >= 50) return { letter: "D", remark: "Fair", ratingClass: "text-orange-600 bg-orange-50 border-orange-200" };
   return { letter: "F", remark: "Fail", ratingClass: "text-red-600 bg-red-50 border-red-200" };
 }
 
@@ -153,10 +153,13 @@ export function calculateClassPositions(students: Student[], className?: ClassNa
           };
         }).sort((x, y) => y.total - x.total);
         
-        const subjPos = allScoresForSubj.findIndex(scoreObj => scoreObj.id === item.student.id) + 1;
+        const subjPos = subj.isPositionManual && subj.position !== undefined
+          ? subj.position
+          : allScoresForSubj.findIndex(scoreObj => scoreObj.id === item.student.id) + 1;
         return {
           ...subj,
-          position: subjPos
+          position: subjPos,
+          isPositionManual: subj.isPositionManual
         };
       })
     };
@@ -213,9 +216,9 @@ export function createStudent(name: string, className: ClassName, idx: number): 
   
   // Custom teacher comments based on grade caliber
   const remarks = [
-    "An outstanding academic performance. Keep leading your peers!",
+    "An outstanding academic result. Keep leading your peers!",
     "A very good result. Continue with this level of focus and hard work.",
-    "A solid performance, though there is room for improvement in science subjects.",
+    "A solid outcome, though there is room for improvement in science subjects.",
     "A satisfactory outcome. Please encourage active study habits at home.",
     "Academic results are fair. More dedication is needed next term."
   ];
@@ -304,4 +307,11 @@ export function saveStudents(students: Student[], term?: string) {
   } catch (e) {
     console.error(`Failed to save students for ${activeTerm} to localStorage`, e);
   }
+}
+
+export function formatOrdinal(n: number | undefined): string {
+  if (n === undefined || isNaN(n) || n <= 0) return '-';
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
