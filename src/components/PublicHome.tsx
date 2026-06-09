@@ -5,13 +5,14 @@
 
 import React, { useState } from 'react';
 import { School, MapPin, Phone, Mail, Award, BookOpen, Clock, UserCheck, ChevronRight, GraduationCap, Shield } from 'lucide-react';
-import { SCHOOL_INFO } from '../utils/academicUtils';
+import { Workspace15Template } from '../types';
 
 interface PublicHomeProps {
   onEnterPortal: (role: 'student' | 'teacher') => void;
+  template: Workspace15Template;
 }
 
-export default function PublicHome({ onEnterPortal }: PublicHomeProps) {
+export default function PublicHome({ onEnterPortal, template }: PublicHomeProps) {
   const [activeTab, setActiveTab] = useState<'welcome' | 'about' | 'admissions'>('welcome');
 
   return (
@@ -22,17 +23,17 @@ export default function PublicHome({ onEnterPortal }: PublicHomeProps) {
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5 text-amber-500" />
-              {SCHOOL_INFO.address}
+              {template.address}
             </span>
           </div>
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
               <Phone className="w-3.5 h-3.5 text-amber-500" />
-              {SCHOOL_INFO.phone}
+              {template.phone}
             </span>
             <span className="flex items-center gap-1">
               <Mail className="w-3.5 h-3.5 text-amber-500" />
-              {SCHOOL_INFO.email}
+              {template.email}
             </span>
           </div>
         </div>
@@ -47,10 +48,10 @@ export default function PublicHome({ onEnterPortal }: PublicHomeProps) {
             </div>
             <div>
               <h1 className="text-lg font-black tracking-tight text-slate-900 leading-none uppercase italic">
-                EZIBECK ACADEMY
+                {template.schoolName}
               </h1>
               <p className="text-[10px] font-bold tracking-widest text-indigo-600 uppercase mt-1">
-                {SCHOOL_INFO.motto}
+                {template.motto}
               </p>
             </div>
           </div>
@@ -112,7 +113,7 @@ export default function PublicHome({ onEnterPortal }: PublicHomeProps) {
                 </span>
               </h2>
               <p className="text-slate-500 text-lg leading-relaxed max-w-xl">
-                At <strong className="text-slate-900 font-extrabold">EZIBECK ACADEMY</strong>, we provide a holistic environment for world-class learning. Guided by our motto <span className="text-indigo-600 italic font-semibold">"Knowledge is Power"</span>, we nurture students through meticulous junior & senior secondary curricula to conquer national and global thresholds.
+                At <strong className="text-slate-900 font-extrabold">{template.schoolName}</strong>, we provide a holistic environment for world-class learning. Guided by our motto <span className="text-indigo-600 italic font-semibold">"{template.motto}"</span>, we nurture students through meticulous junior & senior secondary curricula to conquer national and global thresholds.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
@@ -257,16 +258,16 @@ export default function PublicHome({ onEnterPortal }: PublicHomeProps) {
 
           {activeTab === 'about' && (
             <div className="bg-white rounded-3xl border border-slate-100 p-10 shadow-sm space-y-8">
-              <h3 className="text-2xl font-black text-slate-900 border-b border-slate-100 pb-4">About EZIBECK ACADEMY</h3>
-              <p className="text-slate-600 text-sm leading-relaxed leading-relaxed">
-                Founded with a strong commitment to premium values, <strong>EZIBECK ACADEMY</strong> represents a hub for high-achieving scholars. Nestled in Ovwian, Delta State, we bridge the gap between traditional training excellence and innovative educational technologies.
+              <h3 className="text-2xl font-black text-slate-900 border-b border-slate-100 pb-4">About {template.schoolName}</h3>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                Founded with a strong commitment to premium values, <strong>{template.schoolName}</strong> represents a hub for high-achieving scholars. Nestled at the heart of Delta, we bridge the gap between traditional training excellence and innovative educational technologies.
               </p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
                 <div className="space-y-2">
                   <h4 className="font-extrabold text-indigo-700 text-xs uppercase tracking-widest border-b border-slate-100 pb-1.5 mb-2.5">Our Vision</h4>
                   <p className="text-slate-500 text-xs leading-relaxed">
-                    To remain the leading secondary educational sanctuary in Delta State, known for molding scholars who emerge at the highest tier of intellectual, ethical, and societal ranks nationwide.
+                    To remain the leading secondary educational sanctuary, known for molding scholars who emerge at the highest tier of intellectual, ethical, and societal ranks nationwide.
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -281,7 +282,7 @@ export default function PublicHome({ onEnterPortal }: PublicHomeProps) {
                 <h4 className="font-bold text-indigo-700 text-xs uppercase tracking-widest mb-3">Registered Address</h4>
                 <div className="flex items-start gap-2.5 text-xs text-slate-600">
                   <MapPin className="w-4 h-4 text-indigo-600 flex-shrink-0" />
-                  <span>{SCHOOL_INFO.address}</span>
+                  <span>{template.address}</span>
                 </div>
               </div>
             </div>
@@ -301,7 +302,7 @@ export default function PublicHome({ onEnterPortal }: PublicHomeProps) {
                 <div className="relative pl-6">
                   <div className="absolute -left-[7px] top-1.5 w-3 h-3 bg-indigo-700 rounded-full"></div>
                   <h4 className="font-bold text-slate-800 text-xs">Academic Term Closure</h4>
-                  <p className="text-xs text-slate-400 mt-0.5">Completed April 10, 2026</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Completed {template.termDate}</p>
                   <p className="text-xs text-slate-500 mt-1">
                     Compilation and release of the digital Student Report Card portfolio for all classes JSS1-JSS3 and SS1-SS3.
                   </p>
@@ -317,9 +318,9 @@ export default function PublicHome({ onEnterPortal }: PublicHomeProps) {
                 <div className="relative pl-6">
                   <div className="absolute -left-[7px] top-1.5 w-3 h-3 bg-indigo-700 rounded-full animate-pulse"></div>
                   <h4 className="font-bold text-indigo-800 text-xs">Next Term Resumption</h4>
-                  <p className="text-xs text-indigo-600 font-extrabold mt-0.5">September 14, 2026</p>
+                  <p className="text-xs text-indigo-600 font-extrabold mt-0.5">{template.resumptionDate}</p>
                   <p className="text-xs text-slate-500 mt-1">
-                    Resumption of new academic sessions. All registration logs, fees, and class boards will go live physically at No. 5 Ezibeck Crescent.
+                    Resumption of new academic sessions. All registration logs, fees, and class boards will go live physically at {template.address}.
                   </p>
                 </div>
               </div>

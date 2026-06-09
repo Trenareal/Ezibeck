@@ -45,16 +45,16 @@ export default function App() {
     return DEFAULT_WORKSPACE_15;
   });
 
-  // Load initial dataset or persisted changes on component mount
+  // Load/Reload student dataset reactively when the selected term updates
   useEffect(() => {
-    const loaded = loadStoredStudents();
+    const loaded = loadStoredStudents(template.currentTerm);
     setStudents(loaded);
-  }, []);
+  }, [template.currentTerm]);
 
-  // Update students roster and commit back to storage
+  // Update students roster and commit back to term-isolated storage
   const handleUpdateStudents = (updatedList: Student[]) => {
     setStudents(updatedList);
-    saveStudents(updatedList);
+    saveStudents(updatedList, template.currentTerm);
   };
 
   const handleUpdateTemplate = (newTemplate: Workspace15Template) => {
@@ -69,7 +69,7 @@ export default function App() {
       {/* Route Views Transition */}
       {currentView === 'home' && (
         <div className="fade-in animate-fade-in">
-          <PublicHome onEnterPortal={(role) => setCurrentView(role)} />
+          <PublicHome template={template} onEnterPortal={(role) => setCurrentView(role)} />
         </div>
       )}
 

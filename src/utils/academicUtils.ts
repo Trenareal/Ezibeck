@@ -50,6 +50,9 @@ export function getLetterAndRemark(score: number | undefined | null): { letter: 
   if (score === undefined || score === null || isNaN(score)) {
     return { letter: "No Score", remark: "No Score", ratingClass: "text-slate-500 bg-slate-50 border-slate-200" };
   }
+  if (score === 0) {
+    return { letter: "-", remark: "No Score/Pending", ratingClass: "text-slate-400 bg-slate-50/50 border-slate-200" };
+  }
   if (score < 0 || score > 100) {
     return { letter: "Invalid Score", remark: "Invalid Score", ratingClass: "text-red-500 bg-red-50 border-red-200" };
   }
@@ -107,7 +110,7 @@ export function calculateStudentStats(s: Student): StudentStats {
     return sum;
   }, 0);
   
-  const gpa = (totalGpaPoints / s.subjects.length).toFixed(2);
+  const gpa = s.subjects.length > 0 ? (totalGpaPoints / s.subjects.length).toFixed(2) : "0.00";
 
   return {
     gpa,
@@ -169,24 +172,17 @@ export function calculateClassPositions(students: Student[], className?: ClassNa
   return positioned;
 }
 
-// Generate realistic grades for a student
+// Generate realistic grades for a student - modified to default to 0 so everything is 0 until scores are inputed
 export function generateRandomGrades(subjects: string[]): SubjectGrade[] {
   return subjects.map((sub, idx) => {
-    // Generate logical score: some A, B, C's
-    const isGoodStudent = Math.random() > 0.3;
-    const testScore = isGoodStudent 
-      ? Math.floor(Math.random() * 8) + 20  // 20-27
-      : Math.floor(Math.random() * 12) + 12; // 12-23
-      
-    const examScore = isGoodStudent
-      ? Math.floor(Math.random() * 20) + 48  // 48-67
-      : Math.floor(Math.random() * 25) + 30; // 30-54
-
     return {
       id: `${idx}-${Date.now()}-${Math.random()}`,
       name: sub,
-      testScore: Math.min(30, testScore),
-      examScore: Math.min(70, examScore)
+      testScore: 0,
+      examScore: 0,
+      firstTermSummary: 0,
+      secondTermSummary: 0,
+      thirdTermSummary: 0
     };
   });
 }
@@ -275,26 +271,37 @@ export function getInitialStudents(): Student[] {
   return students;
 }
 
-export function loadStoredStudents(): Student[] {
+export function loadStoredStudents(term?: string): Student[] {
   if (typeof window === 'undefined') return getInitialStudents();
+  const activeTerm = term || 'Second Term';
+  const termKey = `ezibeck_students_${activeTerm.toLowerCase().replace(/\s+/g, '_')}`;
   try {
-    const val = localStorage.getItem('ezibeck_students');
+    const val = localStorage.getItem(termKey);
     if (val) {
       return JSON.parse(val);
     }
+    // Fallback: migrate from legacy key if available, so they don't lose progress
+    const legacyVal = localStorage.getItem('ezibeck_students');
+    if (legacyVal) {
+      const parsed = JSON.parse(legacyVal);
+      saveStudents(parsed, activeTerm);
+      return parsed;
+    }
   } catch (e) {
-    console.error('Error loading students from localStorage', e);
+    console.error(`Error loading students for ${activeTerm} from localStorage`, e);
   }
   const students = getInitialStudents();
-  saveStudents(students);
+  saveStudents(students, activeTerm);
   return students;
 }
 
-export function saveStudents(students: Student[]) {
+export function saveStudents(students: Student[], term?: string) {
   if (typeof window === 'undefined') return;
+  const activeTerm = term || 'Second Term';
+  const termKey = `ezibeck_students_${activeTerm.toLowerCase().replace(/\s+/g, '_')}`;
   try {
-    localStorage.setItem('ezibeck_students', JSON.stringify(students));
+    localStorage.setItem(termKey, JSON.stringify(students));
   } catch (e) {
-    console.error('Failed to save students to localStorage', e);
+    console.error(`Failed to save students for ${activeTerm} to localStorage`, e);
   }
 }

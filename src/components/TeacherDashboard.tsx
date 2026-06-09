@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef } from 'react';
-import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, Printer, UserCheck } from 'lucide-react';
+import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, Printer, UserCheck, LogOut } from 'lucide-react';
 import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile } from '../types';
 import { createStudent, calculateStudentStats, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal } from '../utils/academicUtils';
 
@@ -24,14 +24,28 @@ const DEFAULT_FACULTY: FacultyProfile[] = [
 
 export default function TeacherDashboard({ students, template, onBack, onUpdateStudents, onUpdateTemplate }: TeacherDashboardProps) {
   const [currentUser, setCurrentUser] = useState<FacultyProfile | null>(null);
+  const isAdmin = currentUser && (
+    currentUser.id === 'ezekiel' ||
+    currentUser.role.toLowerCase().includes('principal') ||
+    currentUser.role.toLowerCase().includes('admin')
+  );
   const [selectedClass, setSelectedClass] = useState<ClassName>('JSS1');
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [viewingReportStudent, setViewingReportStudent] = useState<Student | null>(null);
+  const [deleteConfirmStudent, setDeleteConfirmStudent] = useState<{ id: string; name: string; className: ClassName; source: 'list' | 'view' | 'edit' } | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   
   // Dashboard Sub-navigation Tab
-  const [activeSubTab, setActiveSubTab] = useState<'roster' | 'workspace'>('roster');
+  const [activeSubTab, setActiveSubTab] = useState<'roster' | 'workspace' | 'staff'>('roster');
+
+  const [activeTermTab, setActiveTermTab] = useState<'First Term' | 'Second Term' | 'Third Term'>(() => {
+    if (template.currentTerm === 'First Term' || template.currentTerm === 'Second Term' || template.currentTerm === 'Third Term') {
+      return template.currentTerm;
+    }
+    return 'First Term';
+  });
 
   // Dynamic Faculty Management State
   const [facultyProfiles, setFacultyProfiles] = useState<FacultyProfile[]>(() => {
@@ -88,6 +102,9 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
     setTempTermDate(template.termDate);
     setTempSession(template.session);
     setTempCurrentTerm(template.currentTerm);
+    if (template.currentTerm === 'First Term' || template.currentTerm === 'Second Term' || template.currentTerm === 'Third Term') {
+      setActiveTermTab(template.currentTerm);
+    }
     setTempPrincipalName(template.principalName);
     setTempFormTeacherJunior(template.formTeacherJunior);
     setTempFormTeacherSenior(template.formTeacherSenior);
@@ -95,6 +112,19 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
     setTempDistinctionThreshold(template.distinctionThreshold);
     setTempPassThreshold(template.passThreshold);
   }, [template]);
+
+  // Enforce dynamic staff account restriction live
+  React.useEffect(() => {
+    if (currentUser && currentUser.id !== 'ezekiel') {
+      const activeProfile = facultyProfiles.find(p => p.id === currentUser.id);
+      if (activeProfile && activeProfile.isRestricted) {
+        setCurrentUser(null);
+        setEditingStudent(null);
+        setViewingReportStudent(null);
+        setTeacherLoginError('Your current educator session was restricted by the administrator.');
+      }
+    }
+  }, [facultyProfiles, currentUser]);
 
   // New Student input fields including password
   const [newStudentName, setNewStudentName] = useState('');
@@ -150,6 +180,11 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
   const handleVerifyTeacherLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!pendingLoginUser) return;
+
+    if (pendingLoginUser.isRestricted) {
+      setTeacherLoginError('This educator account has been restricted by the Administrator. Please contact Dr. Ezekiel Beck.');
+      return;
+    }
 
     const correctPassword = pendingLoginUser.password || 'admin';
     if (teacherPasswordInput === correctPassword) {
@@ -262,6 +297,35 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
     }));
   };
 
+  // Handle Edit Subject Name
+  const handleSubjectNameChange = (sid: string, newName: string) => {
+    setEditSubjects(prev => prev.map(s => {
+      if (s.id !== sid) return s;
+      return { ...s, name: newName };
+    }));
+  };
+
+  // Handle Add New Subject in Report Sheet
+  const handleAddNewSubject = () => {
+    const newSubj: SubjectGrade = {
+      id: "subj_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+      name: "New Course " + (editSubjects.length + 1),
+      testScore: 0,
+      examScore: 0,
+      firstTermSummary: 0,
+      secondTermSummary: 0,
+      thirdTermSummary: 0
+    };
+    setEditSubjects(prev => [...prev, newSubj]);
+    triggerSuccess(`Added new blank subject row: "${newSubj.name}"!`);
+  };
+
+  // Handle Delete Subject Row
+  const handleDeleteSubject = (sid: string, name: string) => {
+    setEditSubjects(prev => prev.filter(s => s.id !== sid));
+    triggerSuccess(`Removed subject course row: "${name}".`);
+  };
+
   // Handle Behaviour Rating Change
   const handleBehaviourChange = (traitName: string, ratingVal: number) => {
     setEditBehaviour(prev => prev.map(b => {
@@ -300,12 +364,9 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
 
   // Remove Student Profile Efficaciously
   const deleteStudentProfile = (id: string, name: string) => {
-    if (confirm(`Action Critical: Are you absolutely certain you wish to delete the student report card for ${name}?`)) {
-      let refreshed = students.filter(s => s.id !== id);
-      refreshed = calculateClassPositions(refreshed, selectedClass);
-      onUpdateStudents(refreshed);
-      triggerSuccess(`Successfully erased student profile ${name}.`);
-    }
+    const stud = students.find(s => s.id === id);
+    const cls = stud ? stud.className : selectedClass;
+    setDeleteConfirmStudent({ id, name, className: cls, source: 'list' });
   };
 
   // --- LOGGED OUT FACULTY SCREEN ---
@@ -535,16 +596,11 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
 
         <div className="flex gap-2">
           <button
-            onClick={handleLogout}
-            className="border hover:bg-slate-100 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl transition-all"
+            id="btn-trigger-logout-confirm"
+            onClick={() => setShowLogoutConfirm(true)}
+            className="bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-red-500/10 flex items-center gap-1.5 cursor-pointer"
           >
-            Sign Out Desk
-          </button>
-          <button
-            onClick={onBack}
-            className="bg-indigo-900 hover:bg-indigo-950 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all"
-          >
-            View Homepage
+            <LogOut className="w-4 h-4" /> Logout
           </button>
         </div>
       </div>
@@ -572,6 +628,15 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
           >
             ⚙️ Workspace Config Template (15 properties)
           </button>
+          {isAdmin && (
+            <button
+              id="subtab-manage-staff-restrict"
+              onClick={() => setActiveSubTab('staff')}
+              className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${activeSubTab === 'staff' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-650'}`}
+            >
+              🔒 Manage Staff Access ({facultyProfiles.length - 1})
+            </button>
+          )}
         </div>
       )}
 
@@ -581,19 +646,48 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
         {/* VIEW 1: ACTIVE STUDENT ROW EDITOR MODE */}
         {viewingReportStudent ? (
           <div className="space-y-6">
-            <div className="flex justify-between items-center bg-white border border-slate-100 rounded-2xl px-5 py-4 print:hidden shadow-xs border-slate-200">
+            <div className="flex flex-wrap justify-between items-center bg-white border border-slate-100 rounded-2xl px-5 py-4 print:hidden gap-3 shadow-xs border-slate-200">
               <button
                 onClick={() => setViewingReportStudent(null)}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all hover:bg-slate-50 border cursor-pointer text-slate-700"
               >
                 <ArrowLeft className="w-3.5 h-3.5" /> Back to Roster
               </button>
-              <button
-                onClick={() => window.print()}
-                className="bg-indigo-700 hover:bg-indigo-805 text-white font-bold text-xs px-5 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
-              >
-                <Printer className="w-4 h-4" /> Print Report Sheet
-              </button>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setDeleteConfirmStudent({
+                      id: viewingReportStudent.id,
+                      name: viewingReportStudent.name,
+                      className: viewingReportStudent.className,
+                      source: 'view'
+                    });
+                  }}
+                  className="border border-red-200 bg-red-50 hover:bg-red-100 hover:border-red-400 text-red-650 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="Delete student and their report card"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Delete Report Card
+                </button>
+
+                <button
+                  onClick={() => {
+                    startEditStudent(viewingReportStudent);
+                    setViewingReportStudent(null);
+                  }}
+                  className="bg-indigo-650 hover:bg-indigo-755 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                  title="Edit subject scores, behaviour and comments inside the report editor"
+                >
+                  <Edit2 className="w-3.5 h-3.5" /> Edit Report / Subjects
+                </button>
+
+                <button
+                  onClick={() => window.print()}
+                  className="bg-indigo-800 hover:bg-indigo-900 text-white font-bold text-xs px-5 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
+                >
+                  <Printer className="w-4 h-4" /> Print Report Sheet
+                </button>
+              </div>
             </div>
 
             {/* Notion Style Report Sheet Card */}
@@ -1150,19 +1244,42 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* Left Column: Academics Subjects list editor */}
               <div className="lg:col-span-8 space-y-4">
-                <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider border-b pb-1.5">
-                  Academic Subject Grades Record
-                </h4>
+                <div className="flex items-center justify-between border-b pb-1.5">
+                  <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">
+                    Academic Subject Grades Record
+                  </h4>
+                  <span className="bg-indigo-900 text-amber-400 text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded border border-indigo-950">
+                    📂 {activeTermTab} Session Active
+                  </span>
+                </div>
+
+                {/* Dynamic Term isolation helper notice */}
+                <div className="bg-indigo-950 text-indigo-100 border border-indigo-900 rounded-2xl p-4 text-[11px] font-semibold flex items-start gap-2.5 shadow-sm">
+                  <span className="text-sm select-none">ℹ️</span>
+                  <div>
+                    <span className="font-extrabold text-amber-350">Workspace Session Isolation: {activeTermTab} Mode</span>
+                    <p className="text-[10px] text-indigo-200 mt-0.5 leading-relaxed">
+                      You are editing grades for the <strong className="text-white underline underline-offset-1">{activeTermTab} folder</strong>. The standard Test (30) and Exam (70) scores correspond to {activeTermTab}'s work. Summaries for other terms are read-only to preserve records. To edit other terms, change the active session folder at the top of the Student Registry Roster.
+                    </p>
+                  </div>
+                </div>
 
                 <div className="space-y-2 border rounded-2xl overflow-x-auto shadow-inner">
-                  <div className="bg-slate-100 border-b p-3 grid grid-cols-12 text-[10px] font-bold uppercase text-slate-500 tracking-wider min-w-[850px]">
-                    <span className="col-span-3">Subject Course Title</span>
-                    <span className="col-span-1 text-center">Test (30)</span>
-                    <span className="col-span-1 text-center">Exam (70)</span>
-                    <span className="col-span-1 text-center">Live Total (100)</span>
-                    <span className="col-span-2 text-center text-blue-700 font-bold">1st Term# (20)</span>
-                    <span className="col-span-2 text-center text-emerald-700 font-bold">2nd Term# (20)</span>
-                    <span className="col-span-2 text-center text-indigo-700 font-bold">3rd Term# (60)</span>
+                  <div className="bg-slate-100 border-b p-3 grid grid-cols-12 text-[10px] font-bold uppercase text-slate-500 tracking-wider min-w-[850px] items-center">
+                    <span className="col-span-2">Subject Course Title</span>
+                    <span className="col-span-1 text-center font-bold">Test (30)</span>
+                    <span className="col-span-1 text-center font-bold">Exam (70)</span>
+                    <span className="col-span-1 text-center font-bold">Live Total (100)</span>
+                    <span className="col-span-2 text-center font-bold font-sans py-1 rounded text-blue-900 bg-blue-150 border border-blue-300">
+                      1st Term# (20)
+                    </span>
+                    <span className="col-span-2 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300">
+                      2nd Term# (20)
+                    </span>
+                    <span className="col-span-2 text-center font-bold font-sans py-1 rounded text-indigo-900 bg-indigo-150 border border-indigo-300">
+                      3rd Term# (60)
+                    </span>
+                    <span className="col-span-1 text-center font-bold text-slate-400">Action</span>
                   </div>
 
                   <div className="divide-y max-h-96 overflow-y-auto min-w-[850px]">
@@ -1173,7 +1290,16 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                       const tTermVal = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : Math.round(subjTotal * 0.60);
                       return (
                         <div key={subj.id} className="p-3 grid grid-cols-12 items-center text-xs font-semibold text-slate-800 hover:bg-slate-50">
-                          <span className="col-span-3 font-bold">{subj.name}</span>
+                          <div className="col-span-2 flex items-center pr-2">
+                            <input
+                              type="text"
+                              required
+                              value={subj.name}
+                              onChange={(e) => handleSubjectNameChange(subj.id, e.target.value)}
+                              placeholder="e.g. Mathematics"
+                              className="w-full bg-slate-50 border border-slate-200 py-1 px-1.5 rounded text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-indigo-600 focus:ring-1 focus:ring-indigo-155 transition-all font-sans"
+                            />
+                          </div>
                           <span className="col-span-1 flex justify-center px-1">
                             <input
                               type="number"
@@ -1181,7 +1307,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                               max={30}
                               value={subj.testScore}
                               onChange={(e) => handleScoreChange(subj.id, 'test', parseInt(e.target.value) || 0)}
-                              className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-indigo-805 font-bold font-mono"
+                              className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-indigo-805 font-bold font-mono text-slate-800"
                             />
                           </span>
                           <span className="col-span-1 flex justify-center px-1">
@@ -1191,45 +1317,76 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                               max={70}
                               value={subj.examScore}
                               onChange={(e) => handleScoreChange(subj.id, 'exam', parseInt(e.target.value) || 0)}
-                              className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-indigo-805 font-bold font-mono"
+                              className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-indigo-805 font-bold font-mono text-slate-800"
                             />
                           </span>
                           <span className="col-span-1 text-center font-extrabold font-mono text-indigo-900 bg-indigo-50/50 py-1 rounded border">
                             {subjTotal}
                           </span>
-                          <span className="col-span-2 flex justify-center px-1">
+                          
+                          {/* First Term Summary */}
+                          <span className="col-span-2 flex justify-center px-2 relative group">
                             <input
                               type="number"
                               min={0}
                               max={100}
                               value={fTermVal}
                               onChange={(e) => handleScoreChange(subj.id, 'firstTerm', parseInt(e.target.value) || 0)}
-                              className="w-16 bg-blue-50 border border-blue-200 focus:border-blue-500 py-1 rounded text-center outline-none font-bold font-mono text-blue-900"
+                              className="w-16 py-1 rounded text-center outline-none font-bold font-mono transition-all bg-blue-50 border border-blue-200 focus:border-blue-500 text-blue-900 font-extrabold scale-[1.03]"
                             />
                           </span>
-                          <span className="col-span-2 flex justify-center px-1">
+
+                          {/* Second Term Summary */}
+                          <span className="col-span-2 flex justify-center px-2 relative group">
                             <input
                               type="number"
                               min={0}
                               max={100}
                               value={sTermVal}
                               onChange={(e) => handleScoreChange(subj.id, 'secondTerm', parseInt(e.target.value) || 0)}
-                              className="w-16 bg-emerald-50 border border-emerald-200 focus:border-emerald-500 py-1 rounded text-center outline-none font-bold font-mono text-emerald-900"
+                              className="w-16 py-1 rounded text-center outline-none font-bold font-mono transition-all bg-emerald-50 border border-emerald-200 focus:border-emerald-500 text-emerald-990 font-extrabold scale-[1.03]"
                             />
                           </span>
-                          <span className="col-span-2 flex justify-center px-1">
+
+                          {/* Third Term Summary */}
+                          <span className="col-span-2 flex justify-center px-2 relative group">
                             <input
                               type="number"
                               min={0}
                               max={100}
                               value={tTermVal}
                               onChange={(e) => handleScoreChange(subj.id, 'thirdTerm', parseInt(e.target.value) || 0)}
-                              className="w-16 bg-indigo-50 border border-indigo-200 focus:border-indigo-500 py-1 rounded text-center outline-none font-bold font-mono text-indigo-900"
+                              className="w-16 py-1 rounded text-center outline-none font-bold font-mono transition-all bg-indigo-50 border border-indigo-200 focus:border-indigo-500 text-indigo-900 font-extrabold scale-[1.03]"
                             />
                           </span>
+
+                          {/* Action Button */}
+                          <div className="col-span-1 flex justify-center">
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteSubject(subj.id, subj.name)}
+                              title={`Delete ${subj.name}`}
+                              className="p-1.5 text-slate-450 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all cursor-pointer flex-shrink-0"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
+                  </div>
+
+                  <div className="p-3 bg-slate-50 border-t flex justify-between items-center min-w-[850px]">
+                    <span className="text-[10px] text-slate-400 font-semibold italic">
+                      💡 Tip: Click on any Subject Course Title input to rename the course.
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleAddNewSubject}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[10px] tracking-wider uppercase px-4 py-2 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Add New Subject Course Row
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1302,19 +1459,36 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
             </div>
 
             {/* Save Buttons and actions */}
-            <div className="border-t pt-6 mt-8 flex justify-end gap-3 print:hidden">
+            <div className="border-t pt-6 mt-8 flex flex-wrap justify-between items-center gap-3 print:hidden">
               <button
-                onClick={() => setEditingStudent(null)}
-                className="border border-slate-350 hover:bg-slate-50 text-slate-600 font-bold text-xs px-6 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap"
+                onClick={() => {
+                  setDeleteConfirmStudent({
+                    id: editingStudent.id,
+                    name: editingStudent.name,
+                    className: editingStudent.className,
+                    source: 'edit'
+                  });
+                }}
+                className="border border-red-200 bg-red-50 hover:bg-red-100 hover:border-red-400 text-red-650 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer"
+                title="Delete student and their report card"
               >
-                Discard Changes
+                <Trash2 className="w-3.5 h-3.5" /> Delete Report Card
               </button>
-              <button
-                onClick={saveStudentChanges}
-                className="bg-indigo-900 hover:bg-indigo-950 text-white font-bold text-xs px-6 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-indigo-900/10 cursor-pointer whitespace-nowrap"
-              >
-                <Save className="w-4 h-4" /> Save Score Updates
-              </button>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setEditingStudent(null)}
+                  className="border border-slate-350 hover:bg-slate-50 text-slate-600 font-bold text-xs px-6 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap"
+                >
+                  Discard Changes
+                </button>
+                <button
+                  onClick={saveStudentChanges}
+                  className="bg-indigo-900 hover:bg-indigo-950 text-white font-bold text-xs px-6 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-indigo-900/10 cursor-pointer whitespace-nowrap"
+                >
+                  <Save className="w-4 h-4" /> Save Score Updates
+                </button>
+              </div>
             </div>
 
             {/* Interactive Real-Time Report Sheet Live Preview */}
@@ -1651,6 +1825,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
             <form
               onSubmit={(e) => {
                 e.preventDefault();
+                if (!isAdmin) return;
                 onUpdateTemplate({
                   schoolName: tempSchoolName,
                   motto: tempMotto,
@@ -1672,11 +1847,24 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
               }}
               className="space-y-6 text-xs"
             >
-              {/* Row A: General Scholastic Metadata */}
-              <div className="space-y-3.5">
-                <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-l-4 border-slate-900 pl-2">
-                  Section A: General Academic Information
-                </h4>
+              {!isAdmin && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl p-4 text-[11px] font-semibold flex items-start gap-3 shadow-xs">
+                  <span className="text-sm select-none">🔒</span>
+                  <div>
+                    <span className="font-extrabold text-slate-950 uppercase tracking-wide">Read-Only Workspace Configuration</span>
+                    <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
+                      You are logged in as <strong className="text-slate-900 font-bold">{currentUser?.name}</strong> ({currentUser?.role}). Only the School Head Principal (<strong className="text-slate-900 font-bold">Dr. Ezekiel Beck</strong>) has permission to customize these 15 core template settings. However, all active configurations are synchronized and fully reflected on your students' records.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <fieldset disabled={!isAdmin} className="space-y-6 disabled:opacity-90">
+                {/* Row A: General Scholastic Metadata */}
+                <div className="space-y-3.5">
+                  <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-l-4 border-slate-900 pl-2">
+                    Section A: General Academic Information
+                  </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">School Campus Name</label>
@@ -1863,23 +2051,158 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                     />
                   </div>
                 </div>
-              </div>
+                </div>
+              </fieldset>
 
               {/* Form submit/save button */}
               <div className="pt-4 border-t flex justify-end">
-                <button
-                  type="submit"
-                  className="bg-indigo-900 hover:bg-indigo-950 text-white font-extrabold text-[10px] tracking-wider uppercase px-6 py-3 rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-1.5"
-                >
-                  ⚡ Save & Publish Workspace Template
-                </button>
+                {isAdmin ? (
+                  <button
+                    type="submit"
+                    className="bg-indigo-900 hover:bg-indigo-950 text-white font-extrabold text-[10px] tracking-wider uppercase px-6 py-3 rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                  >
+                    ⚡ Save & Publish Workspace Template
+                  </button>
+                ) : (
+                  <div className="bg-slate-100 text-slate-500 border border-slate-200 font-extrabold text-[10px] tracking-wider uppercase px-6 py-3 rounded-xl select-none flex items-center gap-1.5">
+                    🔒 Read-Only (Synchronized Live)
+                  </div>
+                )}
               </div>
             </form>
+          </div>
+        ) : activeSubTab === 'staff' && isAdmin ? (
+          /* VIEW 4: ADMIN STAFF MANAGEMENT SCREEN */
+          <div className="bg-white border rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm animate-fade-in text-slate-800">
+            <div className="border-b pb-4">
+              <span className="text-[10px] bg-rose-50 border border-rose-200 text-rose-750 font-extrabold tracking-widest uppercase px-2.5 py-1 rounded-md">
+                Admin Security Desk
+              </span>
+              <h2 className="text-sm font-extrabold text-slate-900 mt-3 flex items-center gap-1.5 uppercase tracking-tight">
+                🔒 Educator Staff Accounts Access & Restrictions
+              </h2>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Toggle login and portal access privileges for non-administrator academic staffs. Restricted accounts are immediately blocked from opening student ledgers and report directories.
+              </p>
+            </div>
+
+            <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/55 shadow-xs">
+              {facultyProfiles.map(p => {
+                const isSelf = p.id === currentUser?.id;
+                return (
+                  <div key={p.id} className="p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white hover:bg-slate-50/70 transition-colors">
+                    <div className="flex items-center gap-3.5">
+                      <span className="text-3xl bg-slate-100 p-2.5 rounded-2xl select-none">{p.avatar}</span>
+                      <div>
+                        <h4 className="font-extrabold text-slate-905 text-xs flex items-center gap-2">
+                          {p.name}
+                          {isSelf && (
+                            <span className="bg-indigo-100 text-indigo-750 text-[9px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded-md">
+                              You (Admin)
+                            </span>
+                          )}
+                          {p.isRestricted && (
+                            <span className="bg-rose-100 text-rose-700 text-[9px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded-md">
+                              Restricted
+                            </span>
+                          )}
+                        </h4>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{p.role}</p>
+                        <p className="text-[10px] text-slate-500 font-mono mt-1">
+                          Passcode ID: <strong className="font-bold text-slate-800 tracking-wider font-mono bg-slate-100/80 px-2 py-0.5 rounded text-[10px]">{p.password || 'admin'}</strong>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {isSelf ? (
+                        <div className="text-[10px] bg-slate-100 text-slate-400 border border-slate-200 font-extrabold tracking-wider uppercase px-3 py-1.5 rounded-xl select-none">
+                          System Admin Active
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = facultyProfiles.map(f => {
+                              if (f.id === p.id) {
+                                return { ...f, isRestricted: !f.isRestricted };
+                              }
+                              return f;
+                            });
+                            setFacultyProfiles(updated);
+                            if (typeof window !== 'undefined') {
+                              localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(updated));
+                            }
+                            triggerSuccess(
+                              p.isRestricted
+                                ? `Access restored! ${p.name} account is now active.`
+                                : `Account restricted! ${p.name} has been locked from educator desk access.`
+                            );
+                          }}
+                          className={`px-4 py-2 text-[10px] font-black tracking-widest uppercase rounded-xl transition-all shadow-xs border cursor-pointer ${
+                            p.isRestricted
+                              ? 'bg-emerald-600 hover:bg-emerald-700 border-emerald-500 text-white'
+                              : 'bg-rose-50 hover:bg-rose-100 border-rose-200 text-rose-700 hover:text-rose-800'
+                          }`}
+                        >
+                          {p.isRestricted ? '✅ Authorize Access' : '🚫 Restrict Access'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ) : (
           
           // VIEW 2: ROSTER DIRECTORY FOR SELECTED CLASS
           <div className="space-y-6">
+            
+            {/* 3 Workspace Terminal Sessions Divider */}
+            <div className="bg-indigo-950 text-white rounded-3xl p-6 shadow-xl border border-indigo-900 overflow-hidden relative select-none">
+              {/* Abstract decorative background card elements */}
+              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-800 rounded-full blur-3xl opacity-30 select-none pointer-events-none"></div>
+              <div className="absolute -left-10 -top-10 w-32 h-32 bg-amber-500 rounded-full blur-3xl opacity-10 select-none pointer-events-none"></div>
+
+              <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-amber-350 text-slate-950 font-black text-[9px] tracking-widest uppercase px-2 py-0.5 rounded-md">
+                      Terminal Sessions Directory
+                    </span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span className="text-[10px] text-indigo-200 font-bold uppercase tracking-wider font-mono">STAFF WORKSPACE DESK</span>
+                  </div>
+                  <h3 className="text-base font-black tracking-tight">Active Scholar Session: <span className="text-amber-300 underline decoration-amber-300/40 decoration-2 underline-offset-4">{activeTermTab}</span></h3>
+                  <p className="text-xs text-indigo-200 font-medium max-w-xl">
+                    Add new student slips and input terminal assessment marks inside this term workspace. switching active terms redirects and configures report template properties.
+                  </p>
+                </div>
+                
+                {/* 3 Segmented Session Toggles */}
+                <div className="w-full md:w-auto bg-indigo-900/40 border border-indigo-805 p-1 rounded-2xl flex gap-1 font-bold text-xs">
+                  {(['First Term', 'Second Term', 'Third Term'] as const).map((term) => (
+                    <button
+                      key={term}
+                      id={`session-workspace-tab-${term.toLowerCase().replace(' ', '-')}`}
+                      onClick={() => {
+                        setActiveTermTab(term);
+                        onUpdateTemplate({ ...template, currentTerm: term });
+                        triggerSuccess(`Workspace local terminal directory safely routed to ${term}!`);
+                      }}
+                      className={`flex-1 md:flex-none uppercase tracking-wider text-[10px] font-extrabold py-2.5 px-5 rounded-xl transition-all cursor-pointer ${
+                        activeTermTab === term
+                          ? 'bg-amber-350 text-slate-900 shadow-lg font-black scale-[1.01]'
+                          : 'text-indigo-200 hover:bg-indigo-900/60 hover:text-white'
+                      }`}
+                    >
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
             
             {/* Quick Metrics Statistics Widget Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -1933,12 +2256,14 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setShowAddForm(!showAddForm)}
-                  className="bg-indigo-900 hover:bg-indigo-950 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-sm"
-                >
-                  <Plus className="w-4 h-4" /> Add Student
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowAddForm(!showAddForm)}
+                    className="bg-indigo-900 hover:bg-indigo-950 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" /> Add Student
+                  </button>
+                </div>
               </div>
 
               {/* Dynamic Expandable New Student Profile Form */}
@@ -1950,6 +2275,15 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                   <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider border-b pb-1.5">
                     Register New Student Record ({selectedClass})
                   </h4>
+                  
+                  {/* Session Context Notice */}
+                  <div className="bg-amber-50 border border-amber-250 text-slate-800 rounded-xl px-4 py-2.5 text-[11px] font-semibold flex items-start gap-2.5 shadow-xs">
+                    <span className="text-base select-none">📅</span>
+                    <div>
+                      <span className="font-black text-slate-900">Current Session folder: {activeTermTab}</span>
+                      <p className="text-[10px] text-slate-500 mt-0.5">The student will be initialized inside the active {activeTermTab} directory index. You can immediately access their report card to record their marks.</p>
+                    </div>
+                  </div>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                     <div>
@@ -2070,8 +2404,8 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                               </button>
                               <button
                                 onClick={() => deleteStudentProfile(stud.id, stud.name)}
-                                className="border border-slate-300 hover:border-red-600 hover:text-red-900 bg-white hover:bg-slate-50 text-slate-500 p-1.5 rounded-lg transition-all shadow-sm"
-                                title="Delete from roster"
+                                className="border border-red-250 hover:border-red-500 hover:bg-red-50 text-red-600 hover:text-red-900 p-1.5 rounded-lg transition-all shadow-sm"
+                                title="Delete student and report card"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -2087,6 +2421,102 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
           </div>
         )}
       </div>
+
+      {/* Custom Deletion Confirmation Dialog Modal with Yes/No */}
+      {deleteConfirmStudent && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 print:hidden animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-150 mx-4 transform transition-all duration-300 scale-100">
+            <div className="flex items-center gap-3 text-red-600 mb-4 animate-bounce-subtle">
+              <div className="p-2.5 bg-red-50 rounded-2xl">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900">Delete Report?</h3>
+                <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Permanent change</p>
+              </div>
+            </div>
+            
+            <p className="text-xs text-slate-600 font-medium mb-6">
+              do you want to delete this report?
+              <span className="block mt-2 font-extrabold text-slate-900 bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-[11px]">
+                Student: {deleteConfirmStudent.name} ({deleteConfirmStudent.id})
+              </span>
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                id="btn-delete-confirm-no"
+                onClick={() => setDeleteConfirmStudent(null)}
+                className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 bg-white hover:bg-slate-100 hover:text-slate-800 transition-all cursor-pointer"
+              >
+                No
+              </button>
+              <button
+                id="btn-delete-confirm-yes"
+                onClick={() => {
+                  const { id, name, className, source } = deleteConfirmStudent;
+                  let refreshed = students.filter(s => s.id !== id);
+                  refreshed = calculateClassPositions(refreshed, className);
+                  onUpdateStudents(refreshed);
+                  
+                  if (source === 'view') {
+                    setViewingReportStudent(null);
+                  } else if (source === 'edit') {
+                    setEditingStudent(null);
+                  }
+                  
+                  setDeleteConfirmStudent(null);
+                  triggerSuccess(`Successfully erased student report card for ${name}.`);
+                }}
+                className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-red-500/20 cursor-pointer"
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Logout Confirmation Dialog Modal with Yes/Cancel */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 print:hidden animate-fade-in animate-once">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-150 mx-4 transform transition-all duration-300 scale-100">
+            <div className="flex items-center gap-3 text-amber-600 mb-4 animate-bounce-subtle">
+              <div className="p-2.5 bg-amber-50 rounded-2xl">
+                <LogOut className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900 font-sans uppercase">Confirm Logout</h3>
+                <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Staff Desk Session</p>
+              </div>
+            </div>
+            
+            <p className="text-xs text-slate-600 font-medium mb-6">
+              Do you want to log out?
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                id="btn-logout-confirm-cancel"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 bg-white hover:bg-slate-100 hover:text-slate-800 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                id="btn-logout-confirm-yes"
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  handleLogout();
+                }}
+                className="px-5 py-2 bg-red-600 hover:bg-red-750 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-red-500/20 cursor-pointer"
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

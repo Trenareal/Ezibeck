@@ -46,6 +46,7 @@ export interface FacultyProfile {
   role: string;
   avatar: string;
   password?: string; // Password field for Teacher Authentication
+  isRestricted?: boolean; // Restrict access toggle for admin
 }
 
 export interface Workspace15Template {
