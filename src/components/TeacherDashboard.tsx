@@ -169,6 +169,26 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
     setShowAddForm(false);
   };
 
+  // Get allowed classes for current user dynamic roles
+  const allowedClasses: ClassName[] = React.useMemo(() => {
+    if (!currentUser) return ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
+    const roleLower = currentUser.role.toLowerCase();
+    if (roleLower.includes("junior")) {
+      return ['JSS1', 'JSS2', 'JSS3'];
+    }
+    if (roleLower.includes("senior secondary") || (roleLower.includes("senior") && roleLower.includes("lead"))) {
+      return ['SS1', 'SS2', 'SS3'];
+    }
+    return ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
+  }, [currentUser]);
+
+  // Keep selected class parameter within bounds when roles change
+  React.useEffect(() => {
+    if (currentUser && !allowedClasses.includes(selectedClass)) {
+      setSelectedClass(allowedClasses[0]);
+    }
+  }, [currentUser, allowedClasses, selectedClass]);
+
   // Filter students showing in the selected class
   const classStudents = students.filter(s => s.className === selectedClass);
 
@@ -756,13 +776,14 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                         <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                           {viewingReportStudent.subjects.map(subj => {
                             const tot = calculateSubjectTotal(subj);
-                            const { letter, remark, ratingClass } = getLetterAndRemark(tot);
                             
                             // Formulate annual / session average data realistically matching the 20/20/60 formula of Notion
                             const firstTerm = subj.firstTermSummary !== undefined ? subj.firstTermSummary : Math.round(tot * 0.18);
                             const secondTerm = subj.secondTermSummary !== undefined ? subj.secondTermSummary : Math.round(tot * 0.19);
                             const thirdTerm = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : Math.round(tot * 0.60);
                             const sessionAvg = firstTerm + secondTerm + thirdTerm;
+
+                            const { letter, remark, ratingClass } = getLetterAndRemark(sessionAvg);
 
                             return (
                               <tr key={subj.id} className="hover:bg-slate-50/60 transition-all">
@@ -1479,12 +1500,13 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                           <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                             {previewStudent.subjects.map(subj => {
                               const tot = calculateSubjectTotal(subj);
-                              const { letter, remark, ratingClass } = getLetterAndRemark(tot);
                               
                               const firstTerm = subj.firstTermSummary !== undefined ? subj.firstTermSummary : Math.round(tot * 0.18);
                               const secondTerm = subj.secondTermSummary !== undefined ? subj.secondTermSummary : Math.round(tot * 0.19);
                               const thirdTerm = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : Math.round(tot * 0.60);
                               const sessionAvg = firstTerm + secondTerm + thirdTerm;
+
+                              const { letter, remark, ratingClass } = getLetterAndRemark(sessionAvg);
 
                               return (
                                 <tr key={subj.id} className="hover:bg-slate-50/60 transition-all">
@@ -1896,7 +1918,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Select Class Standard:</span>
                   <div className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-xl border text-xs">
-                    {(['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'] as ClassName[]).map(cls => (
+                    {allowedClasses.map(cls => (
                       <button
                         key={cls}
                         onClick={() => {

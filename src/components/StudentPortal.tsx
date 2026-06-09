@@ -503,13 +503,14 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                       <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                         {selectedStudent.subjects.map(subj => {
                           const tot = calculateSubjectTotal(subj);
-                          const { letter, remark, ratingClass } = getLetterAndRemark(tot);
                           
                           // Formulate annual / session average data realistically matching the 20/20/60 formula of Notion
                           const firstTerm = subj.firstTermSummary !== undefined ? subj.firstTermSummary : Math.round(tot * 0.18);
                           const secondTerm = subj.secondTermSummary !== undefined ? subj.secondTermSummary : Math.round(tot * 0.19);
                           const thirdTerm = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : Math.round(tot * 0.60);
                           const sessionAvg = firstTerm + secondTerm + thirdTerm;
+
+                          const { letter, remark, ratingClass } = getLetterAndRemark(sessionAvg);
 
                           return (
                             <tr key={subj.id} className="hover:bg-slate-50/60 transition-all">
