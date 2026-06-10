@@ -1249,7 +1249,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10 pt-6 border-t border-dashed border-slate-200">
                     {/* Form Teacher Remark Callout */}
                     {(() => {
-                      const displayTeacherName = viewingReportStudent.className.startsWith('JSS') ? template.formTeacherJunior : template.formTeacherSenior;
+                      const displayTeacherName = viewingReportStudent.formTeacherName || (viewingReportStudent.className.startsWith('JSS') ? template.formTeacherJunior : template.formTeacherSenior);
                       const displayPrincipalName = template.principalName;
                       return (
                         <>
@@ -1717,7 +1717,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                 
                 return (
                   <div 
-                    className="bg-white border border-slate-205 rounded-3xl shadow-lg p-6 sm:p-12 space-y-8 relative text-slate-800 pointer-events-none select-none max-w-5xl mx-auto"
+                    className="bg-white border border-slate-205 rounded-3xl shadow-lg p-6 sm:p-12 space-y-8 relative text-slate-800 select-none max-w-5xl mx-auto"
                   >
                     {/* Visual slate borders */}
                     <div className="absolute inset-3 border border-slate-100 rounded-2xl pointer-events-none"></div>
@@ -1962,12 +1962,23 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                           </p>
                         </div>
                         
-                        <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
-                          <div>
-                            <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold font-sans">Appraiser</span>
-                            <p className="font-black text-slate-900 font-sans">{previewStudent.className.startsWith('JSS') ? template.formTeacherJunior : template.formTeacherSenior}</p>
-                          </div>
-                        </div>
+                        {(() => {
+                          const displayTeacherName = previewStudent.formTeacherName || (previewStudent.className.startsWith('JSS') ? template.formTeacherJunior : template.formTeacherSenior);
+                          return (
+                            <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
+                              <div>
+                                <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold font-sans">Appraiser</span>
+                                <p className="font-black text-slate-900 font-sans">{displayTeacherName}</p>
+                              </div>
+                              <div className="text-right select-none">
+                                <div className="text-sm font-serif italic text-indigo-950 font-semibold h-5 tracking-wide">
+                                  {displayTeacherName.replace("Mrs.", "").replace("Mr.","").trim()}
+                                </div>
+                                <span className="text-[8px] text-slate-400 uppercase tracking-wider block border-t border-slate-200 pt-0.5 mt-0.5">Signature & Stamp</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Principal Assessment Callout */}

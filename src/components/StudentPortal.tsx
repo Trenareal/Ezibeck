@@ -1036,7 +1036,7 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10 pt-6 border-t border-dashed border-slate-200">
                   {/* Form Teacher Remark Callout */}
                   {(() => {
-                    const displayTeacherName = selectedStudent.className.startsWith('JSS') ? template.formTeacherJunior : template.formTeacherSenior;
+                    const displayTeacherName = selectedStudent.formTeacherName || (selectedStudent.className.startsWith('JSS') ? template.formTeacherJunior : template.formTeacherSenior);
                     const displayPrincipalName = template.principalName;
                     return (
                       <>
