@@ -64,6 +64,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
 
   // Faculty Login Credentials States
   const [pendingLoginUser, setPendingLoginUser] = useState<FacultyProfile | null>(null);
+  const [usernameInput, setUsernameInput] = useState('');
   const [teacherPasswordInput, setTeacherPasswordInput] = useState('');
   const [teacherLoginError, setTeacherLoginError] = useState('');
 
@@ -141,6 +142,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
   const [editSubjects, setEditSubjects] = useState<SubjectGrade[]>([]);
   const [editBehaviour, setEditBehaviour] = useState<BehaviourRating[]>([]);
   const [editFormComment, setEditFormComment] = useState('');
+  const [editPrincipalRemark, setEditPrincipalRemark] = useState('');
   const [editTeacherName, setEditTeacherName] = useState('');
   const [editPrincipalName, setEditPrincipalName] = useState('');
   const [editResumeDate, setEditResumeDate] = useState('2026-09-14');
@@ -179,20 +181,31 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
   // Staff Login action
   const handleVerifyTeacherLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pendingLoginUser) return;
+    if (!usernameInput.trim()) return;
 
-    if (pendingLoginUser.isRestricted) {
+    const matchedUser = facultyProfiles.find(p => 
+      p.id.toLowerCase() === usernameInput.trim().toLowerCase() ||
+      p.name.toLowerCase() === usernameInput.trim().toLowerCase() ||
+      p.name.toLowerCase().replace(/^(dr\.|mr\.|mrs\.|prof\.)\s+/i, '').startsWith(usernameInput.trim().toLowerCase())
+    );
+
+    if (!matchedUser) {
+      setTeacherLoginError('Username / Staff ID not found.');
+      return;
+    }
+
+    if (matchedUser.isRestricted) {
       setTeacherLoginError('This educator account has been restricted by the Administrator. Please contact Dr. Ezekiel Beck.');
       return;
     }
 
-    const correctPassword = pendingLoginUser.password || 'admin';
+    const correctPassword = matchedUser.password || 'admin';
     if (teacherPasswordInput === correctPassword) {
-      setCurrentUser(pendingLoginUser);
-      setPendingLoginUser(null);
+      setCurrentUser(matchedUser);
       setTeacherPasswordInput('');
+      setUsernameInput('');
       setTeacherLoginError('');
-      triggerSuccess(`Successfully authorized as ${pendingLoginUser.name}`);
+      triggerSuccess(`Successfully logged in as ${matchedUser.name}`);
     } else {
       setTeacherLoginError('Incorrect faculty access password code.');
     }
@@ -272,6 +285,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
     setEditSubjects([...student.subjects]);
     setEditBehaviour([...student.behaviour]);
     setEditFormComment(student.formTeacherRemark);
+    setEditPrincipalRemark((student as any).principalRemark || '');
     setEditTeacherName(student.formTeacherName);
     setEditPrincipalName(student.principalName);
     setEditResumeDate(student.resumptionDate);
@@ -356,8 +370,9 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
       formTeacherRemark: editFormComment,
       formTeacherName: editTeacherName,
       principalName: editPrincipalName,
-      resumptionDate: editResumeDate
-    };
+      resumptionDate: editResumeDate,
+      principalRemark: editPrincipalRemark
+    } as any;
 
     // Replace in full list, trigger rank recalculation
     let refreshed = students.map(s => s.id === editingStudent.id ? updatedStudent : s);
@@ -408,56 +423,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
           )}
 
           {/* Conditional view: Teacher Password Challenge */}
-          {pendingLoginUser ? (
-            <form onSubmit={handleVerifyTeacherLogin} className="space-y-4 text-left animate-fade-in bg-slate-950 border border-slate-850 p-5 rounded-2xl">
-              <div className="flex items-center gap-2 border-b border-slate-800 pb-2.5">
-                <span className="text-2xl">{pendingLoginUser.avatar}</span>
-                <div>
-                  <h4 className="font-bold text-xs text-white">{pendingLoginUser.name}</h4>
-                  <p className="text-[9px] text-slate-400">{pendingLoginUser.role}</p>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Enter Faculty Passcode:</label>
-                <input
-                  type="password"
-                  required
-                  autoFocus
-                  placeholder="Profile security password"
-                  value={teacherPasswordInput}
-                  onChange={(e) => {
-                    setTeacherPasswordInput(e.target.value);
-                    setTeacherLoginError('');
-                  }}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2 text-xs font-mono tracking-widest text-white outline-none"
-                />
-                {teacherLoginError && (
-                  <p className="text-[10px] text-red-400 font-semibold mt-1">{teacherLoginError}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPendingLoginUser(null);
-                    setTeacherPasswordInput('');
-                    setTeacherLoginError('');
-                  }}
-                  className="bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-lg py-2 text-[10px] font-bold text-slate-400 tracking-wider uppercase transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-indigo-900 hover:bg-indigo-950 text-white rounded-lg py-2 text-[10px] font-bold tracking-wider uppercase transition-all"
-                >
-                  Unlock Access
-                </button>
-              </div>
-            </form>
-          ) : showRegisterForm ? (
+          {showRegisterForm ? (
             /* Conditional view: Teacher Registration form */
             <form onSubmit={handleRegisterStaff} className="space-y-4 text-left animate-fade-in bg-slate-950 border border-slate-850 p-5 rounded-2xl">
               <h3 className="text-xs font-black text-white uppercase tracking-wider border-b border-slate-800 pb-2">Register New Educator Desk</h3>
@@ -533,44 +499,67 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
               </div>
             </form>
           ) : (
-            /* Select profile block */
-            <>
-              <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl text-left text-xs text-slate-400 space-y-1">
+            /* Secure Unified Credentials Login */
+            <form onSubmit={handleVerifyTeacherLogin} className="space-y-4 text-left animate-fade-in bg-slate-950 border border-slate-850 p-5 rounded-2xl">
+              <div className="bg-[#0f172a] border border-slate-800 p-4 rounded-xl text-left text-xs text-slate-400 space-y-1">
                 <span className="font-extrabold text-slate-200 block text-[11px] uppercase tracking-wider mb-1 text-indigo-400">
-                  Staff Desk Policy
+                  Staff Desk Login
                 </span>
-                <p>Welcome, Educators! Sign in securely by selecting your authorized academic profile. Enter your dynamic password key to configure classes and reports.</p>
+                <p>Welcome, Educators! Sign in securely using your Username or Full Name and physical access password key code to configure reports.</p>
               </div>
 
-              <div className="space-y-2 pt-2">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Choose Faculty profile:</span>
-                {facultyProfiles.map(p => (
-                  <button
-                    key={p.name}
-                    onClick={() => setPendingLoginUser(p)}
-                    className="w-full bg-slate-800/40 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 rounded-xl p-3 flex items-center justify-between transition-all group"
-                  >
-                    <div className="flex items-center gap-3 text-left">
-                      <span className="text-xl">{p.avatar}</span>
-                      <div>
-                        <h4 className="font-bold text-xs text-slate-200 group-hover:text-white leading-none">{p.name}</h4>
-                        <span className="text-[10px] text-slate-400 leading-none">{p.role}</span>
-                      </div>
-                    </div>
-                    <div className="text-[10px] bg-indigo-950 text-indigo-400 border border-indigo-900 px-2 py-1 rounded font-bold">
-                      Authenticate
-                    </div>
-                  </button>
-                ))}
+              <div>
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Username / Full Name:</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. ezekiel, gladys, anthony, or Full Name"
+                  value={usernameInput}
+                  onChange={(e) => {
+                    setUsernameInput(e.target.value);
+                    setTeacherLoginError('');
+                  }}
+                  className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs text-white outline-none font-bold"
+                />
               </div>
 
-              <button
-                onClick={() => setShowRegisterForm(true)}
-                className="w-full border border-dashed border-slate-850 hover:bg-slate-800/40 hover:border-slate-700 transition-all rounded-xl py-2 px-4 text-xs font-bold text-slate-400 hover:text-white flex items-center justify-center gap-1.5"
-              >
-                <Plus className="w-3.5 h-3.5" /> Register New staff profile
-              </button>
-            </>
+              <div>
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Passcode Password Key:</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Profile security password"
+                  value={teacherPasswordInput}
+                  onChange={(e) => {
+                    setTeacherPasswordInput(e.target.value);
+                    setTeacherLoginError('');
+                  }}
+                  className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs font-mono tracking-widest text-white outline-none"
+                />
+                {teacherLoginError && (
+                  <p className="text-[10px] text-red-400 font-semibold mt-1.5 bg-red-950/30 border border-red-500/30 px-3 py-2 rounded-lg">{teacherLoginError}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-900 mt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowRegisterForm(true);
+                    setTeacherLoginError('');
+                  }}
+                  className="bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-lg py-2 text-[10px] font-bold text-slate-400 tracking-wider uppercase transition-all"
+                >
+                  Register Staff
+                </button>
+                <button
+                  type="submit"
+                  className="bg-indigo-900 hover:bg-indigo-950 text-white rounded-lg py-2 text-[10px] font-bold tracking-wider uppercase transition-all"
+                >
+                  Login Access
+                </button>
+              </div>
+            </form>
           )}
 
           <p className="text-[9px] text-slate-500">
@@ -1131,11 +1120,13 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                                 <span>🎓 Principal's Performance Assessment</span>
                               </h4>
                               <p className="italic text-slate-600 pt-3 leading-relaxed">
-                                {viewingReportStudent.formTeacherRemark.includes("outstanding") || stats.avgScore >= (template.distinctionThreshold || 90)
-                                  ? `"Highly commendable academic and behavioral character shown during the term session. Excellent candidate. Promoted with honor."`
-                                  : stats.avgScore >= (template.passThreshold || 50)
-                                    ? `"Satisfactory progress. Continued focus on core concepts will serve candidate well. Promoted."`
-                                    : `"Needs close guidance and study supervision in future sessions to ensure passing criteria."`}
+                                {(viewingReportStudent as any).principalRemark
+                                  ? `"${(viewingReportStudent as any).principalRemark}"`
+                                  : (viewingReportStudent.formTeacherRemark.includes("outstanding") || stats.avgScore >= (template.distinctionThreshold || 90)
+                                    ? `"Highly commendable academic and behavioral character shown during the term session. Excellent candidate. Promoted with honor."`
+                                    : stats.avgScore >= (template.passThreshold || 50)
+                                      ? `"Satisfactory progress. Continued focus on core concepts will serve candidate well. Promoted."`
+                                      : `"Needs close guidance and study supervision in future sessions to ensure passing criteria."`)}
                               </p>
                             </div>
 
@@ -1455,6 +1446,17 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                         onChange={(e) => setEditFormComment(e.target.value)}
                         rows={3}
                         placeholder="Write term summary remark..."
+                        className="w-full bg-white border p-2 text-xs rounded-lg outline-none font-medium text-slate-700 focus:border-indigo-800"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Principal's Remarks (Optional, Overrides Dynamic Default)</label>
+                      <textarea
+                        value={editPrincipalRemark}
+                        onChange={(e) => setEditPrincipalRemark(e.target.value)}
+                        rows={3}
+                        placeholder="Write principal's performance summary comment..."
                         className="w-full bg-white border p-2 text-xs rounded-lg outline-none font-medium text-slate-700 focus:border-indigo-800"
                       />
                     </div>
@@ -1811,11 +1813,13 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                             <span>🎓 Principal's Performance Assessment</span>
                           </h4>
                           <p className="italic text-slate-600 pt-3 leading-relaxed">
-                            {previewStudent.formTeacherRemark.includes("outstanding") || stats.avgScore >= (template.distinctionThreshold || 90)
-                              ? `"Highly commendable academic and behavioral character shown during the term session. Excellent candidate. Promoted with honor."`
-                              : stats.avgScore >= (template.passThreshold || 50)
-                                ? `"Satisfactory progress. Continued focus on core concepts will serve candidate well. Promoted."`
-                                : `"Needs close guidance and study supervision in future sessions to ensure passing criteria."`}
+                            {(previewStudent as any).principalRemark
+                              ? `"${(previewStudent as any).principalRemark}"`
+                              : (previewStudent.formTeacherRemark.includes("outstanding") || stats.avgScore >= (template.distinctionThreshold || 90)
+                                ? `"Highly commendable academic and behavioral character shown during the term session. Excellent candidate. Promoted with honor."`
+                                : stats.avgScore >= (template.passThreshold || 50)
+                                  ? `"Satisfactory progress. Continued focus on core concepts will serve candidate well. Promoted."`
+                                  : `"Needs close guidance and study supervision in future sessions to ensure passing criteria."`)}
                           </p>
                         </div>
 
@@ -2370,7 +2374,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                       type="submit"
                       className="bg-indigo-900 border text-white hover:bg-indigo-950 px-5 py-2 rounded-lg"
                     >
-                      Authenticate Student
+                      Login Student
                     </button>
                   </div>
                 </form>

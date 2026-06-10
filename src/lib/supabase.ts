@@ -39,6 +39,7 @@ export const mapDbStudentToFrontend = (dbStudent: any): Student => {
     principalName: dbStudent.principal_name || '',
     resumptionDate: dbStudent.resumption_date,
     password: dbStudent.password,
+    principalRemark: dbStudent.principal_remark || '',
     subjects: (dbStudent.subjects || []).map((sub: any) => ({
       id: sub.id,
       name: sub.name,
@@ -162,7 +163,8 @@ export const dbService = {
         form_teacher_name: studentData.formTeacherName,
         principal_name: studentData.principalName,
         resumption_date: studentData.resumptionDate,
-        password: studentData.password || '123456'
+        password: studentData.password || '123456',
+        principal_remark: studentData.principalRemark || ''
       })
       .select()
       .single();

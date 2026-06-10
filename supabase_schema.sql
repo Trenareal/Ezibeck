@@ -53,6 +53,7 @@ create table if not exists public.students (
     principal_name text default '',
     resumption_date text not null,
     password text not null default '123456',
+    principal_remark text default '',
     created_at timestamp with time zone default timezone('utc'::text, now()) not null,
     updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );

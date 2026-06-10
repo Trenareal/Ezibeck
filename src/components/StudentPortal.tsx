@@ -79,7 +79,7 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
               </div>
               <div>
                 <h2 className="text-xl font-black text-slate-900 tracking-tight leading-none uppercase">{template.schoolName}</h2>
-                <p className="text-xs text-slate-500 mt-1">Select class stream and choose student name to unlock secure report sheet</p>
+                <p className="text-xs text-slate-500 mt-1">Select class stream and choose student ID to unlock secure report sheet</p>
               </div>
             </div>
             
@@ -109,7 +109,7 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
               </span>
               <input
                 type="text"
-                placeholder="Search candidate name or ID..."
+                placeholder="Search candidate ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-100 focus:border-indigo-55 focus:bg-white rounded-xl py-2.5 pl-10 pr-4 text-xs outline-none transition-all text-slate-705 font-bold shadow-xs"
@@ -126,9 +126,9 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                     <button
                       key={stud.id}
                       onClick={() => handleSelectStudent(stud)}
-                      className={`px-3.5 py-1.5 text-xs rounded-xl border font-bold transition-all cursor-pointer ${selectedStudent?.id === stud.id ? 'bg-indigo-50 border-indigo-205 text-indigo-700 scale-[1.01] shadow-xs' : 'bg-white hover:bg-slate-50 border-slate-100 text-slate-600'}`}
+                      className={`px-3.5 py-1.5 text-xs rounded-xl border font-bold transition-all cursor-pointer ${selectedStudent?.id === stud.id ? 'bg-indigo-50 border-indigo-205 text-indigo-700 scale-[1.01] shadow-xs' : 'bg-white hover:bg-slate-50 border-slate-100 text-slate-600 font-mono'}`}
                     >
-                      {stud.name}
+                      {stud.id}
                     </button>
                   ))}
                 </div>
@@ -160,7 +160,7 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
           <div>
             <h3 className="text-lg font-black text-slate-900 uppercase">Secure Portal Unlock</h3>
             <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Academic file of <strong className="text-slate-800">{selectedStudent.name}</strong> is encrypted. Please enter their student password to decrypt.
+              Academic file of Student ID <strong className="text-[#3b82f6] font-mono">{selectedStudent.id}</strong> is encrypted. Please enter their student password to decrypt.
             </p>
           </div>
 
@@ -204,8 +204,6 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
             <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-700 block mb-0.5">Demo Credentials Helper</span>
             <p className="text-[10px] text-slate-400 leading-normal">
               Candidate Student ID: <span className="font-mono font-bold text-slate-700">{selectedStudent.id}</span>
-              <br />
-              Default Access Password: <span className="font-bold text-slate-700">{selectedStudent.password || '123456'}</span>
             </p>
           </div>
         </div>
@@ -763,11 +761,13 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                               <span>🎓 Principal's Performance Assessment</span>
                             </h4>
                             <p className="text-xs italic text-slate-600 pt-3 leading-relaxed">
-                              {selectedStudent.formTeacherRemark.includes("outstanding") || stats.avgScore >= (template.distinctionThreshold || 90)
-                                ? `"Highly commendable academic and behavioral character shown during the term session. Excellent candidate. Promoted with honor."`
-                                : stats.avgScore >= (template.passThreshold || 50)
-                                  ? `"Satisfactory progress. Continued focus on core concepts will serve candidate well. Promoted."`
-                                  : `"Needs close guidance and study supervision in future sessions to ensure passing criteria."`}
+                              {selectedStudent.principalRemark
+                                ? `"${selectedStudent.principalRemark}"`
+                                : (selectedStudent.formTeacherRemark.includes("outstanding") || stats.avgScore >= (template.distinctionThreshold || 90)
+                                  ? `"Highly commendable academic and behavioral character shown during the term session. Excellent candidate. Promoted with honor."`
+                                  : stats.avgScore >= (template.passThreshold || 50)
+                                    ? `"Satisfactory progress. Continued focus on core concepts will serve candidate well. Promoted."`
+                                    : `"Needs close guidance and study supervision in future sessions to ensure passing criteria."`)}
                             </p>
                           </div>
 

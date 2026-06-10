@@ -39,6 +39,7 @@ export interface Student {
   principalName: string;
   resumptionDate: string;
   password?: string; // Password field for Student Authentication
+  principalRemark?: string;
 }
 
 export interface FacultyProfile {
