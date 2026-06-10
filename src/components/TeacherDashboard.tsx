@@ -422,145 +422,57 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
             </div>
           )}
 
-          {/* Conditional view: Teacher Password Challenge */}
-          {showRegisterForm ? (
-            /* Conditional view: Teacher Registration form */
-            <form onSubmit={handleRegisterStaff} className="space-y-4 text-left animate-fade-in bg-slate-950 border border-slate-850 p-5 rounded-2xl">
-              <h3 className="text-xs font-black text-white uppercase tracking-wider border-b border-slate-800 pb-2">Register New Educator Desk</h3>
-              
-              <div className="space-y-3 text-xs">
-                <div>
-                  <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Full Educator Name</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Prof. Sarah Alao"
-                    value={regName}
-                    onChange={(e) => setRegName(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white outline-none"
-                  />
-                </div>
+          {/* Secure Unified Credentials Login */}
+          <form onSubmit={handleVerifyTeacherLogin} className="space-y-4 text-left animate-fade-in bg-slate-950 border border-slate-850 p-5 rounded-2xl">
+            <div className="bg-[#0f172a] border border-slate-800 p-4 rounded-xl text-left text-xs text-slate-400 space-y-1">
+              <span className="font-extrabold text-slate-200 block text-[11px] uppercase tracking-wider mb-1 text-indigo-400">
+                Staff Desk Login
+              </span>
+              <p>Welcome, Educators! Sign in securely using your Username or Full Name and physical access password key code to configure reports.</p>
+            </div>
 
-                <div>
-                  <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Staff Office Role</label>
-                  <select
-                    value={regRole}
-                    onChange={(e) => setRegRole(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white outline-none font-bold"
-                  >
-                    <option value="Senior College Administrator">Senior College Administrator</option>
-                    <option value="Junior Secondary Form Lead">Junior Secondary Form Lead</option>
-                    <option value="Senior Secondary Form Lead">Senior Secondary Form Lead</option>
-                    <option value="Subject Special Educator">Subject Special Educator</option>
-                  </select>
-                </div>
+            <div>
+              <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Username / Full Name:</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. ezekiel, gladys, anthony, or Full Name"
+                value={usernameInput}
+                onChange={(e) => {
+                  setUsernameInput(e.target.value);
+                  setTeacherLoginError('');
+                }}
+                className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs text-white outline-none font-bold"
+              />
+            </div>
 
-                <div>
-                  <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Passcode Password</label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="Enter secure staff layout key"
-                    value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white outline-none font-mono tracking-widest"
-                  />
-                </div>
+            <div>
+              <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Passcode Password Key:</label>
+              <input
+                type="password"
+                required
+                placeholder="Profile security password"
+                value={teacherPasswordInput}
+                onChange={(e) => {
+                  setTeacherPasswordInput(e.target.value);
+                  setTeacherLoginError('');
+                }}
+                className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs font-mono tracking-widest text-white outline-none"
+              />
+              {teacherLoginError && (
+                <p className="text-[10px] text-red-400 font-semibold mt-1.5 bg-red-950/30 border border-red-500/30 px-3 py-2 rounded-lg">{teacherLoginError}</p>
+              )}
+            </div>
 
-                <div className="grid grid-cols-5 gap-2">
-                  <label className="col-span-5 block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Select Emoji Avatar</label>
-                  {["👩‍🏫", "👨‍🏫", "👩‍💻", "👨‍💻", "🎓"].map(emoji => (
-                    <button
-                      type="button"
-                      key={emoji}
-                      onClick={() => setRegAvatar(emoji)}
-                      className={`text-2xl p-1 rounded-md transition-all ${regAvatar === emoji ? 'bg-indigo-900 scale-110 border border-indigo-500' : 'bg-slate-900 hover:bg-slate-800'}`}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-900">
-                <button
-                  type="button"
-                  onClick={() => setShowRegisterForm(false)}
-                  className="bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-lg py-2 text-[10px] font-bold text-slate-400 tracking-wider uppercase transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="bg-indigo-900 hover:bg-indigo-950 text-white rounded-lg py-2 text-[10px] font-bold tracking-wider uppercase transition-all"
-                >
-                  Enroll Staff
-                </button>
-              </div>
-            </form>
-          ) : (
-            /* Secure Unified Credentials Login */
-            <form onSubmit={handleVerifyTeacherLogin} className="space-y-4 text-left animate-fade-in bg-slate-950 border border-slate-850 p-5 rounded-2xl">
-              <div className="bg-[#0f172a] border border-slate-800 p-4 rounded-xl text-left text-xs text-slate-400 space-y-1">
-                <span className="font-extrabold text-slate-200 block text-[11px] uppercase tracking-wider mb-1 text-indigo-400">
-                  Staff Desk Login
-                </span>
-                <p>Welcome, Educators! Sign in securely using your Username or Full Name and physical access password key code to configure reports.</p>
-              </div>
-
-              <div>
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Username / Full Name:</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. ezekiel, gladys, anthony, or Full Name"
-                  value={usernameInput}
-                  onChange={(e) => {
-                    setUsernameInput(e.target.value);
-                    setTeacherLoginError('');
-                  }}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs text-white outline-none font-bold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Passcode Password Key:</label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Profile security password"
-                  value={teacherPasswordInput}
-                  onChange={(e) => {
-                    setTeacherPasswordInput(e.target.value);
-                    setTeacherLoginError('');
-                  }}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs font-mono tracking-widest text-white outline-none"
-                />
-                {teacherLoginError && (
-                  <p className="text-[10px] text-red-400 font-semibold mt-1.5 bg-red-950/30 border border-red-500/30 px-3 py-2 rounded-lg">{teacherLoginError}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-900 mt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowRegisterForm(true);
-                    setTeacherLoginError('');
-                  }}
-                  className="bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-lg py-2 text-[10px] font-bold text-slate-400 tracking-wider uppercase transition-all"
-                >
-                  Register Staff
-                </button>
-                <button
-                  type="submit"
-                  className="bg-indigo-900 hover:bg-indigo-950 text-white rounded-lg py-2 text-[10px] font-bold tracking-wider uppercase transition-all"
-                >
-                  Login Access
-                </button>
-              </div>
-            </form>
-          )}
+            <div className="pt-2 border-t border-slate-900 mt-2">
+              <button
+                type="submit"
+                className="w-full bg-indigo-900 hover:bg-indigo-950 text-white rounded-lg py-2.5 text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer"
+              >
+                Login Access
+              </button>
+            </div>
+          </form>
 
           <p className="text-[9px] text-slate-500">
             Secure administrative console. EZIBECK'S ACADEMY Academic Office delta-terminal.
@@ -2103,17 +2015,113 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
         ) : activeSubTab === 'staff' && isAdmin ? (
           /* VIEW 4: ADMIN STAFF MANAGEMENT SCREEN */
           <div className="bg-white border rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm animate-fade-in text-slate-800">
-            <div className="border-b pb-4">
-              <span className="text-[10px] bg-rose-50 border border-rose-200 text-rose-750 font-extrabold tracking-widest uppercase px-2.5 py-1 rounded-md">
-                Admin Security Desk
-              </span>
-              <h2 className="text-sm font-extrabold text-slate-900 mt-3 flex items-center gap-1.5 uppercase tracking-tight">
-                🔒 Educator Staff Accounts Access & Restrictions
-              </h2>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                Toggle login and portal access privileges for non-administrator academic staffs. Restricted accounts are immediately blocked from opening student ledgers and report directories.
-              </p>
+            <div className="border-b pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <span className="text-[10px] bg-rose-50 border border-rose-200 text-rose-750 font-extrabold tracking-widest uppercase px-2.5 py-1 rounded-md">
+                  Admin Security Desk
+                </span>
+                <h2 className="text-sm font-extrabold text-slate-900 mt-3 flex items-center gap-1.5 uppercase tracking-tight">
+                  🔒 Educator Staff Accounts Access & Restrictions
+                </h2>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Toggle login and portal access privileges for non-administrator academic staffs. Restricted accounts are immediately blocked from opening student ledgers and report directories.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowRegisterForm(!showRegisterForm)}
+                className="bg-indigo-900 hover:bg-indigo-950 text-white text-xs font-bold tracking-wide px-4 py-2.5 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-center"
+              >
+                {showRegisterForm ? '✕ Close Registration' : '➕ Register New Staff'}
+              </button>
             </div>
+
+            {showRegisterForm && (
+              <form onSubmit={handleRegisterStaff} className="bg-slate-50 border border-slate-200/80 p-5 rounded-2xl space-y-4 animate-fade-in">
+                <div className="border-b border-slate-200 pb-2 flex items-center justify-between">
+                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">Register New Faculty Account</h3>
+                  <span className="text-[10px] text-slate-400 font-medium">Access privileges active upon registration</span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Full Educator Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Mrs. Gladys Alabi"
+                      value={regName}
+                      onChange={(e) => setRegName(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-800 outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 transition-all font-semibold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Staff Office Role</label>
+                    <select
+                      value={regRole}
+                      onChange={(e) => setRegRole(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-800 outline-none font-bold focus:border-indigo-600"
+                    >
+                      <option value="Senior College Administrator">Senior College Administrator</option>
+                      <option value="Junior Secondary Form Lead">Junior Secondary Form Lead</option>
+                      <option value="Senior Secondary Form Lead">Senior Secondary Form Lead</option>
+                      <option value="Subject Special Educator">Subject Special Educator</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Passcode Password Key</label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Enter secure staff layout key"
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-800 outline-none font-mono tracking-widest focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Select Emoji Avatar:</span>
+                    <div className="flex gap-1.5">
+                      {["👩‍🏫", "👨‍🏫", "👩‍💻", "👨‍💻", "🎓"].map(emoji => (
+                        <button
+                          type="button"
+                          key={emoji}
+                          onClick={() => setRegAvatar(emoji)}
+                          className={`text-xl p-1.5 rounded-lg transition-all border ${regAvatar === emoji ? 'bg-indigo-50 border-indigo-200 scale-105' : 'bg-white hover:bg-slate-100 border-slate-200'}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowRegisterForm(false);
+                        setRegName('');
+                        setRegPassword('');
+                      }}
+                      className="bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 rounded-lg px-4 py-2 text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="bg-indigo-900 hover:bg-indigo-950 text-white rounded-lg px-5 py-2 text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer"
+                    >
+                      Authorize & Enroll Staff
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
 
             <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/55 shadow-xs">
               {facultyProfiles.map(p => {

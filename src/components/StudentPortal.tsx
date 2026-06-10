@@ -35,8 +35,58 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
     return matchClass && matchQuery;
   });
 
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  // Helper to load html2pdf from CDN dynamically
+  const loadHtml2Pdf = (): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      if ((window as any).html2pdf) {
+        resolve((window as any).html2pdf);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+      script.integrity = 'sha512-GsLlZN/3F2ErC596goTQruTzhv13fqb53GTC5rq9tu1OnFRxsECf3dB/yeKb4YENAlAHm+3GdBacwx8lAqcxxg==';
+      script.crossOrigin = 'anonymous';
+      script.onload = () => resolve((window as any).html2pdf);
+      script.onerror = () => reject(new Error('Failed to load html2pdf library'));
+      document.head.appendChild(script);
+    });
+  };
+
   const handlePrint = () => {
-    window.print();
+    setShowExportModal(true);
+  };
+
+  const downloadPdfDirect = async () => {
+    if (!printAreaRef.current || !selectedStudent) return;
+    setIsGeneratingPdf(true);
+    try {
+      const html2pdf = await loadHtml2Pdf();
+      const element = printAreaRef.current;
+      const opt = {
+        margin: [10, 12, 10, 12],
+        filename: `${selectedStudent.id}_Report_Sheet_${selectedStudent.name.replace(/\s+/g, '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true, 
+          letterRendering: true,
+          logging: false 
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      
+      await html2pdf().set(opt).from(element).save();
+      setShowExportModal(false);
+    } catch (err) {
+      console.error('PDF Generation Error:', err);
+      // Fallback to basic print
+      window.print();
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   const handleSelectStudent = (stud: Student) => {
@@ -803,6 +853,77 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
               </div>
             );
           })()}
+        </div>
+      )}
+
+      {showExportModal && selectedStudent && (
+        <div id="export-pdf-modal" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in print:hidden">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-100 shadow-2xl space-y-6">
+            <div className="text-center space-y-2">
+              <span className="text-4xl">📄</span>
+              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Save Report Card</h3>
+              <p className="text-sm text-slate-500 leading-relaxed">
+                Would you like to save and download a secure electronic PDF document of <strong className="text-slate-800">{selectedStudent.name}</strong>'s report card to your local device?
+              </p>
+            </div>
+
+            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs space-y-2 text-left">
+              <div className="flex justify-between">
+                <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Candidate Student ID</span>
+                <span className="font-mono font-bold text-[#3b82f6]">{selectedStudent.id}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Academic Name</span>
+                <span className="font-bold text-slate-705">{selectedStudent.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Output Format</span>
+                <span className="bg-indigo-50 text-indigo-700 border border-indigo-100 rounded font-black text-[9px] px-1.5 py-0.5 uppercase">A4 PORTRAIT PDF</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowExportModal(false)}
+                disabled={isGeneratingPdf}
+                className="bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-600 rounded-xl py-3 text-xs font-black uppercase tracking-wider transition-all cursor-pointer text-center disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={downloadPdfDirect}
+                disabled={isGeneratingPdf}
+                className="bg-[#3b82f6] hover:bg-blue-650 text-white rounded-xl py-3 text-xs font-black uppercase tracking-wider transition-all shadow-md cursor-pointer text-center flex items-center justify-center gap-1.5 disabled:opacity-50"
+              >
+                {isGeneratingPdf ? (
+                  <>
+                    <span className="animate-spin inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full"></span>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    ⬇️ Download PDF
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                disabled={isGeneratingPdf}
+                onClick={() => {
+                  setShowExportModal(false);
+                  setTimeout(() => window.print(), 150);
+                }}
+                className="text-[11px] text-slate-400 hover:text-indigo-600 font-bold underline transition-all cursor-pointer"
+              >
+                Or use system native print/save dialog
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
