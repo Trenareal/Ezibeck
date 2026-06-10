@@ -17,9 +17,13 @@ interface TeacherDashboardProps {
 }
 
 const DEFAULT_FACULTY: FacultyProfile[] = [
-  { id: "ezekiel", name: "Dr. Ezekiel Beck", role: "School Head Principal & Founder", avatar: "👨‍🏫", password: "admin" },
-  { id: "gladys", name: "Mrs. Gladys Alabi", role: "Junior Secondary Form Lead", avatar: "👩‍🏫", password: "junior" },
-  { id: "anthony", name: "Mr. Anthony Okon", role: "Senior Secondary Form Lead", avatar: "👨‍💻", password: "senior" }
+  { id: "ezekiel", name: "Dr. Ezekiel Beck", role: "Administrator (Head Principal)", avatar: "👨‍🏫", password: "admin", email: "ezekiel@ezibeckacademy.edu.ng" },
+  { id: "gladys", name: "Mrs. Gladys Alabi", role: "Form Teacher - JSS1", avatar: "👩‍🏫", password: "teacher1", email: "gladys@ezibeckacademy.edu.ng", assignedClass: "JSS1" },
+  { id: "anthony", name: "Mr. Anthony Okon", role: "Form Teacher - JSS2", avatar: "👨‍💻", password: "teacher2", email: "anthony@ezibeckacademy.edu.ng", assignedClass: "JSS2" },
+  { id: "sarah", name: "Mrs. Sarah John", role: "Form Teacher - JSS3", avatar: "👩‍🏫", password: "teacher3", email: "sarah@ezibeckacademy.edu.ng", assignedClass: "JSS3" },
+  { id: "benson", name: "Mr. Benson Chidi", role: "Form Teacher - SS1", avatar: "👨‍🏫", password: "teacher4", email: "benson@ezibeckacademy.edu.ng", assignedClass: "SS1" },
+  { id: "florence", name: "Mrs. Florence Musa", role: "Form Teacher - SS2", avatar: "👩‍🏫", password: "teacher5", email: "florence@ezibeckacademy.edu.ng", assignedClass: "SS2" },
+  { id: "david", name: "Mr. David Ibrahim", role: "Form Teacher - SS3", avatar: "👨‍💻", password: "teacher6", email: "david@ezibeckacademy.edu.ng", assignedClass: "SS3" }
 ];
 
 export default function TeacherDashboard({ students, template, onBack, onUpdateStudents, onUpdateTemplate }: TeacherDashboardProps) {
@@ -47,13 +51,16 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
     return 'First Term';
   });
 
-  // Dynamic Faculty Management State
+  // Dynamic Faculty Management State - strictly limited to 7 members
   const [facultyProfiles, setFacultyProfiles] = useState<FacultyProfile[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('ezibeck_faculty_profiles');
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length === 7) {
+            return parsed;
+          }
         } catch (e) {
           console.error('Error parsing stored faculty profiles', e);
         }
@@ -61,6 +68,27 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
     }
     return DEFAULT_FACULTY;
   });
+
+  // Faculty edit & class assignment states
+  const [editingFaculty, setEditingFaculty] = useState<FacultyProfile | null>(null);
+  const [editingFacultyName, setEditingFacultyName] = useState('');
+  const [editingFacultyEmail, setEditingFacultyEmail] = useState('');
+  const [editingFacultyPassword, setEditingFacultyPassword] = useState('');
+  const [editingFacultyClass, setEditingFacultyClass] = useState<ClassName>('JSS1');
+  const [editingFacultyAvatar, setEditingFacultyAvatar] = useState('👩‍🏫');
+
+  // Faculty Password Reset via Simulated Email OTP states
+  const [showFacultyReset, setShowFacultyReset] = useState(false);
+  const [facultyResetEmail, setFacultyResetEmail] = useState('');
+  const [facultyResetOtp, setFacultyResetOtp] = useState('');
+  const [facultyResetStep, setFacultyResetStep] = useState<'request' | 'verify' | 'new_password'>('request');
+  const [facultyGeneratedOtp, setFacultyGeneratedOtp] = useState('');
+  const [facultyResetError, setFacultyResetError] = useState('');
+  const [facultyResetSuccess, setFacultyResetSuccess] = useState('');
+  const [facultySimulatedNotification, setFacultySimulatedNotification] = useState('');
+  const [facultyNewPass, setFacultyNewPass] = useState('');
+  const [facultyNewPassConfirm, setFacultyNewPassConfirm] = useState('');
+  const [facultyResetUser, setFacultyResetUser] = useState<FacultyProfile | null>(null);
 
   // Faculty Login Credentials States
   const [pendingLoginUser, setPendingLoginUser] = useState<FacultyProfile | null>(null);
@@ -178,6 +206,35 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
     triggerSuccess(`Registered and activated credentials for ${newFaculty.name} successfully!`);
   };
 
+  // Save edited teacher profile and class assignment
+  const handleSaveFacultyEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingFaculty) return;
+
+    const updated = facultyProfiles.map(f => {
+      if (f.id === editingFaculty.id) {
+        return {
+          ...f,
+          name: editingFacultyName.trim(),
+          email: editingFacultyEmail.trim(),
+          password: editingFacultyPassword.trim(),
+          assignedClass: editingFacultyClass,
+          avatar: editingFacultyAvatar,
+          role: editingFacultyClass ? `Form Teacher - ${editingFacultyClass}` : f.role
+        };
+      }
+      return f;
+    });
+
+    setFacultyProfiles(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(updated));
+    }
+
+    setEditingFaculty(null);
+    triggerSuccess(`Successfully saved class assignment and profile updates for ${editingFacultyName}!`);
+  };
+
   // Staff Login action
   const handleVerifyTeacherLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,6 +268,65 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
     }
   };
 
+  const handleFacultySendOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    const matched = facultyProfiles.find(p => p.email?.toLowerCase().trim() === facultyResetEmail.trim().toLowerCase());
+    if (!matched) {
+      setFacultyResetError('No staff profile registered with this email address.');
+      return;
+    }
+    setFacultyResetError('');
+    setFacultyResetUser(matched);
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    setFacultyGeneratedOtp(code);
+    setFacultyResetStep('verify');
+    setFacultySimulatedNotification(`💌 TCH-OTP Code for ${matched.name} sent to ${matched.email}: ${code}`);
+    setFacultyResetSuccess(`Passcode OTP code generated and sent to: ${matched.email}`);
+  };
+
+  const handleFacultyVerifyOtp = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (facultyResetOtp === facultyGeneratedOtp) {
+      setFacultyResetStep('new_password');
+      setFacultyResetError('');
+      setFacultyResetSuccess('OTP passcode verified successfully! Set your new access passcode key below.');
+    } else {
+      setFacultyResetError('Incorrect verification OTP passcode key. Check simulated inbox.');
+    }
+  };
+
+  const handleFacultyConfirmNewPass = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!facultyResetUser) return;
+    if (facultyNewPass.length < 4) {
+      setFacultyResetError('Passcode must be at least 4 characters long.');
+      return;
+    }
+    if (facultyNewPass !== facultyNewPassConfirm) {
+      setFacultyResetError('Passcodes do not match. Please re-enter.');
+      return;
+    }
+
+    const updated = facultyProfiles.map(f => {
+      if (f.id === facultyResetUser.id) {
+        return { ...f, password: facultyNewPass };
+      }
+      return f;
+    });
+
+    setFacultyProfiles(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(updated));
+    }
+
+    setFacultyResetSuccess('Security passcode updated successfully! Please login with your new key.');
+    setFacultyNewPass('');
+    setFacultyNewPassConfirm('');
+    setFacultyResetStep('request');
+    setShowFacultyReset(false);
+    setFacultySimulatedNotification('');
+  };
+
   const handleLogout = () => {
     setCurrentUser(null);
     setEditingStudent(null);
@@ -220,15 +336,15 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
   // Get allowed classes for current user dynamic roles
   const allowedClasses: ClassName[] = React.useMemo(() => {
     if (!currentUser) return ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
-    const roleLower = currentUser.role.toLowerCase();
-    if (roleLower.includes("junior")) {
-      return ['JSS1', 'JSS2', 'JSS3'];
+    if (isAdmin) {
+      return ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
     }
-    if (roleLower.includes("senior secondary") || (roleLower.includes("senior") && roleLower.includes("lead"))) {
-      return ['SS1', 'SS2', 'SS3'];
+    const matchProfile = facultyProfiles.find(f => f.id === currentUser.id);
+    if (matchProfile && matchProfile.assignedClass) {
+      return [matchProfile.assignedClass];
     }
     return ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
-  }, [currentUser]);
+  }, [currentUser, facultyProfiles, isAdmin]);
 
   // Keep selected class parameter within bounds when roles change
   React.useEffect(() => {
@@ -416,63 +532,206 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
           </div>
 
           {/* Real-time Alerts popups inside login */}
-          {successMsg && (
-            <div className="bg-emerald-900/30 border border-emerald-500/50 rounded-xl p-3 text-emerald-300 text-xs text-left font-semibold">
-              ✓ {successMsg}
+          {(successMsg || facultyResetSuccess) && (
+            <div className="bg-emerald-905/30 border border-emerald-500/50 rounded-xl p-3 text-emerald-300 text-xs text-left font-semibold">
+              ✓ {successMsg || facultyResetSuccess}
             </div>
           )}
 
-          {/* Secure Unified Credentials Login */}
-          <form onSubmit={handleVerifyTeacherLogin} className="space-y-4 text-left animate-fade-in bg-slate-950 border border-slate-850 p-5 rounded-2xl">
-            <div className="bg-[#0f172a] border border-slate-800 p-4 rounded-xl text-left text-xs text-slate-400 space-y-1">
-              <span className="font-extrabold text-slate-200 block text-[11px] uppercase tracking-wider mb-1 text-indigo-400">
-                Staff Desk Login
-              </span>
-              <p>Welcome, Educators! Sign in securely using your Username or Full Name and physical access password key code to configure reports.</p>
+          {facultyResetError && (
+            <div className="bg-red-950/30 border border-red-500/50 rounded-xl p-3 text-red-350 text-xs text-left font-semibold">
+              ⚠️ {facultyResetError}
             </div>
+          )}
 
-            <div>
-              <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Username / Full Name:</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. ezekiel, gladys, anthony, or Full Name"
-                value={usernameInput}
-                onChange={(e) => {
-                  setUsernameInput(e.target.value);
-                  setTeacherLoginError('');
-                }}
-                className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs text-white outline-none font-bold"
-              />
+          {facultySimulatedNotification && (
+            <div className="bg-emerald-950 border border-emerald-800 rounded-xl p-4 text-left space-y-1 animate-pulse">
+              <span className="text-[9px] uppercase font-black tracking-widest text-emerald-400 block">📬 Simulated Educator Email Inbox</span>
+              <p className="font-mono text-xs text-emerald-100 break-all leading-normal">{facultySimulatedNotification}</p>
             </div>
+          )}
 
-            <div>
-              <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Passcode Password Key:</label>
-              <input
-                type="password"
-                required
-                placeholder="Profile security password"
-                value={teacherPasswordInput}
-                onChange={(e) => {
-                  setTeacherPasswordInput(e.target.value);
-                  setTeacherLoginError('');
-                }}
-                className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs font-mono tracking-widest text-white outline-none"
-              />
-              {teacherLoginError && (
-                <p className="text-[10px] text-red-400 font-semibold mt-1.5 bg-red-950/30 border border-red-500/30 px-3 py-2 rounded-lg">{teacherLoginError}</p>
+          {showFacultyReset ? (
+            /* FACULTY OTP PASSWORD RESET FORM */
+            <div className="space-y-4 text-left bg-slate-950 border border-slate-850 p-5 rounded-2xl animate-fade-in">
+              <div className="flex items-center justify-between border-b border-slate-850 pb-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Passcode Reset Request</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowFacultyReset(false);
+                    setFacultyResetError('');
+                    setFacultyResetSuccess('');
+                    setFacultySimulatedNotification('');
+                    setFacultyResetStep('request');
+                  }}
+                  className="text-[10px] text-indigo-400 hover:text-indigo-305 hover:underline font-bold cursor-pointer"
+                >
+                  ← Back to Login
+                </button>
+              </div>
+
+              {facultyResetStep === 'request' && (
+                <form onSubmit={handleFacultySendOtp} className="space-y-4">
+                  <div className="bg-slate-900/60 border border-slate-850 p-3 rounded-lg text-slate-400 text-[11px] leading-relaxed">
+                    Enter the registered Email address of your Educator account (e.g. <span className="font-mono text-[10px] text-indigo-300 font-bold">gladys@ezibeckacademy.edu.ng</span>) to receive a secure login OTP code.
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Registered Email address:</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="e.g. gladys@ezibeckacademy.edu.ng"
+                      value={facultyResetEmail}
+                      onChange={(e) => {
+                        setFacultyResetEmail(e.target.value);
+                        setFacultyResetError('');
+                      }}
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs text-white outline-none"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-indigo-900 hover:bg-indigo-950 text-white rounded-lg py-2.5 text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer"
+                  >
+                    Send One-Time OTP Passcode
+                  </button>
+                </form>
+              )}
+
+              {facultyResetStep === 'verify' && (
+                <form onSubmit={handleFacultyVerifyOtp} className="space-y-4">
+                  <div className="bg-slate-900/60 border border-slate-850 p-3 rounded-lg text-slate-400 text-[11px] leading-normal font-medium">
+                    Copy the dynamic verification OTP code shown in the green banner above and input below:
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Enter 6-Digit OTP Code:</label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={6}
+                      placeholder="e.g. 123456"
+                      value={facultyResetOtp}
+                      onChange={(e) => {
+                        setFacultyResetOtp(e.target.value);
+                        setFacultyResetError('');
+                      }}
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs font-mono tracking-widest text-center text-white outline-none font-bold"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-2.5 text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer"
+                  >
+                    Verify Passcode OTP
+                  </button>
+                </form>
+              )}
+
+              {facultyResetStep === 'new_password' && (
+                <form onSubmit={handleFacultyConfirmNewPass} className="space-y-4">
+                  <div>
+                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5">New Access Passcode Key (Min 4 chars):</label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Enter new educator passcode..."
+                      value={facultyNewPass}
+                      onChange={(e) => {
+                        setFacultyNewPass(e.target.value);
+                        setFacultyResetError('');
+                      }}
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs text-white outline-none font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Confirm New Access Passcode Key:</label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Confirm new educator passcode..."
+                      value={facultyNewPassConfirm}
+                      onChange={(e) => {
+                        setFacultyNewPassConfirm(e.target.value);
+                        setFacultyResetError('');
+                      }}
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs text-white outline-none font-bold"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-indigo-900 hover:bg-indigo-950 text-white rounded-lg py-2.5 text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer"
+                  >
+                    Save & Update Passcode Key
+                  </button>
+                </form>
               )}
             </div>
+          ) : (
+            /* STANDARD FACULTY LOGIN FORM */
+            <form onSubmit={handleVerifyTeacherLogin} className="space-y-4 text-left animate-fade-in bg-slate-950 border border-slate-850 p-5 rounded-2xl">
+              <div className="bg-[#0f172a] border border-slate-800 p-4 rounded-xl text-left text-xs text-slate-400 space-y-1">
+                <span className="font-extrabold text-slate-200 block text-[11px] uppercase tracking-wider mb-1 text-indigo-400">
+                  Staff Desk Login
+                </span>
+                <p>Welcome, Educators! Sign in securely using your Username or Full Name and physical access password key code to configure reports.</p>
+              </div>
 
-            <div className="pt-2 border-t border-slate-900 mt-2">
-              <button
-                type="submit"
-                className="w-full bg-indigo-900 hover:bg-indigo-950 text-white rounded-lg py-2.5 text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer"
-              >
-                Login Access
-              </button>
-            </div>
-          </form>
+              <div>
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Username / Full Name:</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. ezekiel, gladys, anthony, or Full Name"
+                  value={usernameInput}
+                  onChange={(e) => {
+                    setUsernameInput(e.target.value);
+                    setTeacherLoginError('');
+                  }}
+                  className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs text-white outline-none font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex justify-between items-center">
+                  <span>Passcode Password Key:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowFacultyReset(true);
+                      setFacultyResetStep('request');
+                    }}
+                    className="text-[9px] text-indigo-400 hover:text-indigo-305 hover:underline font-bold normal-case cursor-pointer"
+                  >
+                    🔑 Forgot Key? Reset with OTP
+                  </button>
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Profile security password"
+                  value={teacherPasswordInput}
+                  onChange={(e) => {
+                    setTeacherPasswordInput(e.target.value);
+                    setTeacherLoginError('');
+                  }}
+                  className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs font-mono tracking-widest text-white outline-none"
+                />
+                {teacherLoginError && (
+                  <p className="text-[10px] text-red-400 font-semibold mt-1.5 bg-red-950/30 border border-red-500/30 px-3 py-2 rounded-lg">{teacherLoginError}</p>
+                )}
+              </div>
+
+              <div className="pt-2 border-t border-slate-900 mt-2">
+                <button
+                  type="submit"
+                  className="w-full bg-indigo-900 hover:bg-indigo-950 text-white rounded-lg py-2.5 text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer"
+                >
+                  Login Access
+                </button>
+              </div>
+            </form>
+          )}
 
           <p className="text-[9px] text-slate-500">
             Secure administrative console. EZIBECK'S ACADEMY Academic Office delta-terminal.
@@ -2027,72 +2286,90 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                   Toggle login and portal access privileges for non-administrator academic staffs. Restricted accounts are immediately blocked from opening student ledgers and report directories.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowRegisterForm(!showRegisterForm)}
-                className="bg-indigo-900 hover:bg-indigo-950 text-white text-xs font-bold tracking-wide px-4 py-2.5 rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 self-start sm:self-center"
-              >
-                {showRegisterForm ? '✕ Close Registration' : '➕ Register New Staff'}
-              </button>
+              <div>
+                <span className="text-[10px] bg-rose-50 border border-rose-200 text-rose-750 font-extrabold tracking-widest uppercase px-2.5 py-1 rounded-md">
+                  Admin Security Desk
+                </span>
+                <h2 className="text-sm font-extrabold text-slate-900 mt-3 flex items-center gap-1.5 uppercase tracking-tight">
+                  🔒 Educator Staff Class Assignments & Security Desk
+                </h2>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Configure class stream streams for teachers. Form Teachers can strictly access and modify students in their assigned stream. Use the edit button to assign classes, modify passcodes, or authorize/restrict access.
+                </p>
+              </div>
             </div>
 
-            {showRegisterForm && (
-              <form onSubmit={handleRegisterStaff} className="bg-slate-50 border border-slate-200/80 p-5 rounded-2xl space-y-4 animate-fade-in">
-                <div className="border-b border-slate-200 pb-2 flex items-center justify-between">
-                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">Register New Faculty Account</h3>
-                  <span className="text-[10px] text-slate-400 font-medium">Access privileges active upon registration</span>
+            {editingFaculty && (
+              <form onSubmit={handleSaveFacultyEdit} className="bg-slate-50 border border-indigo-150 p-5 rounded-2xl space-y-4 animate-fade-in">
+                <div className="border-b border-indigo-100 pb-2 flex items-center justify-between">
+                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    ⚙️ Edit Profile & Class Assignment: <span className="text-indigo-700">{editingFaculty.name}</span>
+                  </h3>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Updates take effect immediately</span>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Full Educator Name</label>
+                    <label className="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Full Educator Name</label>
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Mrs. Gladys Alabi"
-                      value={regName}
-                      onChange={(e) => setRegName(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-800 outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 transition-all font-semibold"
+                      value={editingFacultyName}
+                      onChange={(e) => setEditingFacultyName(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 outline-none focus:border-indigo-600 transition-all font-semibold"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Staff Office Role</label>
+                    <label className="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Registered Email (For OTP Reset)</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="e.g. gladys@ezibeckacademy.edu.ng"
+                      value={editingFacultyEmail}
+                      onChange={(e) => setEditingFacultyEmail(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 outline-none focus:border-indigo-600 transition-all font-semibold font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Class Assigned Stream</label>
                     <select
-                      value={regRole}
-                      onChange={(e) => setRegRole(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-800 outline-none font-bold focus:border-indigo-600"
+                      value={editingFacultyClass || ''}
+                      onChange={(e) => setEditingFacultyClass(e.target.value as ClassName)}
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:border-indigo-600 font-black outline-none"
                     >
-                      <option value="Senior College Administrator">Senior College Administrator</option>
-                      <option value="Junior Secondary Form Lead">Junior Secondary Form Lead</option>
-                      <option value="Senior Secondary Form Lead">Senior Secondary Form Lead</option>
-                      <option value="Subject Special Educator">Subject Special Educator</option>
+                      <option value="JSS1">JSS1 (Junior Secondary 1)</option>
+                      <option value="JSS2">JSS2 (Junior Secondary 2)</option>
+                      <option value="JSS3">JSS3 (Junior Secondary 3)</option>
+                      <option value="SS1">SS1 (Senior Secondary 1)</option>
+                      <option value="SS2">SS2 (Senior Secondary 2)</option>
+                      <option value="SS3">SS3 (Senior Secondary 3)</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Passcode Password Key</label>
+                    <label className="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Security Passcode Password</label>
                     <input
-                      type="password"
+                      type="text"
                       required
-                      placeholder="Enter secure staff layout key"
-                      value={regPassword}
-                      onChange={(e) => setRegPassword(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-800 outline-none font-mono tracking-widest focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+                      value={editingFacultyPassword}
+                      onChange={(e) => setEditingFacultyPassword(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 outline-none font-mono font-bold focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
                     />
                   </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Select Emoji Avatar:</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Select Avatar:</span>
                     <div className="flex gap-1.5">
                       {["👩‍🏫", "👨‍🏫", "👩‍💻", "👨‍💻", "🎓"].map(emoji => (
                         <button
                           type="button"
                           key={emoji}
-                          onClick={() => setRegAvatar(emoji)}
-                          className={`text-xl p-1.5 rounded-lg transition-all border ${regAvatar === emoji ? 'bg-indigo-50 border-indigo-200 scale-105' : 'bg-white hover:bg-slate-100 border-slate-200'}`}
+                          onClick={() => setEditingFacultyAvatar(emoji)}
+                          className={`text-xl p-1.5 rounded-xl transition-all border ${editingFacultyAvatar === emoji ? 'bg-indigo-50 border-indigo-200 scale-105' : 'bg-white hover:bg-slate-100 border-slate-200'}`}
                         >
                           {emoji}
                         </button>
@@ -2103,20 +2380,16 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => {
-                        setShowRegisterForm(false);
-                        setRegName('');
-                        setRegPassword('');
-                      }}
-                      className="bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 rounded-lg px-4 py-2 text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer"
+                      onClick={() => setEditingFaculty(null)}
+                      className="bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 rounded-xl px-4 py-2.5 text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer"
                     >
-                      Cancel
+                      Cancel Edit
                     </button>
                     <button
                       type="submit"
-                      className="bg-indigo-900 hover:bg-indigo-950 text-white rounded-lg px-5 py-2 text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer"
+                      className="bg-indigo-900 hover:bg-indigo-950 text-white rounded-xl px-5 py-2.5 text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer"
                     >
-                      Authorize & Enroll Staff
+                      Save Assigned Class Stream
                     </button>
                   </div>
                 </div>
@@ -2131,7 +2404,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                     <div className="flex items-center gap-3.5">
                       <span className="text-3xl bg-slate-100 p-2.5 rounded-2xl select-none">{p.avatar}</span>
                       <div>
-                        <h4 className="font-extrabold text-slate-905 text-xs flex items-center gap-2">
+                        <h4 className="font-extrabold text-slate-905 text-xs flex flex-wrap items-center gap-2">
                           {p.name}
                           {isSelf && (
                             <span className="bg-indigo-100 text-indigo-750 text-[9px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded-md">
@@ -2140,23 +2413,44 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                           )}
                           {p.isRestricted && (
                             <span className="bg-rose-100 text-rose-700 text-[9px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded-md">
-                              Restricted
+                              Restricted (Locked)
+                            </span>
+                          )}
+                          {p.assignedClass ? (
+                            <span className="bg-indigo-700 text-white text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md">
+                              Class: {p.assignedClass}
+                            </span>
+                          ) : (
+                            <span className="bg-slate-200 text-slate-700 text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md">
+                              No Class Stream
                             </span>
                           )}
                         </h4>
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{p.role}</p>
-                        <p className="text-[10px] text-slate-500 font-mono mt-1">
-                          Passcode ID: <strong className="font-bold text-slate-800 tracking-wider font-mono bg-slate-100/80 px-2 py-0.5 rounded text-[10px]">{p.password || 'admin'}</strong>
+                        <p className="text-[10px] text-slate-500 font-mono mt-1 flex flex-wrap gap-x-4">
+                          <span>Passcode ID: <strong className="font-bold text-slate-800 tracking-wider font-mono bg-slate-100/80 px-2 py-0.5 rounded">{p.password || 'admin'}</strong></span>
+                          {p.email && <span>Email: <strong className="font-mono text-indigo-650">{p.email}</strong></span>}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      {isSelf ? (
-                        <div className="text-[10px] bg-slate-100 text-slate-400 border border-slate-200 font-extrabold tracking-wider uppercase px-3 py-1.5 rounded-xl select-none">
-                          System Admin Active
-                        </div>
-                      ) : (
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingFaculty(p);
+                          setEditingFacultyName(p.name);
+                          setEditingFacultyEmail(p.email || `${p.id}@ezibeckacademy.edu.ng`);
+                          setEditingFacultyPassword(p.password || 'teacher1');
+                          setEditingFacultyClass(p.assignedClass || 'JSS1');
+                          setEditingFacultyAvatar(p.avatar || '👩‍🏫');
+                        }}
+                        className="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 px-3.5 py-2 text-[10px] font-bold tracking-wider uppercase rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                      >
+                        ⚙️ Edit & Assign Class
+                      </button>
+
+                      {!isSelf && (
                         <button
                           type="button"
                           onClick={() => {
@@ -2176,13 +2470,13 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                                 : `Account restricted! ${p.name} has been locked from educator desk access.`
                             );
                           }}
-                          className={`px-4 py-2 text-[10px] font-black tracking-widest uppercase rounded-xl transition-all shadow-xs border cursor-pointer ${
+                          className={`px-3.5 py-2 text-[10px] font-black tracking-wider uppercase rounded-xl transition-all shadow-xs border cursor-pointer ${
                             p.isRestricted
                               ? 'bg-emerald-600 hover:bg-emerald-700 border-emerald-500 text-white'
-                              : 'bg-rose-50 hover:bg-rose-100 border-rose-200 text-rose-700 hover:text-rose-800'
+                              : 'bg-rose-50 hover:bg-rose-100 border-rose-200 text-rose-750 hover:text-rose-900'
                           }`}
                         >
-                          {p.isRestricted ? '✅ Authorize Access' : '🚫 Restrict Access'}
+                          {p.isRestricted ? '✅ Authorize' : '🚫 Restrict'}
                         </button>
                       )}
                     </div>

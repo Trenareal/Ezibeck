@@ -163,6 +163,7 @@ export default function App() {
             students={students} 
             template={template}
             onBack={() => setCurrentView('home')} 
+            onUpdateStudents={handleUpdateStudents}
           />
         </div>
       )}

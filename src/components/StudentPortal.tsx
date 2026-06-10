@@ -5,6 +5,8 @@
 
 import React, { useState, useRef } from 'react';
 import { ArrowLeft, GraduationCap, Search, BookOpen, Eye, Layers, Printer, Star } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 import { Student, ClassName, Workspace15Template } from '../types';
 import { SCHOOL_INFO, calculateStudentStats, getLetterAndRemark, calculateSubjectTotal, BEHAVIOUR_TRAITS } from '../utils/academicUtils';
 
@@ -12,9 +14,10 @@ interface StudentPortalProps {
   students: Student[];
   template: Workspace15Template;
   onBack: () => void;
+  onUpdateStudents?: (updatedList: Student[]) => void;
 }
 
-export default function StudentPortal({ students, template, onBack }: StudentPortalProps) {
+export default function StudentPortal({ students, template, onBack, onUpdateStudents }: StudentPortalProps) {
   const [selectedClass, setSelectedClass] = useState<ClassName>('JSS1');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -24,6 +27,18 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
   const [passwordInput, setPasswordInput] = useState('');
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [loginError, setLoginError] = useState('');
+
+  // Password reset via simulated OTP states
+  const [showResetForm, setShowResetForm] = useState(false);
+  const [resetEmailInput, setResetEmailInput] = useState('');
+  const [resetOtpCode, setResetOtpCode] = useState('');
+  const [otpInput, setOtpInput] = useState('');
+  const [resetStep, setResetStep] = useState<'request' | 'verify' | 'new_password'>('request');
+  const [resetError, setResetError] = useState('');
+  const [resetSuccess, setResetSuccess] = useState('');
+  const [simulatedNotification, setSimulatedNotification] = useState('');
+  const [newPass, setNewPass] = useState('');
+  const [newPassConfirm, setNewPassConfirm] = useState('');
 
   const printAreaRef = useRef<HTMLDivElement>(null);
 
@@ -38,23 +53,6 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
   const [showExportModal, setShowExportModal] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
-  // Helper to load html2pdf from CDN dynamically
-  const loadHtml2Pdf = (): Promise<any> => {
-    return new Promise((resolve, reject) => {
-      if ((window as any).html2pdf) {
-        resolve((window as any).html2pdf);
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-      script.integrity = 'sha512-GsLlZN/3F2ErC596goTQruTzhv13fqb53GTC5rq9tu1OnFRxsECf3dB/yeKb4YENAlAHm+3GdBacwx8lAqcxxg==';
-      script.crossOrigin = 'anonymous';
-      script.onload = () => resolve((window as any).html2pdf);
-      script.onerror = () => reject(new Error('Failed to load html2pdf library'));
-      document.head.appendChild(script);
-    });
-  };
-
   const handlePrint = () => {
     setShowExportModal(true);
   };
@@ -63,26 +61,48 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
     if (!printAreaRef.current || !selectedStudent) return;
     setIsGeneratingPdf(true);
     try {
-      const html2pdf = await loadHtml2Pdf();
       const element = printAreaRef.current;
-      const opt = {
-        margin: [10, 12, 10, 12],
-        filename: `${selectedStudent.id}_Report_Sheet_${selectedStudent.name.replace(/\s+/g, '_')}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true, 
-          letterRendering: true,
-          logging: false 
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
       
-      await html2pdf().set(opt).from(element).save();
+      // Calculate layout scaling to perfectly fit the A4 page container
+      const canvas = await html2canvas(element, {
+        scale: 2, // Retain high physical print definition
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      
+      const imgData = canvas.toDataURL('image/png', 1.0);
+      
+      // Page size properties
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const imgWidth = 210; // A4 layout width in mm
+      const pageHeight = 297; // A4 layout height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+      heightLeft -= pageHeight;
+      
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+        heightLeft -= pageHeight;
+      }
+      
+      const filename = `${selectedStudent.id}_Report_Sheet_${selectedStudent.name.replace(/\s+/g, '_')}.pdf`;
+      pdf.save(filename);
       setShowExportModal(false);
     } catch (err) {
       console.error('PDF Generation Error:', err);
-      // Fallback to basic print
+      // Fallback to system-native print if browser has restrictions
       window.print();
     } finally {
       setIsGeneratingPdf(false);
@@ -94,6 +114,14 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
     setIsUnlocked(false);
     setPasswordInput('');
     setLoginError('');
+    setShowResetForm(false);
+    setResetEmailInput('');
+    setResetOtpCode('');
+    setOtpInput('');
+    setResetStep('request');
+    setResetError('');
+    setResetSuccess('');
+    setSimulatedNotification('');
   };
 
   const handleVerifyPassword = (e: React.FormEvent) => {
@@ -109,6 +137,69 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
     }
   };
 
+  const handleSendResetOTP = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedStudent) return;
+    
+    const expectedEmail = selectedStudent.name.toLowerCase().replace(/\s+/g, '') + "@ezibeckacademy.edu.ng";
+    if (resetEmailInput.trim().toLowerCase() !== expectedEmail) {
+      setResetError(`Incorrect email address. For this student, please enter: ${expectedEmail}`);
+      return;
+    }
+
+    setResetError('');
+    // Generate a secure 6-digit numeric OTP code
+    const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setResetOtpCode(generatedCode);
+    setResetStep('verify');
+    setSimulatedNotification(`💌 STU-OTP Code to Email ${expectedEmail}: ${generatedCode}`);
+    setResetSuccess(`A secure OTP passcode has been sent to your registered email: ${expectedEmail}`);
+  };
+
+  const handleVerifyResetOTP = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpInput === resetOtpCode) {
+      setResetStep('new_password');
+      setResetError('');
+      setResetSuccess('OTP Verified successfully! Please input your new password.');
+    } else {
+      setResetError('The OTP passcode entered does not match our records. Please try again.');
+    }
+  };
+
+  const handleConfirmNewPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedStudent) return;
+    if (newPass.length < 4) {
+      setResetError('Password must be at least 4 characters long.');
+      return;
+    }
+    if (newPass !== newPassConfirm) {
+      setResetError('Passwords do not match. Please confirm.');
+      return;
+    }
+
+    // Update password in the database / main state
+    if (onUpdateStudents) {
+      const updatedList = students.map(s => {
+        if (s.id === selectedStudent.id) {
+          return { ...s, password: newPass };
+        }
+        return s;
+      });
+      onUpdateStudents(updatedList);
+      // Also update selectedStudent state to keep it synchronized!
+      setSelectedStudent({ ...selectedStudent, password: newPass });
+    }
+
+    setResetSuccess('Password updated successfully! You can now log in using your new password.');
+    setNewPass('');
+    setNewPassConfirm('');
+    setResetStep('request');
+    setShowResetForm(false);
+    setSimulatedNotification('');
+  };
+
   return (
     <div className="bg-slate-50/70 min-h-screen py-10 px-4 sm:px-6 lg:px-8 font-sans print:bg-white print:py-0 print:px-0">
       
@@ -121,20 +212,20 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
           <ArrowLeft className="w-4 h-4" /> Back to School Homepage
         </button>
 
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-8 space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-5 sm:p-8 space-y-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-5">
             <div className="flex items-center gap-3">
               <div className="bg-indigo-50 text-indigo-700 p-3 rounded-xl shadow-xs">
                 <GraduationCap className="w-6 h-6" />
               </div>
-              <div>
-                <h2 className="text-xl font-black text-slate-900 tracking-tight leading-none uppercase">{template.schoolName}</h2>
-                <p className="text-xs text-slate-500 mt-1">Select class stream and choose student ID to unlock secure report sheet</p>
+              <div className="max-w-[calc(100%-60px)]">
+                <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight uppercase truncate">{template.schoolName}</h2>
+                <p className="text-[11px] sm:text-xs text-slate-500 mt-1">Select class stream and choose student ID to unlock secure report sheet</p>
               </div>
             </div>
             
             {/* Class Tabs Selector */}
-            <div className="flex flex-wrap gap-1.5 bg-slate-55 p-1.5 rounded-2xl border border-slate-100">
+            <div className="flex gap-1 bg-slate-50 p-1.5 rounded-2xl border border-slate-100/80 overflow-x-auto whitespace-nowrap scrollbar-none w-full lg:w-auto -mx-1 sm:mx-0">
               {(['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'] as ClassName[]).map(cls => (
                 <button
                   key={cls}
@@ -144,7 +235,7 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                     setSelectedStudent(null);
                     setIsUnlocked(false);
                   }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedClass === cls ? 'bg-indigo-700 text-white shadow-md shadow-indigo-100' : 'text-slate-600 hover:bg-slate-100'}`}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex-1 sm:flex-initial text-center ${selectedClass === cls ? 'bg-indigo-700 text-white shadow-md shadow-indigo-100' : 'text-slate-600 hover:bg-slate-100'}`}
                 >
                   {cls}
                 </button>
@@ -190,7 +281,7 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
 
       {/* Main Student Report Display Container */}
       {!selectedStudent ? (
-        <div className="max-w-4xl mx-auto bg-white rounded-3xl border border-dashed border-slate-205 p-16 text-center shadow-sm print:hidden">
+        <div className="max-w-4xl mx-auto bg-white rounded-3xl border border-dashed border-slate-205 p-6 sm:p-16 text-center shadow-sm print:hidden">
           <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-4" />
           <h3 className="text-base font-extrabold text-slate-700 tracking-tight leading-none uppercase">No Student Report Sheet Selected</h3>
           <p className="text-xs text-slate-500 max-w-sm mx-auto mt-2 leading-relaxed font-semibold">
@@ -198,81 +289,240 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
           </p>
         </div>
       ) : !isUnlocked ? (
-        // Secure Password Form to decrypt Student Report Card
-        <div className="max-w-md mx-auto bg-white rounded-3xl border border-slate-200 p-8 shadow-xl text-center space-y-6 print:hidden animate-fade-in my-10">
-          <div className="flex justify-center">
-            <div className="bg-indigo-50 border border-indigo-100 text-indigo-700 p-4 rounded-full">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-              </svg>
+        // Secure Password Form / OTP Reset Form to decrypt Student Report Card
+        <div className="max-w-md mx-auto bg-white rounded-3xl border border-slate-200 p-5 sm:p-8 shadow-xl text-center space-y-6 print:hidden animate-fade-in my-10">
+          {showResetForm ? (
+            <div className="space-y-5 text-left">
+              <div className="flex items-center justify-between border-b pb-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowResetForm(false);
+                    setResetError('');
+                    setResetSuccess('');
+                    setSimulatedNotification('');
+                  }}
+                  className="text-xs font-bold text-slate-500 hover:text-indigo-700 flex items-center gap-1 transition-colors cursor-pointer"
+                >
+                  ← Back to Unlock
+                </button>
+                <span className="text-[9px] bg-indigo-50 border border-indigo-200 text-indigo-700 font-extrabold px-2 py-0.5 rounded tracking-widest uppercase">
+                  OTP Reset Desk
+                </span>
+              </div>
+
+              <div>
+                <h3 className="text-base font-black text-slate-900 uppercase">Reset Student Password</h3>
+                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                  Reset password for candidate <strong className="text-slate-800 font-bold">{selectedStudent.name}</strong> ({selectedStudent.id}) with a simulated email verification passcode.
+                </p>
+              </div>
+
+              {simulatedNotification && (
+                <div className="bg-emerald-50 border border-emerald-250 text-emerald-855 text-xs rounded-xl p-3.5 space-y-1 font-semibold shadow-3xs animate-pulse">
+                  <span className="text-[9px] uppercase font-black tracking-wider text-emerald-800 block">📬 Simulation Inbox Notification</span>
+                  <p className="font-mono text-[11px] break-all leading-normal">{simulatedNotification}</p>
+                </div>
+              )}
+
+              {resetError && (
+                <p className="text-red-600 text-xs font-semibold bg-red-50 border border-red-100 rounded-lg p-2.5">
+                  ⚠️ {resetError}
+                </p>
+              )}
+
+              {resetSuccess && !simulatedNotification && (
+                <p className="text-emerald-700 text-xs font-semibold bg-emerald-50 border border-emerald-100 rounded-lg p-2.5">
+                  ✓ {resetSuccess}
+                </p>
+              )}
+
+              {resetStep === 'request' && (
+                <form onSubmit={handleSendResetOTP} className="space-y-4">
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-[11px] text-slate-500 font-medium leading-relaxed">
+                    Student's registered email address on archive: <br />
+                    <strong className="text-slate-800 font-bold">{selectedStudent.name.toLowerCase().replace(/\s+/g, '')}@ezibeckacademy.edu.ng</strong>
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1">Enter Student's Email Address</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="Enter registered email address..."
+                      value={resetEmailInput}
+                      onChange={(e) => {
+                        setResetEmailInput(e.target.value);
+                        setResetError('');
+                      }}
+                      className="w-full bg-slate-50 border border-slate-205 focus:border-indigo-500 focus:bg-white rounded-xl py-2.5 px-3 text-xs font-bold outline-none transition-all shadow-3xs"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-indigo-700 hover:bg-indigo-805 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-md shadow-indigo-100 cursor-pointer"
+                  >
+                    Send Authorization OTP Code
+                  </button>
+                </form>
+              )}
+
+              {resetStep === 'verify' && (
+                <form onSubmit={handleVerifyResetOTP} className="space-y-4">
+                  <p className="text-[11px] text-slate-500 leading-normal">
+                    Please look at the green inbox banner above, copy the **6-digit verification code**, and input it below:
+                  </p>
+                  <div>
+                    <label className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1">6-Digit OTP Verification Passcode</label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={6}
+                      placeholder="e.g. 123456"
+                      value={otpInput}
+                      onChange={(e) => {
+                        setOtpInput(e.target.value);
+                        setResetError('');
+                      }}
+                      className="w-full bg-slate-50 border border-slate-205 focus:border-indigo-500 focus:bg-white rounded-xl py-2.5 px-3 text-xs font-mono font-bold tracking-widest text-center outline-none transition-all"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-md cursor-pointer"
+                  >
+                    Confirm & Verify OTP
+                  </button>
+                </form>
+              )}
+
+              {resetStep === 'new_password' && (
+                <form onSubmit={handleConfirmNewPassword} className="space-y-4">
+                  <div>
+                    <label className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1">New Password (Min 4 chars)</label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Enter new account password..."
+                      value={newPass}
+                      onChange={(e) => {
+                        setNewPass(e.target.value);
+                        setResetError('');
+                      }}
+                      className="w-full bg-slate-50 border border-slate-205 focus:border-indigo-500 focus:bg-white rounded-xl py-2.5 px-3 text-xs font-bold outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-1">Confirm New Password</label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Re-type new password to confirm..."
+                      value={newPassConfirm}
+                      onChange={(e) => {
+                        setNewPassConfirm(e.target.value);
+                        setResetError('');
+                      }}
+                      className="w-full bg-slate-50 border border-slate-205 focus:border-indigo-500 focus:bg-white rounded-xl py-2.5 px-3 text-xs font-bold outline-none transition-all"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-indigo-700 hover:bg-indigo-805 text-white font-bold text-xs py-2.5 rounded-xl transition-all shadow-md cursor-pointer animate-pulse"
+                  >
+                    Save & Update Student Password
+                  </button>
+                </form>
+              )}
             </div>
-          </div>
-          <div>
-            <h3 className="text-lg font-black text-slate-900 uppercase">Secure Portal Unlock</h3>
-            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-              Academic file of Student ID <strong className="text-[#3b82f6] font-mono">{selectedStudent.id}</strong> is encrypted. Please enter their student password to decrypt.
-            </p>
-          </div>
+          ) : (
+            <>
+              <div className="flex justify-center">
+                <div className="bg-indigo-50 border border-indigo-100 text-indigo-700 p-4 rounded-full">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-slate-900 uppercase">Secure Portal Unlock</h3>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                  Academic file of Student ID <strong className="text-[#3b82f6] font-mono">{selectedStudent.id}</strong> is encrypted. Please enter their student password to decrypt.
+                </p>
+              </div>
 
-          <form onSubmit={handleVerifyPassword} className="space-y-4">
-            <div className="text-left">
-              <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Student Password</label>
-              <input
-                type="password"
-                required
-                placeholder="Enter password..."
-                value={passwordInput}
-                onChange={(e) => setPasswordInput(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl py-3 px-4 text-xs font-bold outline-none transition-all shadow-3xs"
-              />
-            </div>
+              <form onSubmit={handleVerifyPassword} className="space-y-4">
+                <div className="text-left">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1 flex justify-between items-center">
+                    <span>Student Password</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowResetForm(true);
+                        setResetStep('request');
+                      }}
+                      className="text-[10px] text-indigo-650 hover:text-indigo-800 hover:underline font-extrabold normal-case cursor-pointer"
+                    >
+                      🔑 Forgot Key? Overwrite with OTP
+                    </button>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Enter password..."
+                    value={passwordInput}
+                    onChange={(e) => setPasswordInput(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl py-3 px-4 text-xs font-bold outline-none transition-all shadow-3xs"
+                  />
+                </div>
 
-            {loginError && (
-              <p className="text-red-600 text-xs font-semibold bg-red-50 border border-red-100 rounded-lg p-2.5">
-                {loginError}
-              </p>
-            )}
+                {loginError && (
+                  <p className="text-red-600 text-xs font-semibold bg-red-50 border border-red-100 rounded-lg p-2.5">
+                    {loginError}
+                  </p>
+                )}
 
-            <div className="pt-2 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setSelectedStudent(null)}
-                className="w-1/2 border hover:bg-slate-50 text-slate-500 font-bold text-xs py-3 rounded-xl transition-all cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="w-1/2 bg-indigo-700 hover:bg-indigo-805 text-white font-bold text-xs py-3 rounded-xl transition-all shadow-md shadow-indigo-100 cursor-pointer"
-              >
-                Unlock Report Card
-              </button>
-            </div>
-          </form>
+                <div className="pt-2 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedStudent(null)}
+                    className="w-1/2 border hover:bg-slate-50 text-slate-500 font-bold text-xs py-3 rounded-xl transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="w-1/2 bg-indigo-700 hover:bg-indigo-805 text-white font-bold text-xs py-3 rounded-xl transition-all shadow-md shadow-indigo-100 cursor-pointer"
+                  >
+                    Unlock Report Card
+                  </button>
+                </div>
+              </form>
 
-          <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 text-left">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-700 block mb-0.5">Demo Credentials Helper</span>
-            <p className="text-[10px] text-slate-400 leading-normal">
-              Candidate Student ID: <span className="font-mono font-bold text-slate-700">{selectedStudent.id}</span>
-            </p>
-          </div>
+              <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 text-left">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-700 block mb-0.5">Demo Credentials Helper</span>
+                <p className="text-[10px] text-slate-400 leading-normal">
+                  Candidate Student ID: <span className="font-mono font-bold text-slate-700">{selectedStudent.id}</span>
+                </p>
+              </div>
+            </>
+          )}
         </div>
       ) : (
         // Decrypted View
         <div className="max-w-4xl mx-auto space-y-6">
           
           {/* Sub menu inside student viewer (hidden during print) */}
-          <div className="flex justify-between items-center bg-white border border-slate-100 rounded-2xl px-5 py-4 print:hidden shadow-xs">
-            <div className="flex gap-2 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-100 rounded-3xl p-4 sm:px-5 sm:py-4 print:hidden shadow-xs">
+            <div className="flex flex-col xs:flex-row flex-wrap gap-2 animate-fade-in w-full sm:w-auto">
               <button
                 onClick={() => setViewTab('report')}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${viewTab === 'report' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
+                className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex-1 xs:flex-initial ${viewTab === 'report' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
               >
                 <Eye className="w-3.5 h-3.5" /> Official Report Card
               </button>
               <button
                 onClick={() => setViewTab('charts')}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${viewTab === 'charts' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
+                className={`flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex-1 xs:flex-initial ${viewTab === 'charts' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
               >
                 <Layers className="w-3.5 h-3.5" /> Performance Visualizer
               </button>
@@ -282,14 +532,14 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                   setPasswordInput('');
                   setLoginError('');
                 }}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-red-650 hover:bg-red-50 transition-all cursor-pointer border border-red-100/50"
+                className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-red-650 hover:bg-red-50 transition-all cursor-pointer border border-red-100/50 flex-1 xs:flex-initial"
               >
                 🔒 Lock Session
               </button>
             </div>
             <button
               onClick={handlePrint}
-              className="bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs px-5 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
+              className="bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer w-full sm:w-auto"
             >
               <Printer className="w-4 h-4" /> Print Sheet
             </button>
@@ -375,13 +625,13 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
             return (
               <div 
                 ref={printAreaRef}
-                className="bg-white border border-slate-200/80 rounded-3xl shadow-xl p-6 sm:p-12 space-y-8 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in"
+                className="bg-white border border-slate-200/80 rounded-3xl shadow-xl p-4 sm:p-12 space-y-6 sm:space-y-8 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in"
               >
                 {/* Print layout decorator line */}
-                <div className="absolute inset-3 border border-slate-100 rounded-2xl pointer-events-none print:hidden"></div>
+                <div className="absolute inset-1.5 xs:inset-3 border border-slate-100 rounded-2xl pointer-events-none print:hidden"></div>
 
                 {/* Notion Style Header Breadcrumbs */}
-                <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-slate-400 border-b border-slate-100/70 pb-3 mb-2 relative z-10 select-none">
+                <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-[11px] font-medium text-slate-400 border-b border-slate-100/70 pb-3 mb-2 relative z-10 select-none">
                   <span className="hover:text-slate-600 transition-colors cursor-pointer">🏫 {template.schoolName}</span>
                   <span>/</span>
                   <span className="hover:text-slate-600 transition-colors cursor-pointer">📁 Report Registry</span>
@@ -392,24 +642,24 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                 </div>
 
                 {/* Notion Top Cover Band */}
-                <div className="relative h-28 w-full bg-slate-150 rounded-2xl overflow-hidden mb-6 border border-slate-150 print:hidden select-none">
+                <div className="relative h-20 sm:h-28 w-full bg-slate-150 rounded-2xl overflow-hidden mb-6 border border-slate-150 print:hidden select-none">
                   <div className="absolute inset-0 bg-gradient-to-r from-slate-200/50 via-indigo-50/10 to-slate-100"></div>
-                  <div className="absolute top-2 right-3 text-[10px] bg-white/70 backdrop-blur-xs px-2 py-0.5 rounded text-slate-400 font-bold tracking-wider uppercase">Cover Slate</div>
+                  <div className="absolute top-2 right-3 text-[9px] sm:text-[10px] bg-white/70 backdrop-blur-xs px-2 py-0.5 rounded text-slate-400 font-bold tracking-wider uppercase">Cover Slate</div>
                 </div>
 
                 {/* Overlapping Page Emoji Icon & School Identification */}
                 <div className="relative z-10 space-y-4">
-                  <div className="flex items-start gap-4 -mt-12 sm:-mt-14 print:mt-0 select-none">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl border border-slate-205 shadow-sm flex items-center justify-center text-3xl sm:text-4xl">
+                  <div className="flex items-start gap-4 -mt-10 sm:-mt-14 print:mt-0 select-none">
+                    <div className="w-14 h-14 sm:w-20 sm:h-20 bg-white rounded-2xl border border-slate-205 shadow-sm flex items-center justify-center text-2xl sm:text-4xl">
                       📒
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <h1 className="text-2xl sm:text-3.5xl font-black text-slate-900 tracking-tight leading-none uppercase">
+                    <h1 className="text-xl sm:text-3.5xl font-black text-slate-900 tracking-tight leading-tight uppercase">
                       {template.schoolName}
                     </h1>
-                    <p className="text-[11px] uppercase tracking-wider text-indigo-700 font-bold flex items-center gap-1.5 select-none">
+                    <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-indigo-700 font-bold flex items-center gap-1.5 select-none">
                       <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
                       Motto: {template.motto}
                     </p>
@@ -421,9 +671,9 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                   <hr className="border-slate-100" />
 
                   {/* Dynamic Official Page Heading */}
-                  <div className="py-2.5">
-                    <h2 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight leading-none uppercase flex items-center gap-2">
-                      <span className="inline-block px-2.5 py-1 bg-slate-900 text-slate-100 text-[10px] font-black rounded-md tracking-wider">OFFICIAL STATUS</span>
+                  <div className="py-2">
+                    <h2 className="text-xs sm:text-base font-extrabold text-slate-900 tracking-tight leading-tight uppercase flex flex-col xs:flex-row xs:items-center gap-2">
+                      <span className="inline-block px-2.5 py-1 bg-slate-900 text-slate-100 text-[9px] sm:text-[10px] font-black rounded-md tracking-wider w-max">OFFICIAL STATUS</span>
                       STUDENT’S TERMLY REPORT SHEET FOR {selectedStudent.className.startsWith('JSS') ? 'JUNIOR' : 'SENIOR'} SECONDARY SCHOOL
                     </h2>
                   </div>
@@ -431,80 +681,90 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
 
                 {/* Database Properties Box: Student Info */}
                 <div className="relative z-10 border border-slate-200/80 rounded-2xl bg-[#FCFCFC]/80 divide-y divide-slate-100 shadow-3xs">
-                  <div className="bg-[#FAF9F9] px-4 py-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 select-none">
+                  <div className="bg-[#FAF9F9] px-4 py-2 text-[9px] sm:text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 select-none">
                     <span>📋 Student Properties Collection View</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-3.5 gap-x-6 p-4 sm:p-5 text-xs text-slate-700">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-3.5 gap-x-6 p-4 sm:p-5 text-[11px] sm:text-xs text-slate-700">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 gap-2">
+                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 flex-shrink-0">
                         <span>📝</span> Student Name
                       </span>
-                      <span className="font-extrabold text-slate-900 text-right w-1/2 truncate">{selectedStudent.name}</span>
+                      <span className="font-extrabold text-slate-900 text-right truncate max-w-[60%]">{selectedStudent.name}</span>
                     </div>
 
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 gap-2">
+                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 flex-shrink-0">
                         <span>🔑</span> Student ID
                       </span>
-                      <span className="font-mono font-bold text-indigo-700 text-right w-1/2">{selectedStudent.id}</span>
+                      <span className="font-mono font-bold text-indigo-700 text-right">{selectedStudent.id}</span>
                     </div>
 
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 gap-2">
+                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 flex-shrink-0">
                         <span>🏫</span> Class Stream
                       </span>
-                      <span className="font-extrabold text-slate-900 text-right w-1/2">{selectedStudent.className} Stream</span>
+                      <span className="font-extrabold text-slate-900 text-right">{selectedStudent.className} Stream</span>
                     </div>
 
-                    <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 sm:border-0 sm:pb-0">
-                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
+                    <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 sm:border-0 sm:pb-0 gap-2">
+                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 flex-shrink-0">
                         <span>🧬</span> Sex / Gender
                       </span>
-                      <span className="font-bold text-slate-800 text-right w-1/2">{selectedStudent.sex}</span>
+                      <span className="font-bold text-slate-800 text-right">{selectedStudent.sex}</span>
                     </div>
 
-                    <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 sm:border-0 sm:pb-0">
-                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
+                    <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 sm:border-0 sm:pb-0 gap-2">
+                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 flex-shrink-0">
                         <span>🎂</span> Age Profile
                       </span>
-                      <span className="font-bold text-slate-800 text-right w-1/2">{selectedStudent.age} Years</span>
+                      <span className="font-bold text-slate-800 text-right">{selectedStudent.age} Years</span>
                     </div>
 
-                    <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 sm:border-0 sm:pb-0">
-                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
+                    <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 sm:border-0 sm:pb-0 gap-2">
+                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 flex-shrink-0">
                         <span>📅</span> Report Date
                       </span>
-                      <span className="font-bold text-slate-800 text-right w-1/2">{template.termDate}</span>
+                      <span className="font-bold text-slate-800 text-right">{template.termDate}</span>
                     </div>
 
-                    <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 lg:border-0 lg:pb-0">
-                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
+                    <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 lg:border-0 lg:pb-0 gap-2">
+                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 flex-shrink-0">
                         <span>🗓️</span> Academic Session
                       </span>
-                      <span className="font-extrabold text-slate-900 text-right w-1/2">{template.session}</span>
+                      <span className="font-extrabold text-slate-900 text-right">{template.session}</span>
                     </div>
 
-                    <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 lg:border-0 lg:pb-0">
-                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
-                        <span>🚌</span> Attendance Present
+                    <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 lg:border-0 lg:pb-0 gap-2">
+                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 flex-shrink-0">
+                        <span>🚌</span> Attendance
                       </span>
-                      <span className="font-bold text-slate-800 text-right w-1/2">{selectedStudent.attendancePresent} / {selectedStudent.attendanceTotal} sessions</span>
+                      <span className="font-bold text-slate-800 text-right">{selectedStudent.attendancePresent} / {selectedStudent.attendanceTotal} sessions</span>
                     </div>
 
-                    <div className="flex items-center justify-between lg:border-0">
-                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
+                    <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 lg:border-0 lg:pb-0 gap-2">
+                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 flex-shrink-0">
                         <span>🔄</span> Resumption Date
                       </span>
-                      <span className="font-extrabold text-indigo-700 text-right w-1/2">{template.resumptionDate}</span>
+                      <span className="font-extrabold text-indigo-700 text-right">{template.resumptionDate}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between lg:border-0 gap-2">
+                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 flex-shrink-0">
+                        <span>💰</span> Next Term Fees
+                      </span>
+                      <span className="font-extrabold text-emerald-700 text-right">{template.nextTermFee || '₦45,000'}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Part A: Academic Course Evaluation */}
                 <div className="relative z-10 space-y-4">
-                  <h3 className="text-slate-900 font-extrabold text-xs uppercase tracking-widest border-l-4 border-slate-900 pl-2.5 pb-0.5 flex items-center justify-between select-none">
+                  <h3 className="text-slate-900 font-extrabold text-xs uppercase tracking-widest border-l-4 border-slate-900 pl-2.5 pb-0.5 flex flex-col sm:flex-row sm:items-center justify-between gap-1 select-none">
                     <span>Part A: Academic Course Evaluation</span>
-                    <span className="text-[10px] text-slate-400 normal-case font-bold mt-[-4px]">Standard Formula Matrix Layout</span>
+                    <span className="text-[10px] text-indigo-650 font-bold flex items-center gap-1 animate-pulse sm:animate-none">
+                      <span className="sm:hidden">Swipe table left/right ↔️</span>
+                      <span className="hidden sm:inline text-slate-400 font-normal">Standard Formula Matrix Layout</span>
+                    </span>
                   </h3>
                   
                   {/* Notion-style database table */}
@@ -646,40 +906,40 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                 </div>
 
                 {/* Sub-Score KPI Dashboard metrics */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10 select-none">
-                  <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Cumulative Total</span>
-                    <p className="font-extrabold text-slate-900 text-base leading-none">
-                      {stats.totalScore} <span className="text-xs text-slate-400 font-normal">/ {stats.maxPossibleScore}</span>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 relative z-10 select-none">
+                  <div className="bg-[#FAF9F9] border border-slate-150 p-3 sm:p-4 rounded-xl text-center space-y-1">
+                    <span className="text-[8px] xs:text-[9px] font-black text-slate-400 uppercase tracking-widest block">Cumulative Total</span>
+                    <p className="font-extrabold text-slate-900 text-sm sm:text-base leading-none">
+                      {stats.totalScore} <span className="text-[10px] sm:text-xs text-slate-400 font-normal">/ {stats.maxPossibleScore}</span>
                     </p>
                   </div>
 
-                  <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Termly Average</span>
-                    <p className="font-extrabold text-slate-900 text-base leading-none">
+                  <div className="bg-[#FAF9F9] border border-slate-150 p-3 sm:p-4 rounded-xl text-center space-y-1">
+                    <span className="text-[8px] xs:text-[9px] font-black text-slate-400 uppercase tracking-widest block">Termly Average</span>
+                    <p className="font-extrabold text-slate-900 text-sm sm:text-base leading-none">
                       {stats.avgScore.toFixed(1)}%
                     </p>
                   </div>
 
-                  <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Calculated GPA</span>
-                    <p className="font-extrabold text-indigo-700 text-base leading-none">
-                      {stats.gpa} <span className="text-[10px] text-slate-400 font-normal">/ 5.0</span>
+                  <div className="bg-[#FAF9F9] border border-slate-150 p-3 sm:p-4 rounded-xl text-center space-y-1">
+                    <span className="text-[8px] xs:text-[9px] font-black text-slate-400 uppercase tracking-widest block">Calculated GPA</span>
+                    <p className="font-extrabold text-indigo-700 text-sm sm:text-base leading-none">
+                      {stats.gpa} <span className="text-[9px] sm:text-[10px] text-slate-400 font-normal">/ 5.0</span>
                     </p>
                   </div>
 
-                  <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Attendance Record</span>
-                    <p className="font-extrabold text-emerald-600 text-base leading-none">
-                      {Math.round(selectedStudent.attendancePresent / selectedStudent.attendanceTotal * 100)}% <span className="text-[10px] text-slate-400 font-medium">Present</span>
+                  <div className="bg-[#FAF9F9] border border-slate-150 p-3 sm:p-4 rounded-xl text-center space-y-1">
+                    <span className="text-[8px] xs:text-[9px] font-black text-slate-400 uppercase tracking-widest block">Attendance Record</span>
+                    <p className="font-extrabold text-emerald-600 text-sm sm:text-base leading-none">
+                      {Math.round(selectedStudent.attendancePresent / selectedStudent.attendanceTotal * 100)}% <span className="text-[9px] sm:text-[10px] text-slate-400 font-medium">Present</span>
                     </p>
                   </div>
                 </div>
 
                 {/* Part B: Character Assessment, Grades Scale, and Behaviour Guide Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 relative z-10">
                   {/* Left Parameter Column: Conduct Evaluation */}
-                  <div className="lg:col-span-6 bg-[#FCFCFC]/60 border border-slate-155 p-5 rounded-2xl space-y-3.5 shadow-3xs">
+                  <div className="lg:col-span-6 bg-[#FCFCFC]/60 border border-slate-155 p-4 sm:p-5 rounded-2xl space-y-3.5 shadow-3xs">
                     <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-indigo-600 pl-2 select-none flex justify-between items-center">
                       <span>Part B: Character & Behavioral Conduct</span>
                     </h4>
@@ -780,7 +1040,7 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                     const displayPrincipalName = template.principalName;
                     return (
                       <>
-                        <div className="bg-[#FAF9F9] border border-slate-200 p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-3xs">
+                        <div className="bg-[#FAF9F9] border border-slate-200 p-4 sm:p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-3xs">
                           <div>
                             <h4 className="font-black text-slate-900 text-xs uppercase tracking-widest border-b border-slate-200/50 pb-1.5 select-none flex items-center gap-1.5">
                               <span>💬 Form Teacher's Appraisal</span>
@@ -793,10 +1053,10 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                           <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
                             <div className="text-xs">
                               <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold select-none">Appraiser</span>
-                              <p className="font-black text-slate-900">{displayTeacherName}</p>
+                              <p className="font-black text-slate-900 text-[11px] sm:text-xs">{displayTeacherName}</p>
                             </div>
                             <div className="text-right select-none">
-                              <div className="text-sm font-serif italic text-indigo-950 font-semibold h-5 tracking-wide">
+                              <div className="text-xs sm:text-sm font-serif italic text-indigo-950 font-semibold h-5 tracking-wide">
                                 {displayTeacherName.replace("Mrs.", "").replace("Mr.","").trim()}
                               </div>
                               <span className="text-[8px] text-slate-400 uppercase tracking-wider block border-t border-slate-200 pt-0.5 mt-0.5">Signature & Stamp</span>
@@ -805,7 +1065,7 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                         </div>
 
                         {/* Principal Assessment Callout */}
-                        <div className="bg-[#FAF9F9] border border-slate-200 p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-3xs">
+                        <div className="bg-[#FAF9F9] border border-slate-200 p-4 sm:p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-3xs">
                           <div>
                             <h4 className="font-black text-slate-900 text-xs uppercase tracking-widest border-b border-slate-200/50 pb-1.5 select-none flex items-center gap-1.5">
                               <span>🎓 Principal's Performance Assessment</span>
@@ -824,10 +1084,10 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                           <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
                             <div className="text-xs">
                               <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold select-none">Authorized Principal</span>
-                              <p className="font-black text-slate-900">{displayPrincipalName}</p>
+                              <p className="font-black text-slate-900 text-[11px] sm:text-xs">{displayPrincipalName}</p>
                             </div>
                             <div className="text-right select-none">
-                              <div className="text-sm font-serif italic text-indigo-950 font-semibold h-5 tracking-wide">
+                              <div className="text-xs sm:text-sm font-serif italic text-indigo-950 font-semibold h-5 tracking-wide">
                                 {displayPrincipalName.replace("Dr.","").trim()}
                               </div>
                               <span className="text-[8px] text-slate-400 uppercase tracking-wider block border-t border-slate-200 pt-0.5 mt-0.5">Seal & Signature</span>
@@ -837,6 +1097,31 @@ export default function StudentPortal({ students, template, onBack }: StudentPor
                       </>
                     );
                   })()}
+                </div>
+
+                {/* Next Term & Fees Bill Card */}
+                <div className="bg-emerald-50/50 border border-emerald-100/95 rounded-2xl p-4 sm:p-5 relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-3xs">
+                  <div className="space-y-1 text-left sm:max-w-[60%]">
+                    <span className="text-[9px] bg-emerald-100 border border-emerald-200 text-emerald-800 font-extrabold tracking-widest uppercase px-2 py-0.5 rounded select-none">
+                      Upcoming Term Invoice Details
+                    </span>
+                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-tight select-none">
+                      Next Term Resumption & Fee Breakdown
+                    </h4>
+                    <p className="text-[11px] text-slate-500">
+                      All outstanding and next term fees must be settled fully prior to resumption. Please present payment bank teller or invoice receipt to academic officer at entrance.
+                    </p>
+                  </div>
+                  <div className="flex flex-row sm:flex-col gap-4 sm:gap-1.5 justify-between bg-white border border-emerald-100/85 p-3 rounded-xl w-full sm:w-auto sm:min-w-[200px] text-xs shadow-3xs">
+                    <div className="flex justify-between gap-4 w-full">
+                      <span className="text-slate-400 font-bold uppercase text-[9px] tracking-wider select-none">Expected Resumption</span>
+                      <span className="font-extrabold text-slate-800 text-right">{template.resumptionDate}</span>
+                    </div>
+                    <div className="flex justify-between gap-4 w-full border-t border-slate-100 pt-1.5 sm:pt-1 sm:mt-1">
+                      <span className="text-slate-400 font-bold uppercase text-[9px] tracking-wider select-none">Required Fee</span>
+                      <span className="font-black text-emerald-700 text-xs text-right">{template.nextTermFee || '₦45,000'}</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Bottom Status bar stamp */}
