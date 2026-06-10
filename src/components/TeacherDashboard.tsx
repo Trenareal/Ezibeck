@@ -669,8 +669,8 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
             </div>
           ) : (
             /* STANDARD FACULTY LOGIN FORM */
-            <form onSubmit={handleVerifyTeacherLogin} className="space-y-4 text-left animate-fade-in bg-slate-950 border border-slate-850 p-5 rounded-2xl">
-              <div className="bg-[#0f172a] border border-slate-800 p-4 rounded-xl text-left text-xs text-slate-400 space-y-1">
+            <form onSubmit={handleVerifyTeacherLogin} className="space-y-5 text-left animate-fade-in bg-slate-950 border border-slate-850 p-6 rounded-2xl shadow-xl">
+              <div className="bg-[#0f172a] border border-slate-800/80 p-4 rounded-xl text-left text-xs text-slate-400 space-y-1">
                 <span className="font-extrabold text-slate-200 block text-[11px] uppercase tracking-wider mb-1 text-indigo-400">
                   Staff Desk Login
                 </span>
@@ -678,7 +678,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
               </div>
 
               <div>
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Username / Full Name:</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Username / Full Name:</label>
                 <input
                   type="text"
                   required
@@ -688,23 +688,13 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                     setUsernameInput(e.target.value);
                     setTeacherLoginError('');
                   }}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs text-white outline-none font-bold"
+                  className="w-full bg-slate-900/60 border border-slate-800 hover:border-slate-700 focus:border-indigo-500 rounded-xl p-3 text-xs text-white outline-none font-bold transition-all focus:ring-1 focus:ring-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex justify-between items-center">
-                  <span>Passcode Password Key:</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowFacultyReset(true);
-                      setFacultyResetStep('request');
-                    }}
-                    className="text-[9px] text-indigo-400 hover:text-indigo-305 hover:underline font-bold normal-case cursor-pointer"
-                  >
-                    🔑 Forgot Key? Reset with OTP
-                  </button>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                  Passcode Password Key:
                 </label>
                 <input
                   type="password"
@@ -715,19 +705,32 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                     setTeacherPasswordInput(e.target.value);
                     setTeacherLoginError('');
                   }}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs font-mono tracking-widest text-white outline-none"
+                  className="w-full bg-slate-900/60 border border-slate-800 hover:border-slate-700 focus:border-indigo-500 rounded-xl p-3 text-xs font-mono tracking-widest text-white outline-none transition-all focus:ring-1 focus:ring-indigo-500"
                 />
                 {teacherLoginError && (
                   <p className="text-[10px] text-red-400 font-semibold mt-1.5 bg-red-950/30 border border-red-500/30 px-3 py-2 rounded-lg">{teacherLoginError}</p>
                 )}
               </div>
 
-              <div className="pt-2 border-t border-slate-900 mt-2">
+              <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full bg-indigo-900 hover:bg-indigo-950 text-white rounded-lg py-2.5 text-[10px] font-bold tracking-wider uppercase transition-all cursor-pointer"
+                  className="w-full bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-500 hover:to-indigo-700 text-white rounded-xl py-3 text-xs font-black tracking-wider uppercase transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg hover:shadow-indigo-500/20 active:scale-98 border border-indigo-500/30 flex items-center justify-center gap-2"
                 >
-                  Login Access
+                  Confirm & Log In 🔐
+                </button>
+              </div>
+
+              <div className="flex justify-center pt-2 border-t border-slate-900/60">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowFacultyReset(true);
+                    setFacultyResetStep('request');
+                  }}
+                  className="text-[11px] text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1.5 hover:underline transition-colors py-1 cursor-pointer"
+                >
+                  🔑 Forget password? Reset with OTP
                 </button>
               </div>
             </form>
@@ -758,16 +761,6 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
               <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">{currentUser.role}</p>
             </div>
           </div>
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            id="btn-trigger-logout-confirm"
-            onClick={() => setShowLogoutConfirm(true)}
-            className="bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-red-500/10 flex items-center gap-1.5 cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" /> Logout
-          </button>
         </div>
       </div>
 
@@ -2751,6 +2744,17 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
             </div>
           </div>
         )}
+      </div>
+
+      {/* Bottom Right Logout Button Panel */}
+      <div className="max-w-6xl mx-auto mt-8 flex justify-end print:hidden">
+        <button
+          id="btn-trigger-logout-confirm"
+          onClick={() => setShowLogoutConfirm(true)}
+          className="bg-rose-600 hover:bg-rose-750 text-white text-[11px] font-black uppercase tracking-wider px-5 py-3 rounded-2xl transition-all shadow-md hover:scale-[1.01] active:scale-[0.99] flex items-center gap-2 cursor-pointer shadow-red-500/10"
+        >
+          <LogOut className="w-4 h-4 text-white" /> Logout Staff Desk
+        </button>
       </div>
 
       {/* Custom Deletion Confirmation Dialog Modal with Yes/No */}
