@@ -232,6 +232,9 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
   const highestScore = classStudents.length > 0 
     ? Math.max(...classStudents.map(s => calculateStudentStats(s).totalScore))
     : 0;
+  const maxClassCumulative = classStudents.length > 0
+    ? (classStudents[0].subjects.length * 100)
+    : 1000;
   const averageGPAInClass = classStudents.length > 0
     ? (classStudents.reduce((sum, s) => sum + parseFloat(calculateStudentStats(s).gpa), 0) / classStudents.length).toFixed(2)
     : "0.00";
@@ -2240,7 +2243,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
               <div className="bg-white border rounded-2xl p-4 flex items-center justify-between shadow-sm">
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Highest Cumulative ({selectedClass})</span>
-                  <p className="text-xl font-bold font-mono text-slate-900">{highestScore} <span className="text-xs text-slate-400">/ 1000 pts</span></p>
+                  <p className="text-xl font-bold font-mono text-slate-900">{highestScore} <span className="text-xs text-slate-400">/ {maxClassCumulative} pts</span></p>
                 </div>
                 <div className="bg-emerald-50 text-emerald-800 p-2.5 rounded-xl border-emerald-100 border">
                   <TrendingUp className="w-5 h-5" />
