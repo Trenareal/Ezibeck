@@ -4,10 +4,9 @@
  */
 
 import React, { useState, useRef } from 'react';
-import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, Printer, UserCheck, LogOut, Download, Upload, Database, RefreshCw, Layers } from 'lucide-react';
+import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, Printer, UserCheck, LogOut } from 'lucide-react';
 import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile } from '../types';
 import { createStudent, calculateStudentStats, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal } from '../utils/academicUtils';
-import { isSupabaseConfigured } from '../lib/supabase';
 
 interface TeacherDashboardProps {
   students: Student[];
@@ -182,66 +181,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
     setTimeout(() => setSuccessMsg(''), 4000);
   };
 
-  // Ref & handlers for Unified Device Data Synchronization
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleExportDataBackup = () => {
-    try {
-      const backupData = {
-        _v: "ezibeck_backup_v1",
-        timestamp: new Date().toISOString(),
-        template: template,
-        students: students
-      };
-      
-      const jsonString = JSON.stringify(backupData, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `ezibeck_academy_unified_backup_${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      triggerSuccess("Unified JSON Backup file successfully generated and downloaded!");
-    } catch (err: any) {
-      console.error(err);
-      alert("Failed to export backup data. Please try again.");
-    }
-  };
-
-  const handleImportDataBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      try {
-        const result = event.target?.result as string;
-        const parsed = JSON.parse(result);
-
-        if (!parsed || parsed._v !== "ezibeck_backup_v1" || !Array.isArray(parsed.students)) {
-          alert("Invalid backup file format. Please ensure the file was exported from this platform.");
-          return;
-        }
-
-        if (confirm(`Confirm Sync: Overwrite this device's local data with the records from the backup file? Both your students catalog and school settings will be immediately unified.`)) {
-          if (parsed.template) {
-            onUpdateTemplate(parsed.template);
-          }
-          onUpdateStudents(parsed.students);
-          triggerSuccess("Unified dataset imported successfully! Devices are now synchronized.");
-        }
-      } catch (err) {
-        alert("Encountered parsing error. Please check the content of your backup file.");
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
 
   // Staff registration helper
   const handleRegisterStaff = (e: React.FormEvent) => {
@@ -2337,120 +2277,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
               </div>
             </form>
 
-            {/* Device Synchronization & Cloud Database Alignment Panel */}
-            <div className="bg-slate-50/80 border border-slate-200 rounded-3xl p-5 sm:p-7 space-y-6 mt-8">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200/60 pb-4">
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-[9px] uppercase font-black px-2 py-0.5 rounded-md border tracking-widest ${
-                      isSupabaseConfigured 
-                        ? 'bg-emerald-50 border-emerald-250 text-emerald-800' 
-                        : 'bg-amber-50 border-amber-250 text-amber-800 animate-pulse'
-                    }`}>
-                      {isSupabaseConfigured ? '🟢 Unified Cloud Sync Active' : '🟡 Device-Local Storage Mode'}
-                    </span>
-                    <span className="text-[10px] text-slate-404 font-semibold uppercase tracking-wider">Multi-Device Unification</span>
-                  </div>
-                  <h3 className="font-black text-sm text-slate-905 mt-2 flex items-center gap-2">
-                    <RefreshCw className={`w-4 h-4 text-indigo-705 ${isSupabaseConfigured ? 'animate-spin duration-1000' : ''}`} />
-                    Device Synchronization & Backup Hub
-                  </h3>
-                  <p className="text-slate-500 text-[11px] mt-1 leading-relaxed">
-                    Ever wonder why different cellphones or laptops show different student records or scores? By default, browsers keep and protect data locally on your current device. <strong>Unify your information across Device A & Device B</strong> cleanly below.
-                  </p>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                {/* Side A: Fully Automatic Real-Time Synchronization */}
-                <div className="space-y-4 bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between">
-                  <div className="space-y-3">
-                    <h4 className="font-extrabold text-xs text-indigo-950 flex items-center gap-2">
-                      <Database className="w-4 h-4 text-indigo-650" />
-                      1. Cloud Database Hot-Sync (Automatic)
-                    </h4>
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                      Link your devices with a real-time central Cloud Database. Once connected, every single edit, grade addition, or remark written on a tablet or phone updates everywhere within milliseconds.
-                    </p>
-                    
-                    <div className="bg-indigo-50/50 border border-indigo-100 p-3 rounded-xl space-y-2">
-                      <span className="text-[10px] block font-black text-indigo-900 uppercase tracking-widest">Connect Real Database in 1 Minute:</span>
-                      <ol className="text-[10px] text-slate-650 list-decimal pl-4 space-y-1 font-semibold leading-relaxed">
-                        <li>Navigate to Google AI Studio's <strong>Settings / Environment Keys</strong>.</li>
-                        <li>Submit both <code className="bg-white px-1 py-0.5 border rounded text-indigo-700 font-mono text-[9px]">VITE_SUPABASE_URL</code> and <code className="bg-white px-1 py-0.5 border rounded text-indigo-700 font-mono text-[9px]">VITE_SUPABASE_ANON_KEY</code>.</li>
-                        <li>Reboot. This applet will sync instantly and configure tables on-the-fly!</li>
-                      </ol>
-                    </div>
-                  </div>
-
-                  <div className="pt-3">
-                    {isSupabaseConfigured ? (
-                      <div className="flex items-center gap-2 text-emerald-800 text-[10px] font-bold bg-emerald-50 border border-emerald-250 p-2.5 rounded-xl justify-center">
-                        <span>✅ Your cloud database is active! All devices are synchronized live.</span>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          alert("To activate sync, set VITE_SUPABASE_URL & VITE_SUPABASE_ANON_KEY secrets in the AI Studio platform Settings panel.");
-                        }}
-                        className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-[10px] uppercase tracking-wider py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 border border-slate-200/80"
-                      >
-                        <Database className="w-3.5 h-3.5 text-slate-500" /> Verify Cloud Setup
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Side B: Instant Manual Synchronization */}
-                <div className="space-y-4 bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between">
-                  <div className="space-y-3">
-                    <h4 className="font-extrabold text-xs text-indigo-950 flex items-center gap-2">
-                      <Layers className="w-4 h-4 text-emerald-600" />
-                      2. Instant Sync File (Local Backup)
-                    </h4>
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                      No cloud credentials? No problem! Perform an instant manual synchronization. Download your latest student records and reports from Device A, send the file, and upload it on Device B.
-                    </p>
-                    
-                    <div className="bg-slate-50 border border-slate-150 p-3 rounded-xl">
-                      <div className="flex items-start gap-2 text-[10px] text-slate-500 font-semibold leading-relaxed">
-                        <span className="text-indigo-600 font-bold">💡 Tip:</span>
-                        <span>Use this tool daily to backup your hard-earned report card entries. Backups are stored as lightweight and safe `.json` school files.</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 flex flex-col sm:flex-row gap-2">
-                    <button
-                      type="button"
-                      onClick={handleExportDataBackup}
-                      className="flex-1 bg-slate-900 border border-slate-800 hover:bg-black text-white font-extrabold text-[10px] uppercase tracking-wider py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                    >
-                      <Download className="w-3.5 h-3.5 text-white" /> Download Backup
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex-1 bg-emerald-600 border border-emerald-500 hover:bg-emerald-700 text-white font-extrabold text-[10px] uppercase tracking-wider py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                    >
-                      <Upload className="w-3.5 h-3.5 text-white" /> Upload Backup
-                    </button>
-                  </div>
-                  
-                  {/* Hidden Input File Element */}
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleImportDataBackup}
-                    accept=".json"
-                    className="hidden"
-                  />
-                </div>
-
-              </div>
-            </div>
           </div>
         ) : activeSubTab === 'staff' && isAdmin ? (
           /* VIEW 4: ADMIN STAFF MANAGEMENT SCREEN */
