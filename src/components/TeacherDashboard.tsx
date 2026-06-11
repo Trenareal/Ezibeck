@@ -5,6 +5,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, Printer, UserCheck, LogOut } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile } from '../types';
 import { createStudent, calculateStudentStats, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal } from '../utils/academicUtils';
 
@@ -61,6 +63,108 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
   const [selectedClass, setSelectedClass] = useState<ClassName>('JSS1');
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [viewingReportStudent, setViewingReportStudent] = useState<Student | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const teacherPrintAreaRef = useRef<HTMLDivElement>(null);
+
+  const downloadTeacherPdf = async () => {
+    if (isGeneratingPdf || !teacherPrintAreaRef.current || !viewingReportStudent) return;
+    setIsGeneratingPdf(true);
+
+    const element = teacherPrintAreaRef.current;
+    
+    // Store original scroll & style to safely restore in case of success or failure
+    const originalStyle = element.getAttribute('style') || '';
+    const originalScrollY = window.scrollY;
+    
+    // Find nested scroll wrappers so we can restore them fully
+    const overflowElms = element.querySelectorAll('.overflow-x-auto');
+    const originalOverflows: string[] = [];
+    const originalWidths: string[] = [];
+    overflowElms.forEach((el, idx) => {
+      const htmlEl = el as HTMLElement;
+      originalOverflows[idx] = htmlEl.style.overflowX || '';
+      originalWidths[idx] = htmlEl.style.width || '';
+    });
+
+    const restoreStyles = () => {
+      element.setAttribute('style', originalStyle);
+      overflowElms.forEach((el, idx) => {
+        const htmlEl = el as HTMLElement;
+        htmlEl.style.overflowX = originalOverflows[idx];
+        htmlEl.style.width = originalWidths[idx];
+      });
+      window.scrollTo(0, originalScrollY);
+    };
+
+    try {
+      // Scroll to top of window to avoid rendering defects in html2canvas
+      window.scrollTo(0, 0);
+      
+      // Enforce desktop viewport sizing for high physical layout precision and avoid wrapping
+      element.style.width = '1024px';
+      element.style.minWidth = '1024px';
+      element.style.maxWidth = '1024px';
+      
+      // Set all horizontal overflows of tables inside the print wrapper to visible
+      overflowElms.forEach((el) => {
+        const htmlEl = el as HTMLElement;
+        htmlEl.style.overflowX = 'visible';
+        htmlEl.style.width = '100%';
+      });
+
+      // Generate canvas
+      const canvas = await html2canvas(element, {
+        scale: 1.5, // High physical definition, lightweight and highly reliable
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        width: 1024,
+        windowWidth: 1024
+      });
+      
+      restoreStyles();
+      
+      const imgData = canvas.toDataURL('image/jpeg', 0.9);
+      
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      // Fit comfortably in portrait A4 width (210mm) with 10mm margins on both sides
+      const imgWidth = 190; 
+      const pageHeight = 277; // Margins top/bottom
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      
+      let heightLeft = imgHeight;
+      let position = 10; // Start with 10mm margin
+      
+      pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight, undefined, 'FAST');
+      heightLeft -= pageHeight;
+      
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight + 10;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight, undefined, 'FAST');
+        heightLeft -= pageHeight;
+      }
+      
+      const filename = `Ezibeck_Report_Sheet_${viewingReportStudent.id}_${viewingReportStudent.name.replace(/\s+/g, '_')}.pdf`;
+      pdf.save(filename);
+    } catch (err) {
+      console.error('Direct PDF Generation Error:', err);
+      
+      // Fallback style restoration to prevent UI defects
+      restoreStyles();
+      
+      // Trigger native printing directly without popup distraction
+      window.print();
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
   const [deleteConfirmStudent, setDeleteConfirmStudent] = useState<{ id: string; name: string; className: ClassName; source: 'list' | 'view' | 'edit' } | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -944,10 +1048,20 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                 </button>
 
                 <button
-                  onClick={() => window.print()}
-                  className="bg-indigo-800 hover:bg-indigo-900 text-white font-bold text-xs px-5 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
+                  onClick={downloadTeacherPdf}
+                  disabled={isGeneratingPdf}
+                  className="bg-indigo-800 hover:bg-indigo-900 disabled:opacity-50 text-white font-bold text-xs px-5 py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
                 >
-                  <Printer className="w-4 h-4" /> Print Report Sheet
+                  {isGeneratingPdf ? (
+                    <>
+                      <span className="animate-spin inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-once"></span>
+                      Saving PDF...
+                    </>
+                  ) : (
+                    <>
+                      <Printer className="w-4 h-4" /> Download / Print PDF
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -957,6 +1071,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
               const stats = calculateStudentStats(viewingReportStudent);
               return (
                 <div 
+                  ref={teacherPrintAreaRef}
                   className="report-card-printable bg-white border border-slate-205 rounded-3xl shadow-xl p-6 sm:p-12 space-y-8 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in text-slate-800"
                 >
                   {/* Print layout decorator line */}
