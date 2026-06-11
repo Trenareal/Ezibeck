@@ -221,8 +221,89 @@ export const dbService = {
   },
 
   async saveAllStudents(students: Student[]) {
-    for (const student of students) {
-      await this.saveStudent(student);
+    if (students.length === 0) return;
+
+    // 1. Map all basic details to DB format
+    const dbStudents = students.map(s => ({
+      id: s.id,
+      name: s.name,
+      age: s.age,
+      sex: s.sex,
+      class_name: s.className,
+      term_date: s.termDate,
+      session: s.session,
+      attendance_present: s.attendancePresent,
+      attendance_total: s.attendanceTotal,
+      form_teacher_remark: s.formTeacherRemark || '',
+      form_teacher_name: s.formTeacherName || '',
+      principal_name: s.principalName || '',
+      resumption_date: s.resumptionDate,
+      password: s.password || '123456',
+      principal_remark: s.principalRemark || ''
+    }));
+
+    // Batch upsert students in a single high-performance request
+    const { error: studentError } = await supabase
+      .from('students')
+      .upsert(dbStudents);
+
+    if (studentError) throw studentError;
+
+    // 2. Gather all subjects and all behaviours from all students
+    const allSubjects: any[] = [];
+    const allBehaviours: any[] = [];
+    const studentIds = students.map(s => s.id);
+
+    students.forEach(student => {
+      if (student.subjects && student.subjects.length > 0) {
+        student.subjects.forEach((sub: any) => {
+          allSubjects.push({
+            student_id: student.id,
+            name: sub.name,
+            test_score: sub.testScore,
+            exam_score: sub.examScore,
+            first_term_summary: sub.firstTermSummary || 0,
+            second_term_summary: sub.secondTermSummary || 0,
+            third_term_summary: sub.thirdTermSummary || 0,
+            position: sub.position || null,
+            is_position_manual: sub.isPositionManual || false
+          });
+        });
+      }
+
+      if (student.behaviour && student.behaviour.length > 0) {
+        student.behaviour.forEach((b: any) => {
+          allBehaviours.push({
+            student_id: student.id,
+            name: b.name,
+            rating: b.rating
+          });
+        });
+      }
+    });
+
+    // 3. Clear existing grades/behaviours for these specific students in bulk, then batch insert
+    if (studentIds.length > 0) {
+      const { error: delSubError } = await supabase.from('subject_grades').delete().in('student_id', studentIds);
+      if (delSubError) throw delSubError;
+
+      const { error: delBhvError } = await supabase.from('behavioural_ratings').delete().in('student_id', studentIds);
+      if (delBhvError) throw delBhvError;
+    }
+
+    // 4. Batch insert all new grades and behaviours
+    if (allSubjects.length > 0) {
+      const { error: subError } = await supabase
+        .from('subject_grades')
+        .insert(allSubjects);
+      if (subError) throw subError;
+    }
+
+    if (allBehaviours.length > 0) {
+      const { error: bError } = await supabase
+        .from('behavioural_ratings')
+        .insert(allBehaviours);
+      if (bError) throw bError;
     }
   },
 

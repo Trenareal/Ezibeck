@@ -38,7 +38,31 @@ const DEFAULT_WORKSPACE_15: Workspace15Template = {
 
 export default function App() {
   const [students, setStudents] = useState<Student[]>([]);
-  const [currentView, setCurrentView] = useState<'home' | 'student' | 'teacher'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'student' | 'teacher'>(() => {
+    if (typeof window !== 'undefined') {
+      // 1. First priority: check query parameter to support opening portal in new tabs seamlessly
+      const params = new URLSearchParams(window.location.search);
+      const viewParam = params.get('view');
+      if (viewParam === 'student' || viewParam === 'teacher' || viewParam === 'home') {
+        localStorage.setItem('ezibeck_current_view', viewParam);
+        return viewParam;
+      }
+      // 2. Second priority: read from persistent state
+      const savedView = localStorage.getItem('ezibeck_current_view');
+      if (savedView === 'student' || savedView === 'teacher' || savedView === 'home') {
+        return savedView;
+      }
+    }
+    return 'home';
+  });
+
+  // Track page state changes to survive browser reloads
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ezibeck_current_view', currentView);
+    }
+  }, [currentView]);
+
   const [template, setTemplate] = useState<Workspace15Template>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('ezibeck_workspace15');
@@ -105,10 +129,15 @@ export default function App() {
     const channelsMap: Record<string, any> = {};
     
     const channels = topics.map((topic) => {
+      const tableName = topic.split(':')[1];
       const ch = supabase
         .channel(topic, { config: { private: true } })
         .on('broadcast', { event: '*' }, (payload) => {
           console.log(`📥 Received real-time broadcast sync on topic: ${topic}`, payload);
+          setSyncTrigger((prev) => prev + 1);
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: tableName }, (payload) => {
+          console.log(`📥 Received real-time postgres_changes sync on table: ${tableName}`, payload);
           setSyncTrigger((prev) => prev + 1);
         })
         .subscribe((status) => {

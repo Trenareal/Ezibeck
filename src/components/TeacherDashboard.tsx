@@ -27,7 +27,32 @@ const DEFAULT_FACULTY: FacultyProfile[] = [
 ];
 
 export default function TeacherDashboard({ students, template, onBack, onUpdateStudents, onUpdateTemplate }: TeacherDashboardProps) {
-  const [currentUser, setCurrentUser] = useState<FacultyProfile | null>(null);
+  const [currentUser, setCurrentUser] = useState<FacultyProfile | null>(() => {
+    if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem('ezibeck_faculty_user');
+      if (savedUser) {
+        try {
+          return JSON.parse(savedUser);
+        } catch (e) {
+          console.error('Error loading saved faculty user session', e);
+        }
+      }
+    }
+    return null;
+  });
+
+  const [focusedInputs, setFocusedInputs] = useState<Record<string, boolean>>({});
+
+  // Sync staff user session to survive browser reloads
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (currentUser) {
+        localStorage.setItem('ezibeck_faculty_user', JSON.stringify(currentUser));
+      } else {
+        localStorage.removeItem('ezibeck_faculty_user');
+      }
+    }
+  }, [currentUser]);
   const isAdmin = currentUser && (
     currentUser.id === 'ezekiel' ||
     currentUser.role.toLowerCase().includes('principal') ||
@@ -95,6 +120,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
   const [usernameInput, setUsernameInput] = useState('');
   const [teacherPasswordInput, setTeacherPasswordInput] = useState('');
   const [teacherLoginError, setTeacherLoginError] = useState('');
+  const [rememberMe, setRememberMe] = useState(true);
 
   // Faculty Registration States
   const [showRegisterForm, setShowRegisterForm] = useState(false);
@@ -261,6 +287,13 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
     const correctPassword = matchedUser.password || 'admin';
     if (teacherPasswordInput === correctPassword) {
       setCurrentUser(matchedUser);
+      if (typeof window !== 'undefined') {
+        if (rememberMe) {
+          localStorage.setItem('ezibeck_faculty_user', JSON.stringify(matchedUser));
+        } else {
+          localStorage.removeItem('ezibeck_faculty_user');
+        }
+      }
       setTeacherPasswordInput('');
       setUsernameInput('');
       setTeacherLoginError('');
@@ -707,11 +740,25 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                     setTeacherPasswordInput(e.target.value);
                     setTeacherLoginError('');
                   }}
-                  className="w-full bg-slate-900/60 border border-slate-800 hover:border-slate-700 focus:border-indigo-500 rounded-xl p-3 text-xs font-mono tracking-widest text-white outline-none transition-all focus:ring-1 focus:ring-indigo-500"
+                  className="w-full bg-slate-900/60 border border-slate-800 hover:border-slate-700 focus:border-indigo-505 rounded-xl p-3 text-xs font-mono tracking-widest text-white outline-none transition-all focus:ring-1 focus:ring-indigo-500"
                 />
                 {teacherLoginError && (
                   <p className="text-[10px] text-red-400 font-semibold mt-1.5 bg-red-950/30 border border-red-500/30 px-3 py-2 rounded-lg">{teacherLoginError}</p>
                 )}
+              </div>
+
+              {/* Keep Me Signed In Box */}
+              <div className="flex items-center gap-2 py-1.5 select-none hover:opacity-90">
+                <input
+                  type="checkbox"
+                  id="remember-me-checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-805 text-indigo-600 focus:ring-indigo-500 bg-slate-900 accent-indigo-500 cursor-pointer"
+                />
+                <label htmlFor="remember-me-checkbox" className="text-[11px] font-bold text-slate-400 cursor-pointer select-none pb-0.5">
+                  Keep me signed in / Save login for next time
+                </label>
               </div>
 
               <div className="pt-2">
@@ -867,7 +914,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                     <span>/</span>
                     <span>📁 Report Registry</span>
                     <span>/</span>
-                    <span>👥 {viewingReportStudent.className} Streams</span>
+                    <span>👥 {viewingReportStudent.className}</span>
                     <span>/</span>
                     <span className="text-slate-700 font-semibold">📄 {viewingReportStudent.name}</span>
                   </div>
@@ -932,9 +979,9 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
 
                       <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
                         <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
-                          <span>🏫</span> Class Stream
+                          <span>🏫</span> Class
                         </span>
-                        <span className="font-extrabold text-slate-900 text-right w-1/2">{viewingReportStudent.className} Stream</span>
+                        <span className="font-extrabold text-slate-900 text-right w-1/2">{viewingReportStudent.className}</span>
                       </div>
 
                       <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 sm:border-0 sm:pb-0">
@@ -1470,7 +1517,9 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                               type="number"
                               min={0}
                               max={30}
-                              value={subj.testScore}
+                              value={focusedInputs[`${subj.id}_test`] && subj.testScore === 0 ? '' : subj.testScore}
+                              onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_test`]: true }))}
+                              onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_test`]: false }))}
                               onChange={(e) => handleScoreChange(subj.id, 'test', parseInt(e.target.value) || 0)}
                               className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-indigo-805 font-bold font-mono text-slate-800"
                             />
@@ -1480,7 +1529,9 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                               type="number"
                               min={0}
                               max={70}
-                              value={subj.examScore}
+                              value={focusedInputs[`${subj.id}_exam`] && subj.examScore === 0 ? '' : subj.examScore}
+                              onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_exam`]: true }))}
+                              onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_exam`]: false }))}
                               onChange={(e) => handleScoreChange(subj.id, 'exam', parseInt(e.target.value) || 0)}
                               className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-indigo-805 font-bold font-mono text-slate-800"
                             />
@@ -1495,7 +1546,9 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                               type="number"
                               min={0}
                               max={100}
-                              value={fTermVal}
+                              value={focusedInputs[`${subj.id}_firstTerm`] && fTermVal === 0 ? '' : fTermVal}
+                              onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: true }))}
+                              onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: false }))}
                               onChange={(e) => handleScoreChange(subj.id, 'firstTerm', parseInt(e.target.value) || 0)}
                               className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-blue-50 border border-blue-200 focus:border-blue-500 text-blue-900 font-extrabold scale-[1.03]"
                             />
@@ -1507,7 +1560,9 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                               type="number"
                               min={0}
                               max={100}
-                              value={sTermVal}
+                              value={focusedInputs[`${subj.id}_secondTerm`] && sTermVal === 0 ? '' : sTermVal}
+                              onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_secondTerm`]: true }))}
+                              onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_secondTerm`]: false }))}
                               onChange={(e) => handleScoreChange(subj.id, 'secondTerm', parseInt(e.target.value) || 0)}
                               className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50 border border-emerald-200 focus:border-emerald-500 text-emerald-990 font-extrabold scale-[1.03]"
                             />
@@ -1519,7 +1574,9 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                               type="number"
                               min={0}
                               max={100}
-                              value={tTermVal}
+                              value={focusedInputs[`${subj.id}_thirdTerm`] && tTermVal === 0 ? '' : tTermVal}
+                              onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_thirdTerm`]: true }))}
+                              onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_thirdTerm`]: false }))}
                               onChange={(e) => handleScoreChange(subj.id, 'thirdTerm', parseInt(e.target.value) || 0)}
                               className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-indigo-50 border border-indigo-200 focus:border-indigo-500 text-indigo-900 font-extrabold scale-[1.03]"
                             />
@@ -1730,7 +1787,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                       <span>/</span>
                       <span>📁 Draft Sandbox</span>
                       <span>/</span>
-                      <span>👥 {previewStudent.className} Streams</span>
+                      <span>👥 {previewStudent.className}</span>
                       <span>/</span>
                       <span className="text-slate-700 font-semibold">📄 {previewStudent.name}</span>
                     </div>
@@ -1791,9 +1848,9 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
 
                         <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
                           <span className="font-semibold text-slate-400 flex items-center gap-1.5 w-1/2">
-                            <span>🏫</span> Class Stream
+                            <span>🏫</span> Class
                           </span>
-                          <span className="font-extrabold text-slate-900 text-right w-1/2">{previewStudent.className} Stream</span>
+                          <span className="font-extrabold text-slate-900 text-right w-1/2">{previewStudent.className}</span>
                         </div>
 
                         <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 sm:border-0 sm:pb-0">
@@ -2302,7 +2359,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                   🔒 Educator Staff Class Assignments & Security Desk
                 </h2>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Configure class stream streams for teachers. Form Teachers can strictly access and modify students in their assigned stream. Use the edit button to assign classes, modify passcodes, or authorize/restrict access.
+                  Configure class assignments for teachers. Form Teachers can strictly access and modify students in their assigned class. Use the edit button to assign classes, modify passcodes, or authorize/restrict access.
                 </p>
               </div>
             </div>
@@ -2341,7 +2398,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                   </div>
 
                   <div>
-                    <label className="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Class Assigned Stream</label>
+                    <label className="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Class Assigned</label>
                     <select
                       value={editingFacultyClass || ''}
                       onChange={(e) => setEditingFacultyClass(e.target.value as ClassName)}
@@ -2397,7 +2454,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                       type="submit"
                       className="bg-indigo-900 hover:bg-indigo-950 text-white rounded-xl px-5 py-2.5 text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer"
                     >
-                      Save Assigned Class Stream
+                      Save Assigned Class
                     </button>
                   </div>
                 </div>
@@ -2430,7 +2487,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                             </span>
                           ) : (
                             <span className="bg-slate-200 text-slate-700 text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md">
-                              No Class Stream
+                              No Class
                             </span>
                           )}
                         </h4>

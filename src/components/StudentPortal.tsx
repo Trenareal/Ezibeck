@@ -220,7 +220,7 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
               </div>
               <div className="max-w-[calc(100%-60px)]">
                 <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight uppercase truncate">{template.schoolName}</h2>
-                <p className="text-[11px] sm:text-xs text-slate-500 mt-1">Select class stream and choose student ID to unlock secure report sheet</p>
+                <p className="text-[11px] sm:text-xs text-slate-500 mt-1">Select class and choose student ID to unlock secure report sheet</p>
               </div>
             </div>
             
@@ -636,7 +636,7 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
                   <span>/</span>
                   <span className="hover:text-slate-600 transition-colors cursor-pointer">📁 Report Registry</span>
                   <span>/</span>
-                  <span className="hover:text-slate-600 transition-colors cursor-pointer">👥 {selectedStudent.className} Streams</span>
+                  <span className="hover:text-slate-600 transition-colors cursor-pointer">👥 {selectedStudent.className}</span>
                   <span>/</span>
                   <span className="text-slate-700 font-semibold">📄 {selectedStudent.name}</span>
                 </div>
@@ -701,9 +701,9 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
 
                     <div className="flex items-center justify-between border-b border-slate-100 pb-1.5 gap-2">
                       <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 flex-shrink-0">
-                        <span>🏫</span> Class Stream
+                        <span>🏫</span> Class
                       </span>
-                      <span className="font-extrabold text-slate-900 text-right">{selectedStudent.className} Stream</span>
+                      <span className="font-extrabold text-slate-900 text-right">{selectedStudent.className}</span>
                     </div>
 
                     <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 sm:border-0 sm:pb-0 gap-2">

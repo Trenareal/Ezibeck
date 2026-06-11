@@ -50,7 +50,7 @@ export interface FacultyProfile {
   password?: string; // Password field for Teacher Authentication
   isRestricted?: boolean; // Restrict access toggle for admin
   email?: string; // Email for OTP resets
-  assignedClass?: ClassName; // Class stream restriction
+  assignedClass?: ClassName; // Class restriction
 }
 
 export interface Workspace15Template {
