@@ -50,12 +50,7 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
     return matchClass && matchQuery;
   });
 
-  const [showExportModal, setShowExportModal] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-
-  const handlePrint = () => {
-    setShowExportModal(true);
-  };
 
   const downloadPdfDirect = async () => {
     if (isGeneratingPdf || !printAreaRef.current || !selectedStudent) return;
@@ -145,21 +140,16 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
       
       const filename = `${selectedStudent.id}_Report_Sheet_${selectedStudent.name.replace(/\s+/g, '_')}.pdf`;
       pdf.save(filename);
-      setShowExportModal(false);
     } catch (err) {
       console.error('PDF Generation Error:', err);
       
       // Fallback style restoration to prevent UI defects
       restoreStyles();
       
-      // Notify user about browser policy block and trigger the system native printer
-      alert('Automatic PDF generation failed or was blocked by browser sandbox policies. Opening system print window to let you save as PDF directly...');
-      setShowExportModal(false);
-      
-      // Allow the DOM state to recover, then trigger high-quality native print view
+      // Allow the DOM state to recover, then trigger high-quality native print view directly
       setTimeout(() => {
         window.print();
-      }, 250);
+      }, 50);
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -641,10 +631,20 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
               </button>
             </div>
             <button
-              onClick={handlePrint}
-              className="bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer w-full sm:w-auto"
+              onClick={downloadPdfDirect}
+              disabled={isGeneratingPdf}
+              className="bg-indigo-700 hover:bg-indigo-800 disabled:opacity-50 text-white font-bold text-xs px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer w-full sm:w-auto"
             >
-              <Printer className="w-4 h-4" /> Print Sheet
+              {isGeneratingPdf ? (
+                <>
+                  <span className="animate-spin inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full"></span>
+                  Saving PDF...
+                </>
+              ) : (
+                <>
+                  <Printer className="w-4 h-4" /> Download / Print PDF
+                </>
+              )}
             </button>
           </div>
 
@@ -1244,76 +1244,7 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
         </div>
       )}
 
-      {showExportModal && selectedStudent && (
-        <div id="export-pdf-modal" className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in print:hidden">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-100 shadow-2xl space-y-6">
-            <div className="text-center space-y-2">
-              <span className="text-4xl">📄</span>
-              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Save Report Card</h3>
-              <p className="text-sm text-slate-500 leading-relaxed">
-                Would you like to save and download a secure electronic PDF document of <strong className="text-slate-800">{selectedStudent.name}</strong>'s report card to your local device?
-              </p>
-            </div>
 
-            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs space-y-2 text-left">
-              <div className="flex justify-between">
-                <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Candidate Student ID</span>
-                <span className="font-mono font-bold text-[#3b82f6]">{selectedStudent.id}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Academic Name</span>
-                <span className="font-bold text-slate-705">{selectedStudent.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">Output Format</span>
-                <span className="bg-indigo-50 text-indigo-700 border border-indigo-100 rounded font-black text-[9px] px-1.5 py-0.5 uppercase">A4 PORTRAIT PDF</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowExportModal(false)}
-                disabled={isGeneratingPdf}
-                className="bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-600 rounded-xl py-3 text-xs font-black uppercase tracking-wider transition-all cursor-pointer text-center disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={downloadPdfDirect}
-                disabled={isGeneratingPdf}
-                className="bg-[#3b82f6] hover:bg-blue-650 text-white rounded-xl py-3 text-xs font-black uppercase tracking-wider transition-all shadow-md cursor-pointer text-center flex items-center justify-center gap-1.5 disabled:opacity-50"
-              >
-                {isGeneratingPdf ? (
-                  <>
-                    <span className="animate-spin inline-block w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full"></span>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    ⬇️ Download PDF
-                  </>
-                )}
-              </button>
-            </div>
-
-            <div className="text-center pt-2">
-              <button
-                type="button"
-                disabled={isGeneratingPdf}
-                onClick={() => {
-                  setShowExportModal(false);
-                  setTimeout(() => window.print(), 150);
-                }}
-                className="text-[11px] text-slate-400 hover:text-indigo-600 font-bold underline transition-all cursor-pointer"
-              >
-                Or use system native print/save dialog
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
