@@ -59,17 +59,24 @@ export default function App() {
   useEffect(() => {
     if (!isSupabaseConfigured) return;
     
-    const channel = supabase
-      .channel('ezibeck-realtime-sync', {
-        config: { private: true } // important for RLS/private channels
-      })
-      .on('broadcast', { event: '*' }, (payload) => {
-        setSyncTrigger((prev) => prev + 1);
-      })
-      .subscribe();
+    const topics = [
+      'public:students',
+      'public:school_config',
+      'public:subject_grades',
+      'public:behavioural_ratings',
+    ];
+    
+    const channels = topics.map((topic) =>
+      supabase
+        .channel(topic, { config: { private: true } })
+        .on('broadcast', { event: '*' }, () => {
+          setSyncTrigger((prev) => prev + 1);
+        })
+        .subscribe()
+    );
     
     return () => {
-      supabase.removeChannel(channel);
+      channels.forEach((ch) => supabase.removeChannel(ch));
     };
   }, []);
 
