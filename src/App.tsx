@@ -63,6 +63,39 @@ export default function App() {
     }
   }, [currentView]);
 
+  // Synchronize browser history pop events to allow back-button navigation
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Set initial window history state if missing, ensuring clean go-back targets
+    if (!window.history.state || !window.history.state.view) {
+      window.history.replaceState({ view: currentView }, '');
+    }
+
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state && event.state.view) {
+        setCurrentView(event.state.view);
+      } else {
+        setCurrentView('home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  const handleNavigate = (view: 'home' | 'student' | 'teacher') => {
+    if (typeof window !== 'undefined') {
+      const curState = window.history.state;
+      if (!curState || curState.view !== view) {
+        window.history.pushState({ view }, '');
+      }
+    }
+    setCurrentView(view);
+  };
+
   const [template, setTemplate] = useState<Workspace15Template>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('ezibeck_workspace15');
@@ -262,7 +295,7 @@ export default function App() {
       {/* Route Views Transition */}
       {currentView === 'home' && (
         <div className="fade-in animate-fade-in">
-          <PublicHome template={template} onEnterPortal={(role) => setCurrentView(role)} />
+          <PublicHome template={template} onEnterPortal={handleNavigate} />
         </div>
       )}
 
@@ -271,7 +304,7 @@ export default function App() {
           <StudentPortal 
             students={students} 
             template={template}
-            onBack={() => setCurrentView('home')} 
+            onBack={() => handleNavigate('home')} 
             onUpdateStudents={handleUpdateStudents}
           />
         </div>
@@ -282,7 +315,7 @@ export default function App() {
           <TeacherDashboard 
             students={students} 
             template={template}
-            onBack={() => setCurrentView('home')} 
+            onBack={() => handleNavigate('home')} 
             onUpdateStudents={handleUpdateStudents}
             onUpdateTemplate={handleUpdateTemplate}
           />

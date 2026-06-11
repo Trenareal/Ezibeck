@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, Printer, UserCheck, LogOut } from 'lucide-react';
 import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile } from '../types';
 import { createStudent, calculateStudentStats, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal } from '../utils/academicUtils';
@@ -93,6 +93,60 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
     }
     return DEFAULT_FACULTY;
   });
+
+  // Synchronize viewingReportStudent and editingStudent subviews with browser history pop events
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state && event.state.view === 'teacher') {
+        const { sub, studentId } = event.state;
+        
+        if (sub === 'view' && studentId) {
+          const found = students.find(s => s.id === studentId);
+          if (found) {
+            setViewingReportStudent(found);
+            setEditingStudent(null);
+            return;
+          }
+        } else if (sub === 'edit' && studentId) {
+          const found = students.find(s => s.id === studentId);
+          if (found) {
+            startEditStudent(found);
+            setViewingReportStudent(null);
+            return;
+          }
+        }
+        
+        // Return to normal registry roster lists on back button
+        setViewingReportStudent(null);
+        setEditingStudent(null);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [students]);
+
+  // Listen to state changes to push history entries upon user action click
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const sub = viewingReportStudent ? 'view' : (editingStudent ? 'edit' : null);
+    const studentId = viewingReportStudent ? viewingReportStudent.id : (editingStudent ? editingStudent.id : null);
+
+    const curState = window.history.state;
+    const isMatched = curState && 
+                      curState.view === 'teacher' && 
+                      curState.sub === sub && 
+                      curState.studentId === studentId;
+
+    if (!isMatched) {
+      window.history.pushState({ view: 'teacher', sub, studentId }, '');
+    }
+  }, [viewingReportStudent, editingStudent]);
 
   // Faculty edit & class assignment states
   const [editingFaculty, setEditingFaculty] = useState<FacultyProfile | null>(null);

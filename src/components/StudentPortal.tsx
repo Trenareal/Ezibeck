@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, GraduationCap, Search, BookOpen, Eye, Layers, Printer, Star } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -144,7 +144,43 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
     }
   };
 
+  // Synchronize student selection with browser history
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state && event.state.view === 'student') {
+        const studentId = event.state.studentId;
+        if (studentId) {
+          const found = students.find(s => s.id === studentId);
+          if (found) {
+            setSelectedStudent(found);
+            setIsUnlocked(false);
+            setPasswordInput('');
+            setLoginError('');
+            return;
+          }
+        }
+        setSelectedStudent(null);
+        setIsUnlocked(false);
+        setPasswordInput('');
+        setLoginError('');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [students]);
+
   const handleSelectStudent = (stud: Student) => {
+    if (typeof window !== 'undefined') {
+      const curState = window.history.state;
+      if (!curState || curState.studentId !== stud.id || curState.view !== 'student') {
+        window.history.pushState({ view: 'student', studentId: stud.id }, '');
+      }
+    }
     setSelectedStudent(stud);
     setIsUnlocked(false);
     setPasswordInput('');
@@ -157,6 +193,17 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
     setResetError('');
     setResetSuccess('');
     setSimulatedNotification('');
+  };
+
+  const handleDeselectStudent = () => {
+    if (typeof window !== 'undefined' && window.history.state && window.history.state.studentId) {
+      window.history.back();
+    } else {
+      setSelectedStudent(null);
+      setIsUnlocked(false);
+      setPasswordInput('');
+      setLoginError('');
+    }
   };
 
   const handleVerifyPassword = (e: React.FormEvent) => {
@@ -519,7 +566,7 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
                 <div className="pt-2 flex gap-2">
                   <button
                     type="button"
-                    onClick={() => setSelectedStudent(null)}
+                    onClick={handleDeselectStudent}
                     className="w-1/2 border hover:bg-slate-50 text-slate-500 font-bold text-xs py-3 rounded-xl transition-all cursor-pointer"
                   >
                     Cancel
