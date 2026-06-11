@@ -58,49 +58,17 @@ export default function App() {
   // Set up real-time multi-device subscription to keep devices in perfect sync
   useEffect(() => {
     if (!isSupabaseConfigured) return;
-
-    console.log("Setting up real-time multi-device Supabase change listeners...");
-
+    
     const channel = supabase
-      .channel('ezibeck-realtime-sync')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'students' },
-        (payload) => {
-          console.log('Realtime update: Student table changed', payload);
-          setSyncTrigger((prev) => prev + 1);
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'school_config' },
-        (payload) => {
-          console.log('Realtime update: School config changed', payload);
-          setSyncTrigger((prev) => prev + 1);
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'subject_grades' },
-        (payload) => {
-          console.log('Realtime update: Subject course grades changed', payload);
-          setSyncTrigger((prev) => prev + 1);
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'behavioural_ratings' },
-        (payload) => {
-          console.log('Realtime update: Behavioural ratings changed', payload);
-          setSyncTrigger((prev) => prev + 1);
-        }
-      )
-      .subscribe((status) => {
-        console.log('Real-time database sync status:', status);
-      });
-
+      .channel('ezibeck-realtime-sync', {
+        config: { private: true } // important for RLS/private channels
+      })
+      .on('broadcast', { event: '*' }, (payload) => {
+        setSyncTrigger((prev) => prev + 1);
+      })
+      .subscribe();
+    
     return () => {
-      console.log('Unsubscribing real-time sync channel...');
       supabase.removeChannel(channel);
     };
   }, []);
