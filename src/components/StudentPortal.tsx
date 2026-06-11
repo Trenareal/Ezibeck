@@ -58,7 +58,7 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
   };
 
   const downloadPdfDirect = async () => {
-    if (!printAreaRef.current || !selectedStudent) return;
+    if (isGeneratingPdf || !printAreaRef.current || !selectedStudent) return;
     setIsGeneratingPdf(true);
     try {
       const element = printAreaRef.current;
@@ -138,8 +138,7 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
       setShowExportModal(false);
     } catch (err) {
       console.error('PDF Generation Error:', err);
-      // Fallback to system-native print if browser has restrictions
-      window.print();
+      alert('Could not download pdf automatically. Please use the system native print option at the bottom instead.');
     } finally {
       setIsGeneratingPdf(false);
     }
