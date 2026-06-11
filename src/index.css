@@ -10,7 +10,7 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 10mm 12mm 10mm 12mm;
+    margin: 8mm 10mm 8mm 10mm;
   }
   body {
     -webkit-print-color-adjust: exact !important;
@@ -22,5 +22,31 @@
   .print-card-break {
     page-break-inside: avoid;
     break-inside: avoid;
+  }
+
+  /* Scale the whole report card beautifully inside printed portrait document */
+  .report-card-printable {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    /* Zoom/Scale down the elements only on print to prevent horizontal overflow */
+    zoom: 0.8 !important;
+  }
+
+  /* Force tables to display in full length on print without vertical/horizontal truncation */
+  .report-card-printable .overflow-x-auto {
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .report-card-printable table {
+    width: 100% !important;
+    table-layout: auto !important;
   }
 }

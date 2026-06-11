@@ -903,7 +903,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
               const stats = calculateStudentStats(viewingReportStudent);
               return (
                 <div 
-                  className="bg-white border border-slate-205 rounded-3xl shadow-xl p-6 sm:p-12 space-y-8 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in text-slate-800"
+                  className="report-card-printable bg-white border border-slate-205 rounded-3xl shadow-xl p-6 sm:p-12 space-y-8 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in text-slate-800"
                 >
                   {/* Print layout decorator line */}
                   <div className="absolute inset-3 border border-slate-100 rounded-2xl pointer-events-none print:hidden"></div>
@@ -1032,9 +1032,8 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                   <div className="relative z-10 space-y-4">
                     <h3 className="text-slate-900 font-extrabold text-xs uppercase tracking-widest border-l-4 border-slate-900 pl-2.5 pb-0.5 flex items-center justify-between select-none">
                       <span>Part A: Academic Course Evaluation</span>
-                      <span className="text-[10px] text-slate-400 normal-case font-bold mt-[-4px]">Standard Formula Matrix Layout</span>
+                      <span className="text-[10px] text-slate-400 normal-case font-bold">Standard Formula Matrix Layout</span>
                     </h3>
-                    
                     {/* Notion-style database table */}
                     <div className="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-3xs">
                       <table className="w-full text-left text-xs border-collapse">
@@ -1061,8 +1060,8 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                             <th className="py-2.5 px-3 border-r border-slate-205 text-center text-[10px] w-20">
                               <span className="flex items-center justify-center gap-1"># 3RD TERM (60)</span>
                             </th>
-                            <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-indigo-50/20 w-28">
-                              <span className="flex items-center justify-center gap-1 text-slate-850 font-bold">Σ SESSION AVE</span>
+                            <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-indigo-50/20 w-28 text-slate-800 font-bold">
+                              <span className="flex items-center justify-center gap-1 text-slate-805 font-bold">Σ SESSION AVE</span>
                             </th>
                             <th className="py-2.5 px-3 border-r border-slate-200 text-center w-20">
                               <span className="flex items-center justify-center gap-1">Σ GRADE</span>
@@ -1095,7 +1094,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                                 <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-indigo-755 bg-indigo-50/20">{tot}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{firstTerm}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{secondTerm}</td>
-                                <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{thirdTerm}</td>
+                                <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-455">{thirdTerm}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-indigo-700 bg-slate-50/40">{sessionAvg}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-100 text-center">
                                   <span className={`px-2 py-0.5 text-[10px] font-black rounded-sm tracking-wider ${ratingClass}`}>
@@ -1898,7 +1897,7 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                     </div>
 
                     {/* Part A: Academic Course Evaluation */}
-                    <div className="relative z-10 space-y-4">
+                    <div className="relative z-10 space-y-4 font-sans">
                       <h3 className="text-slate-900 font-extrabold text-xs uppercase tracking-widest border-l-4 border-slate-900 pl-2.5 pb-0.5 flex items-center justify-between">
                         <span>Part A: Academic Course Evaluation</span>
                       </h3>

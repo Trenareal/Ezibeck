@@ -63,13 +63,48 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
     try {
       const element = printAreaRef.current;
       
+      // Store original scroll & style
+      const originalStyle = element.getAttribute('style') || '';
+      const originalScrollY = window.scrollY;
+      
+      // Scroll to top of window to avoid rendering defects in html2canvas
+      window.scrollTo(0, 0);
+      
+      // Enforce desktop viewport sizing for high physical layout precision and avoid wrapping
+      element.style.width = '1024px';
+      element.style.minWidth = '1024px';
+      element.style.maxWidth = '1024px';
+      
+      // Set all horizontal overflows of tables inside the print wrapper to visible
+      const overflowElms = element.querySelectorAll('.overflow-x-auto');
+      const originalOverflows: string[] = [];
+      const originalWidths: string[] = [];
+      overflowElms.forEach((el, idx) => {
+        const htmlEl = el as HTMLElement;
+        originalOverflows[idx] = htmlEl.style.overflowX || '';
+        originalWidths[idx] = htmlEl.style.width || '';
+        htmlEl.style.overflowX = 'visible';
+        htmlEl.style.width = '100%';
+      });
+
       // Calculate layout scaling to perfectly fit the A4 page container
       const canvas = await html2canvas(element, {
         scale: 2, // Retain high physical print definition
         useCORS: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        width: 1024,
+        windowWidth: 1024
       });
+      
+      // Immediate clean restoration
+      element.setAttribute('style', originalStyle);
+      overflowElms.forEach((el, idx) => {
+        const htmlEl = el as HTMLElement;
+        htmlEl.style.overflowX = originalOverflows[idx];
+        htmlEl.style.width = originalWidths[idx];
+      });
+      window.scrollTo(0, originalScrollY);
       
       const imgData = canvas.toDataURL('image/png', 1.0);
       
@@ -80,20 +115,21 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
         format: 'a4'
       });
       
-      const imgWidth = 210; // A4 layout width in mm
-      const pageHeight = 297; // A4 layout height in mm
+      // Fit comfortably in portrait A4 width (210mm) with 10mm margins on both sides
+      const imgWidth = 190; 
+      const pageHeight = 277; // Margins top/bottom
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
       let heightLeft = imgHeight;
-      let position = 0;
+      let position = 10; // Start with 10mm margin
       
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight, undefined, 'FAST');
       heightLeft -= pageHeight;
       
       while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
+        position = heightLeft - imgHeight + 10;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight, undefined, 'FAST');
         heightLeft -= pageHeight;
       }
       
@@ -625,7 +661,7 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
             return (
               <div 
                 ref={printAreaRef}
-                className="bg-white border border-slate-200/80 rounded-3xl shadow-xl p-4 sm:p-12 space-y-6 sm:space-y-8 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in"
+                className="report-card-printable bg-white border border-slate-200/80 rounded-3xl shadow-xl p-4 sm:p-12 space-y-6 sm:space-y-8 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in"
               >
                 {/* Print layout decorator line */}
                 <div className="absolute inset-1.5 xs:inset-3 border border-slate-100 rounded-2xl pointer-events-none print:hidden"></div>
