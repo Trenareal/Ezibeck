@@ -60,13 +60,34 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
   const downloadPdfDirect = async () => {
     if (isGeneratingPdf || !printAreaRef.current || !selectedStudent) return;
     setIsGeneratingPdf(true);
+
+    const element = printAreaRef.current;
+    
+    // Store original scroll & style to safely restore in case of success or failure
+    const originalStyle = element.getAttribute('style') || '';
+    const originalScrollY = window.scrollY;
+    
+    // Find nested scroll wrappers so we can restore them fully
+    const overflowElms = element.querySelectorAll('.overflow-x-auto');
+    const originalOverflows: string[] = [];
+    const originalWidths: string[] = [];
+    overflowElms.forEach((el, idx) => {
+      const htmlEl = el as HTMLElement;
+      originalOverflows[idx] = htmlEl.style.overflowX || '';
+      originalWidths[idx] = htmlEl.style.width || '';
+    });
+
+    const restoreStyles = () => {
+      element.setAttribute('style', originalStyle);
+      overflowElms.forEach((el, idx) => {
+        const htmlEl = el as HTMLElement;
+        htmlEl.style.overflowX = originalOverflows[idx];
+        htmlEl.style.width = originalWidths[idx];
+      });
+      window.scrollTo(0, originalScrollY);
+    };
+
     try {
-      const element = printAreaRef.current;
-      
-      // Store original scroll & style
-      const originalStyle = element.getAttribute('style') || '';
-      const originalScrollY = window.scrollY;
-      
       // Scroll to top of window to avoid rendering defects in html2canvas
       window.scrollTo(0, 0);
       
@@ -76,13 +97,8 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
       element.style.maxWidth = '1024px';
       
       // Set all horizontal overflows of tables inside the print wrapper to visible
-      const overflowElms = element.querySelectorAll('.overflow-x-auto');
-      const originalOverflows: string[] = [];
-      const originalWidths: string[] = [];
-      overflowElms.forEach((el, idx) => {
+      overflowElms.forEach((el) => {
         const htmlEl = el as HTMLElement;
-        originalOverflows[idx] = htmlEl.style.overflowX || '';
-        originalWidths[idx] = htmlEl.style.width || '';
         htmlEl.style.overflowX = 'visible';
         htmlEl.style.width = '100%';
       });
@@ -97,14 +113,8 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
         windowWidth: 1024
       });
       
-      // Immediate clean restoration
-      element.setAttribute('style', originalStyle);
-      overflowElms.forEach((el, idx) => {
-        const htmlEl = el as HTMLElement;
-        htmlEl.style.overflowX = originalOverflows[idx];
-        htmlEl.style.width = originalWidths[idx];
-      });
-      window.scrollTo(0, originalScrollY);
+      // Immediate clean restoration of the UI right after canvas screenshot is captured successfully
+      restoreStyles();
       
       const imgData = canvas.toDataURL('image/png', 1.0);
       
@@ -138,7 +148,18 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
       setShowExportModal(false);
     } catch (err) {
       console.error('PDF Generation Error:', err);
-      alert('Could not download pdf automatically. Please use the system native print option at the bottom instead.');
+      
+      // Fallback style restoration to prevent UI defects
+      restoreStyles();
+      
+      // Notify user about browser policy block and trigger the system native printer
+      alert('Automatic PDF generation failed or was blocked by browser sandbox policies. Opening system print window to let you save as PDF directly...');
+      setShowExportModal(false);
+      
+      // Allow the DOM state to recover, then trigger high-quality native print view
+      setTimeout(() => {
+        window.print();
+      }, 250);
     } finally {
       setIsGeneratingPdf(false);
     }
