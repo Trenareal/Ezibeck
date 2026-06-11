@@ -5,8 +5,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, GraduationCap, Search, BookOpen, Eye, Layers, Printer, Star } from 'lucide-react';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 import { Student, ClassName, Workspace15Template } from '../types';
 import { SCHOOL_INFO, calculateStudentStats, getLetterAndRemark, calculateSubjectTotal, BEHAVIOUR_TRAITS } from '../utils/academicUtils';
 
@@ -50,108 +48,9 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
     return matchClass && matchQuery;
   });
 
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-
-  const downloadPdfDirect = async () => {
-    if (isGeneratingPdf || !printAreaRef.current || !selectedStudent) return;
-    setIsGeneratingPdf(true);
-
-    const element = printAreaRef.current;
-    
-    // Store original scroll & style to safely restore in case of success or failure
-    const originalStyle = element.getAttribute('style') || '';
-    const originalScrollY = window.scrollY;
-    
-    // Find nested scroll wrappers so we can restore them fully
-    const overflowElms = element.querySelectorAll('.overflow-x-auto');
-    const originalOverflows: string[] = [];
-    const originalWidths: string[] = [];
-    overflowElms.forEach((el, idx) => {
-      const htmlEl = el as HTMLElement;
-      originalOverflows[idx] = htmlEl.style.overflowX || '';
-      originalWidths[idx] = htmlEl.style.width || '';
-    });
-
-    const restoreStyles = () => {
-      element.setAttribute('style', originalStyle);
-      overflowElms.forEach((el, idx) => {
-        const htmlEl = el as HTMLElement;
-        htmlEl.style.overflowX = originalOverflows[idx];
-        htmlEl.style.width = originalWidths[idx];
-      });
-      window.scrollTo(0, originalScrollY);
-    };
-
-    try {
-      // Scroll to top of window to avoid rendering defects in html2canvas
-      window.scrollTo(0, 0);
-      
-      // Enforce desktop viewport sizing for high physical layout precision and avoid wrapping
-      element.style.width = '1024px';
-      element.style.minWidth = '1024px';
-      element.style.maxWidth = '1024px';
-      
-      // Set all horizontal overflows of tables inside the print wrapper to visible
-      overflowElms.forEach((el) => {
-        const htmlEl = el as HTMLElement;
-        htmlEl.style.overflowX = 'visible';
-        htmlEl.style.width = '100%';
-      });
-
-      // Calculate layout scaling to perfectly fit the A4 page container
-      const canvas = await html2canvas(element, {
-        scale: 2, // Retain high physical print definition
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        width: 1024,
-        windowWidth: 1024
-      });
-      
-      // Immediate clean restoration of the UI right after canvas screenshot is captured successfully
-      restoreStyles();
-      
-      const imgData = canvas.toDataURL('image/png', 1.0);
-      
-      // Page size properties
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-      
-      // Fit comfortably in portrait A4 width (210mm) with 10mm margins on both sides
-      const imgWidth = 190; 
-      const pageHeight = 277; // Margins top/bottom
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      let heightLeft = imgHeight;
-      let position = 10; // Start with 10mm margin
-      
-      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight, undefined, 'FAST');
-      heightLeft -= pageHeight;
-      
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight + 10;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pageHeight;
-      }
-      
-      const filename = `${selectedStudent.id}_Report_Sheet_${selectedStudent.name.replace(/\s+/g, '_')}.pdf`;
-      pdf.save(filename);
-    } catch (err) {
-      console.error('PDF Generation Error:', err);
-      
-      // Fallback style restoration to prevent UI defects
-      restoreStyles();
-      
-      // Allow the DOM state to recover, then trigger high-quality native print view directly
-      setTimeout(() => {
-        window.print();
-      }, 50);
-    } finally {
-      setIsGeneratingPdf(false);
+  const downloadPdfDirect = () => {
+    if (typeof window !== 'undefined') {
+      window.print();
     }
   };
 
@@ -632,19 +531,9 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
             </div>
             <button
               onClick={downloadPdfDirect}
-              disabled={isGeneratingPdf}
-              className="bg-indigo-700 hover:bg-indigo-800 disabled:opacity-50 text-white font-bold text-xs px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer w-full sm:w-auto"
+              className="bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer w-full sm:w-auto"
             >
-              {isGeneratingPdf ? (
-                <>
-                  <span className="animate-spin inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full"></span>
-                  Saving PDF...
-                </>
-              ) : (
-                <>
-                  <Printer className="w-4 h-4" /> Download / Print PDF
-                </>
-              )}
+              <Printer className="w-4 h-4" /> Download / Print PDF
             </button>
           </div>
 
