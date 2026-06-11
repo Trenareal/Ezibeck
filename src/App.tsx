@@ -54,24 +54,38 @@ export default function App() {
   });
 
   const [syncTrigger, setSyncTrigger] = useState(0);
+  const activeChannelsRef = React.useRef<Record<string, any>>({});
 
   // Helper to send real-time broadcast notifications to other devices
   const broadcastChange = (topic: string) => {
     if (!isSupabaseConfigured) return;
     try {
-      const ch = supabase.channel(topic, { config: { private: true } });
-      ch.subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          ch.send({
-            type: 'broadcast',
-            event: 'sync',
-            payload: { timestamp: Date.now() },
-          }).then(() => {
-            // Clean up the temporary channel
-            supabase.removeChannel(ch);
-          });
-        }
-      });
+      const ch = activeChannelsRef.current[topic];
+      if (ch) {
+        console.log(`📡 Sending realtime sync broadcast on active channel: ${topic}`);
+        ch.send({
+          type: 'broadcast',
+          event: 'sync',
+          payload: { timestamp: Date.now() },
+        });
+      } else {
+        // Fallback if not mapped
+        const tempCh = supabase.channel(topic, { config: { private: true } });
+        tempCh.subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            tempCh.send({
+              type: 'broadcast',
+              event: 'sync',
+              payload: { timestamp: Date.now() },
+            }).then(() => {
+              // Wait a context delay before removing to ensure dispatch delivery
+              setTimeout(() => {
+                supabase.removeChannel(tempCh);
+              }, 1200);
+            });
+          }
+        });
+      }
     } catch (e) {
       console.error(`Failed to send broadcast on ${topic}`, e);
     }
@@ -88,17 +102,28 @@ export default function App() {
       'public:behavioural_ratings',
     ];
     
-    const channels = topics.map((topic) =>
-      supabase
+    const channelsMap: Record<string, any> = {};
+    
+    const channels = topics.map((topic) => {
+      const ch = supabase
         .channel(topic, { config: { private: true } })
-        .on('broadcast', { event: '*' }, () => {
+        .on('broadcast', { event: '*' }, (payload) => {
+          console.log(`📥 Received real-time broadcast sync on topic: ${topic}`, payload);
           setSyncTrigger((prev) => prev + 1);
         })
-        .subscribe()
-    );
+        .subscribe((status) => {
+          console.log(`📡 Real-time channel ${topic} status: ${status}`);
+        });
+        
+      channelsMap[topic] = ch;
+      return ch;
+    });
+    
+    activeChannelsRef.current = channelsMap;
     
     return () => {
       channels.forEach((ch) => supabase.removeChannel(ch));
+      activeChannelsRef.current = {};
     };
   }, []);
 
