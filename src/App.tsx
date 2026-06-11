@@ -55,6 +55,28 @@ export default function App() {
 
   const [syncTrigger, setSyncTrigger] = useState(0);
 
+  // Helper to send real-time broadcast notifications to other devices
+  const broadcastChange = (topic: string) => {
+    if (!isSupabaseConfigured) return;
+    try {
+      const ch = supabase.channel(topic, { config: { private: true } });
+      ch.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          ch.send({
+            type: 'broadcast',
+            event: 'sync',
+            payload: { timestamp: Date.now() },
+          }).then(() => {
+            // Clean up the temporary channel
+            supabase.removeChannel(ch);
+          });
+        }
+      });
+    } catch (e) {
+      console.error(`Failed to send broadcast on ${topic}`, e);
+    }
+  };
+
   // Set up real-time multi-device subscription to keep devices in perfect sync
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -148,6 +170,9 @@ export default function App() {
         }
         // Save the updated/registered students
         await dbService.saveAllStudents(updatedList);
+        
+        // Broadcast change so other active devices reload instantly
+        broadcastChange('public:students');
       } catch (error) {
         console.error("Failed to commit student updates to Supabase:", error);
       }
@@ -169,6 +194,9 @@ export default function App() {
         } else {
           await supabase.from('school_config').insert(dbTpl);
         }
+        
+        // Broadcast change so other active devices reload instantly
+        broadcastChange('public:school_config');
       } catch (error) {
         console.error("Failed to sync template to Supabase:", error);
       }
