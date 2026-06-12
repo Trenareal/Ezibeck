@@ -740,250 +740,288 @@ export default function TeacherDashboard({
   // --- LOGGED OUT FACULTY SCREEN ---
   if (!currentUser) {
     return (
-      <div className="bg-slate-950 min-h-screen text-slate-100 flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-grid-pattern"></div>
-        
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl relative z-10 text-center space-y-6">
+      <div className="bg-gradient-to-br from-slate-50 via-white to-emerald-50/40 min-h-screen text-slate-700 flex flex-col justify-center items-center px-4 py-8 relative overflow-hidden">
+        {/* Aesthetic background mesh glows */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-100/30 rounded-full filter blur-3xl opacity-60 select-none pointer-events-none"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-50/80 rounded-full filter blur-3xl opacity-60 select-none pointer-events-none"></div>
+
+        <div className="max-w-md w-full space-y-4 relative z-10 transition-all duration-200">
+          
           <button
             onClick={onBack}
-            className="text-slate-400 hover:text-white text-xs font-bold transition-all mb-4 block mx-auto flex items-center gap-1 bg-slate-800 py-1.5 px-3.5 rounded-lg border border-slate-700/60"
+            className="group text-slate-500 hover:text-emerald-700 text-xs font-black transition-all flex items-center gap-2 bg-white/95 hover:bg-emerald-50/60 py-2.5 px-4 rounded-xl border border-slate-200/70 shadow-3xs cursor-pointer select-none"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to School Homepage
+            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" /> Back to School Homepage
           </button>
 
-          <div className="flex justify-center">
-            <div className="bg-indigo-450/10 border border-indigo-400/30 font-bold text-indigo-400 p-4 rounded-2xl">
-              <School className="w-10 h-10 animate-pulse" />
-            </div>
-          </div>
-
-          <div>
-            <h1 className="text-xl font-black tracking-tight uppercase leading-none text-white">EZIBECK STAFF DESK</h1>
-            <p className="text-[10px] tracking-widest text-indigo-400 font-extrabold uppercase mt-1">Authorized Entry Workspace</p>
-          </div>
-
-          {/* Real-time Alerts popups inside login */}
-          {(successMsg || facultyResetSuccess) && (
-            <div className="bg-emerald-905/30 border border-emerald-500/50 rounded-xl p-3 text-emerald-300 text-xs text-left font-semibold">
-              ✓ {successMsg || facultyResetSuccess}
-            </div>
-          )}
-
-          {facultyResetError && (
-            <div className="bg-red-950/30 border border-red-500/50 rounded-xl p-3 text-red-350 text-xs text-left font-semibold">
-              ⚠️ {facultyResetError}
-            </div>
-          )}
-
-          {facultySimulatedNotification && (
-            <div className="bg-emerald-950 border border-emerald-800 rounded-xl p-4 text-left space-y-1 animate-pulse">
-              <span className="text-[9px] uppercase font-black tracking-widest text-emerald-400 block">📬 Simulated Educator Email Inbox</span>
-              <p className="font-mono text-xs text-emerald-100 break-all leading-normal">{facultySimulatedNotification}</p>
-            </div>
-          )}
-
-          {showFacultyReset ? (
-            /* FACULTY OTP PASSWORD RESET FORM */
-            <div className="space-y-4 text-left bg-slate-950 border border-slate-850 p-5 rounded-2xl animate-fade-in">
-              <div className="flex items-center justify-between border-b border-slate-850 pb-2">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Passcode Reset Request</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowFacultyReset(false);
-                    setFacultyResetError('');
-                    setFacultyResetSuccess('');
-                    setFacultySimulatedNotification('');
-                    setFacultyResetStep('request');
-                  }}
-                  className="text-[10px] text-indigo-400 hover:text-indigo-305 hover:underline font-bold cursor-pointer"
-                >
-                  ← Back to Login
-                </button>
+          <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-xl text-center space-y-6">
+            <div className="flex justify-center flex-col items-center gap-3 select-none">
+              <div className="bg-emerald-50 border border-emerald-100/60 font-bold text-emerald-600 p-4 rounded-full shadow-3xs flex items-center justify-center">
+                <School className="w-7 h-7 text-emerald-600" />
               </div>
-
-              {facultyResetStep === 'request' && (
-                <form onSubmit={handleFacultySendOtp} className="space-y-4">
-                  <div className="bg-slate-900/60 border border-slate-850 p-3 rounded-lg text-slate-400 text-[11px] leading-relaxed">
-                    Enter the registered Email address of your Educator account (e.g. <span className="font-mono text-[10px] text-indigo-300 font-bold">gladys@ezibeckacademy.edu.ng</span>) to receive a secure login OTP code.
-                  </div>
-                  <div>
-                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Registered Email address:</label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="e.g. gladys@ezibeckacademy.edu.ng"
-                      value={facultyResetEmail}
-                      onChange={(e) => {
-                        setFacultyResetEmail(e.target.value);
-                        setFacultyResetError('');
-                      }}
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs text-white outline-none"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full bg-indigo-900 hover:bg-indigo-950 text-white rounded-lg py-2.5 text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer"
-                  >
-                    Send One-Time OTP Passcode
-                  </button>
-                </form>
-              )}
-
-              {facultyResetStep === 'verify' && (
-                <form onSubmit={handleFacultyVerifyOtp} className="space-y-4">
-                  <div className="bg-slate-900/60 border border-slate-850 p-3 rounded-lg text-slate-400 text-[11px] leading-normal font-medium">
-                    Copy the dynamic verification OTP code shown in the green banner above and input below:
-                  </div>
-                  <div>
-                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Enter 6-Digit OTP Code:</label>
-                    <input
-                      type="text"
-                      required
-                      maxLength={6}
-                      placeholder="e.g. 123456"
-                      value={facultyResetOtp}
-                      onChange={(e) => {
-                        setFacultyResetOtp(e.target.value);
-                        setFacultyResetError('');
-                      }}
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs font-mono tracking-widest text-center text-white outline-none font-bold"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg py-2.5 text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer"
-                  >
-                    Verify Passcode OTP
-                  </button>
-                </form>
-              )}
-
-              {facultyResetStep === 'new_password' && (
-                <form onSubmit={handleFacultyConfirmNewPass} className="space-y-4">
-                  <div>
-                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5">New Access Passcode Key (Min 4 chars):</label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="Enter new educator passcode..."
-                      value={facultyNewPass}
-                      onChange={(e) => {
-                        setFacultyNewPass(e.target.value);
-                        setFacultyResetError('');
-                      }}
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs text-white outline-none font-bold"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1.5">Confirm New Access Passcode Key:</label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="Confirm new educator passcode..."
-                      value={facultyNewPassConfirm}
-                      onChange={(e) => {
-                        setFacultyNewPassConfirm(e.target.value);
-                        setFacultyResetError('');
-                      }}
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500 rounded-lg p-2.5 text-xs text-white outline-none font-bold"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full bg-indigo-900 hover:bg-indigo-950 text-white rounded-lg py-2.5 text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer"
-                  >
-                    Save & Update Passcode Key
-                  </button>
-                </form>
-              )}
-            </div>
-          ) : (
-            /* STANDARD FACULTY LOGIN FORM */
-            <form onSubmit={handleVerifyTeacherLogin} className="space-y-5 text-left animate-fade-in bg-slate-950 border border-slate-850 p-6 rounded-2xl shadow-xl">
-              <div className="bg-[#0f172a] border border-slate-800/80 p-4 rounded-xl text-left text-xs text-slate-400 space-y-1">
-                <span className="font-extrabold text-slate-200 block text-[11px] uppercase tracking-wider mb-1 text-indigo-400">
-                  Staff Desk Login
+              <div>
+                <span className="text-[9px] bg-emerald-50 border border-emerald-200 text-emerald-800 font-extrabold tracking-widest uppercase px-3 py-1 rounded-full">
+                  Educators Entry Desk
                 </span>
-                <p>Welcome, Educators! Sign in securely using your Username or Full Name and physical access password key code to configure reports.</p>
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight uppercase text-slate-950 mt-2">
+                  EZIBECK STAFF DESK
+                </h1>
+                <p className="text-[10px] tracking-wide text-slate-400 font-extrabold uppercase mt-1">
+                  Authorized Central Roster & Report Manager
+                </p>
               </div>
+            </div>
 
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Username / Full Name:</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. ezekiel, gladys, anthony, or Full Name"
-                  value={usernameInput}
-                  onChange={(e) => {
-                    setUsernameInput(e.target.value);
-                    setTeacherLoginError('');
-                  }}
-                  className="w-full bg-slate-900/60 border border-slate-800 hover:border-slate-700 focus:border-indigo-500 rounded-xl p-3 text-xs text-white outline-none font-bold transition-all focus:ring-1 focus:ring-indigo-500"
-                />
+            {/* Simulated Alerts & Notifications */}
+            {(successMsg || facultyResetSuccess) && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 text-emerald-800 text-xs text-left font-bold shadow-3xs animate-fade-in">
+                ✓ {successMsg || facultyResetSuccess}
               </div>
+            )}
 
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
-                  Passcode Password Key:
-                </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Profile security password"
-                  value={teacherPasswordInput}
-                  onChange={(e) => {
-                    setTeacherPasswordInput(e.target.value);
-                    setTeacherLoginError('');
-                  }}
-                  className="w-full bg-slate-900/60 border border-slate-800 hover:border-slate-700 focus:border-indigo-505 rounded-xl p-3 text-xs font-mono tracking-widest text-white outline-none transition-all focus:ring-1 focus:ring-indigo-500"
-                />
-                {teacherLoginError && (
-                  <p className="text-[10px] text-red-400 font-semibold mt-1.5 bg-red-950/30 border border-red-500/30 px-3 py-2 rounded-lg">{teacherLoginError}</p>
+            {facultyResetError && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3.5 text-red-705 text-xs text-left font-semibold shadow-3xs animate-fade-in">
+                ⚠️ {facultyResetError}
+              </div>
+            )}
+
+            {facultySimulatedNotification && (
+              <div className="bg-emerald-50 border border-emerald-250 rounded-xl p-4 text-left space-y-1.5 animate-pulse shadow-3xs">
+                <span className="text-[9px] uppercase font-black tracking-widest text-emerald-850 block">📬 Simulation Educator Email Inbox</span>
+                <p className="font-mono text-[11px] text-emerald-800 break-all leading-normal">{facultySimulatedNotification}</p>
+              </div>
+            )}
+
+            {showFacultyReset ? (
+              /* FACULTY OTP PASSWORD RESET FORM */
+              <div className="space-y-4 text-left animate-fade-in">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Passcode Reset Desk</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowFacultyReset(false);
+                      setFacultyResetError('');
+                      setFacultyResetSuccess('');
+                      setFacultySimulatedNotification('');
+                      setFacultyResetStep('request');
+                    }}
+                    className="text-[10px] text-emerald-600 hover:text-emerald-850 hover:underline font-bold cursor-pointer"
+                  >
+                    ← Back to Login
+                  </button>
+                </div>
+
+                {facultyResetStep === 'request' && (
+                  <form onSubmit={handleFacultySendOtp} className="space-y-4">
+                    <div className="bg-slate-50 border border-slate-150 p-3.5 rounded-xl text-slate-505 text-[11px] leading-relaxed font-semibold">
+                      Enter the registered Email address of your Educator account (e.g. <span className="font-mono text-[10px] text-emerald-700 font-extrabold">gladys@ezibeckacademy.edu.ng</span>) to receive a secure login OTP code.
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-450 mb-1.5">Registered Email Address:</label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="e.g. gladys@ezibeckacademy.edu.ng"
+                        value={facultyResetEmail}
+                        onChange={(e) => {
+                          setFacultyResetEmail(e.target.value);
+                          setFacultyResetError('');
+                        }}
+                        className="w-full bg-slate-50 border border-slate-205 focus:border-emerald-500 focus:bg-white rounded-xl p-3 text-xs text-slate-900 outline-none font-bold"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-3 text-xs font-black tracking-wider uppercase transition-all duration-150 cursor-pointer shadow-md shadow-emerald-50"
+                    >
+                      Send One-Time OTP Passcode
+                    </button>
+                  </form>
+                )}
+
+                {facultyResetStep === 'verify' && (
+                  <form onSubmit={handleFacultyVerifyOtp} className="space-y-4">
+                    <div className="bg-slate-50 border border-slate-150 p-3.5 rounded-xl text-slate-505 text-[11px] leading-normal font-medium">
+                      Copy the dynamic verification OTP code shown in the green simulated inbox banner at the top of the card and input below:
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-450 mb-1.5">Enter 6-Digit OTP Code:</label>
+                      <input
+                        type="text"
+                        required
+                        maxLength={6}
+                        placeholder="e.g. 123456"
+                        value={facultyResetOtp}
+                        onChange={(e) => {
+                          setFacultyResetOtp(e.target.value);
+                          setFacultyResetError('');
+                        }}
+                        className="w-full bg-slate-50 border border-emerald-200 text-slate-900 rounded-xl p-3 text-xs font-mono font-bold tracking-widest text-center outline-none focus:border-emerald-500 focus:bg-white transition-all focus:ring-4 focus:ring-emerald-500/10"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-3 text-xs font-black tracking-wider uppercase transition-all duration-150 cursor-pointer shadow-md shadow-emerald-50"
+                    >
+                      Verify Passcode OTP
+                    </button>
+                  </form>
+                )}
+
+                {facultyResetStep === 'new_password' && (
+                  <form onSubmit={handleFacultyConfirmNewPass} className="space-y-4">
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-455 mb-1.5">New Access Passcode Key (Min 4 chars):</label>
+                      <input
+                        type="password"
+                        required
+                        placeholder="Enter new educator passcode..."
+                        value={facultyNewPass}
+                        onChange={(e) => {
+                          setFacultyNewPass(e.target.value);
+                          setFacultyResetError('');
+                        }}
+                        className="w-full bg-slate-50 border border-slate-205 focus:border-emerald-500 focus:bg-white rounded-xl p-3 text-xs text-slate-900 outline-none font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-black uppercase tracking-widest text-slate-455 mb-1.5">Confirm New Access Passcode Key:</label>
+                      <input
+                        type="password"
+                        required
+                        placeholder="Confirm new educator passcode..."
+                        value={facultyNewPassConfirm}
+                        onChange={(e) => {
+                          setFacultyNewPassConfirm(e.target.value);
+                          setFacultyResetError('');
+                        }}
+                        className="w-full bg-slate-50 border border-slate-205 focus:border-emerald-500 focus:bg-white rounded-xl p-3 text-xs text-slate-900 outline-none font-bold"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl py-3 text-xs font-black tracking-wider uppercase transition-all duration-150 cursor-pointer shadow-md shadow-emerald-50"
+                    >
+                      Save & Update Passcode Key
+                    </button>
+                  </form>
                 )}
               </div>
+            ) : (
+              /* STANDARD FACULTY LOGIN FORM */
+              <form onSubmit={handleVerifyTeacherLogin} className="space-y-5 text-left animate-fade-in">
+                <div>
+                  <label className="block text-[10px] font-black text-slate-450 uppercase tracking-widest mb-1.5">Username / Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. ezekiel, gladys, anthony, or Full Name"
+                    value={usernameInput}
+                    onChange={(e) => {
+                      setUsernameInput(e.target.value);
+                      setTeacherLoginError('');
+                    }}
+                    className="w-full bg-slate-50 border border-slate-200/80 focus:border-emerald-500 focus:bg-white rounded-xl p-3 text-xs text-slate-900 outline-none font-bold transition-all focus:ring-4 focus:ring-emerald-500/10 placeholder-slate-405"
+                  />
+                </div>
 
-              {/* Keep Me Signed In Box */}
-              <div className="flex items-center gap-2 py-1.5 select-none hover:opacity-90">
-                <input
-                  type="checkbox"
-                  id="remember-me-checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-805 text-indigo-600 focus:ring-indigo-500 bg-slate-900 accent-indigo-500 cursor-pointer"
-                />
-                <label htmlFor="remember-me-checkbox" className="text-[11px] font-bold text-slate-400 cursor-pointer select-none pb-0.5">
-                  Keep me signed in / Save login for next time
+                <div>
+                  <label className="block text-[10px] font-black text-slate-450 uppercase tracking-widest mb-1.5">
+                    Passcode Password Key
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Profile security password"
+                    value={teacherPasswordInput}
+                    onChange={(e) => {
+                      setTeacherPasswordInput(e.target.value);
+                      setTeacherLoginError('');
+                    }}
+                    className="w-full bg-slate-50 border border-slate-205 focus:border-emerald-500 focus:bg-white rounded-xl p-3 text-xs text-slate-900 outline-none transition-all focus:ring-4 focus:ring-emerald-500/10 font-bold placeholder-slate-405"
+                  />
+                  {teacherLoginError && (
+                    <p className="text-[10px] text-red-650 font-semibold mt-2.5 bg-red-50 border border-red-100 rounded-lg p-2.5">{teacherLoginError}</p>
+                  )}
+                </div>
+
+                {/* Keep Me Signed In Box */}
+                <label className="flex items-center gap-2 py-1 select-none hover:opacity-90 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-205 text-emerald-600 focus:ring-emerald-500/25 bg-slate-50 accent-emerald-600 cursor-pointer"
+                  />
+                  <span className="text-[11px] font-extrabold text-slate-500 pb-0.5">
+                    Remember my credentials
+                  </span>
                 </label>
-              </div>
 
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-500 hover:to-indigo-700 text-white rounded-xl py-3 text-xs font-black tracking-wider uppercase transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg hover:shadow-indigo-500/20 active:scale-98 border border-indigo-500/30 flex items-center justify-center gap-2"
-                >
-                  Confirm & Log In 🔐
-                </button>
-              </div>
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-555 hover:to-emerald-700 text-white rounded-xl py-3 text-xs font-black tracking-wider uppercase transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg hover:shadow-emerald-500/15 active:scale-98 border border-emerald-500/10 flex items-center justify-center gap-2"
+                  >
+                    Confirm & Log In 🔐
+                  </button>
+                </div>
 
-              <div className="flex justify-center pt-2 border-t border-slate-900/60">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowFacultyReset(true);
-                    setFacultyResetStep('request');
-                  }}
-                  className="text-[11px] text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1.5 hover:underline transition-colors py-1 cursor-pointer"
-                >
-                  🔑 Forget password? Reset with OTP
-                </button>
-              </div>
-            </form>
-          )}
+                <div className="flex justify-center pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowFacultyReset(true);
+                      setFacultyResetStep('request');
+                    }}
+                    className="text-[11px] text-emerald-650 hover:text-emerald-800 font-extrabold flex items-center gap-1.5 hover:underline transition-colors py-1 cursor-pointer"
+                  >
+                    🔑 Forgot password? Overwrite with OTP
+                  </button>
+                </div>
+              </form>
+            )}
 
-          <p className="text-[9px] text-slate-500">
-            Secure administrative console. EZIBECK'S ACADEMY Academic Office delta-terminal.
-          </p>
+            {/* Quick Login Directory panel for ease of testing */}
+            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-3.5 text-left text-[11px] text-slate-505 space-y-2 select-none">
+              <div className="flex items-center justify-between">
+                <span className="font-extrabold text-slate-700 uppercase tracking-wider text-[9px] flex items-center gap-1">
+                  <span>🔐</span> School Staff directory
+                </span>
+                <span className="text-[8px] bg-emerald-100 text-emerald-805 px-1.5 py-0.5 rounded font-mono font-black uppercase">
+                  Fast Fill
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-0.5">
+                {facultyProfiles.map(acc => (
+                  <div 
+                    key={acc.id} 
+                    className="bg-white border border-slate-100 p-2 rounded-xl text-left hover:border-emerald-350 transition-colors shadow-3xs flex items-center gap-2 group cursor-pointer"
+                    onClick={() => {
+                      setUsernameInput(acc.id);
+                      setTeacherPasswordInput(acc.password || 'teacher1');
+                      setTeacherLoginError('');
+                    }}
+                    title="Click to auto-fill"
+                  >
+                    <span className="text-sm select-none p-1 bg-slate-50 rounded-lg group-hover:bg-emerald-50 transition-colors">{acc.avatar}</span>
+                    <div className="min-w-0">
+                      <p className="font-bold text-slate-800 text-[10px] leading-tight truncate group-hover:text-emerald-700">{acc.name}</p>
+                      <p className="text-slate-400 text-[8px] truncate mt-0.5">{acc.assignedClass || "Principal"} • Code: <strong className="font-mono text-slate-650 font-bold">{acc.password || "admin"}</strong></p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[9px] text-slate-400 italic text-center pt-1">
+                💡 Tip: Click any educator card above to auto-fill their username & passcode key instantly!
+              </p>
+            </div>
+
+            <p className="text-[9px] text-slate-450">
+              Secure administrative console. EZIBECK ACADEMY Academic Information Terminal.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -1127,7 +1165,7 @@ export default function TeacherDashboard({
                 <button
                   onClick={downloadTeacherPdf}
                   disabled={isGeneratingPdf}
-                  className="bg-indigo-800 hover:bg-indigo-900 disabled:opacity-50 text-white font-bold text-xs px-5 py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
+                  className="bg-emerald-800 hover:bg-emerald-800 disabled:opacity-50 text-white font-bold text-xs px-5 py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer"
                 >
                   {isGeneratingPdf ? (
                     <>
@@ -1183,8 +1221,8 @@ export default function TeacherDashboard({
                       <h1 className="text-2xl sm:text-3.5xl font-black text-slate-900 tracking-tight leading-none uppercase">
                         {template.schoolName}
                       </h1>
-                      <p className="text-[11px] uppercase tracking-wider text-indigo-700 font-bold flex items-center gap-1.5 select-none">
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+                      <p className="text-[11px] uppercase tracking-wider text-emerald-700 font-bold flex items-center gap-1.5 select-none">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
                         Motto: {template.motto}
                       </p>
                       <p className="text-slate-500 text-[10px] sm:text-[11px] leading-relaxed">
@@ -1220,7 +1258,7 @@ export default function TeacherDashboard({
                         <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
                           <span>🔑</span> Student ID
                         </span>
-                        <span className="font-mono font-bold text-indigo-700 text-right w-1/2">{viewingReportStudent.id}</span>
+                        <span className="font-mono font-bold text-emerald-700 text-right w-1/2">{viewingReportStudent.id}</span>
                       </div>
 
                       <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
@@ -1269,7 +1307,7 @@ export default function TeacherDashboard({
                         <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
                           <span>🔄</span> Resumption Date
                         </span>
-                        <span className="font-extrabold text-indigo-750 text-right w-1/2">{template.resumptionDate}</span>
+                        <span className="font-extrabold text-emerald-750 text-right w-1/2">{template.resumptionDate}</span>
                       </div>
                     </div>
                   </div>
@@ -1294,8 +1332,8 @@ export default function TeacherDashboard({
                             <th className="py-2.5 px-3 border-r border-slate-200 text-center w-24">
                               <span className="flex items-center justify-center gap-1"># EXAM (70)</span>
                             </th>
-                            <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-indigo-50/30 w-24">
-                              <span className="flex items-center justify-center gap-1 text-indigo-750">Σ TERM (100)</span>
+                            <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/20 w-24">
+                              <span className="flex items-center justify-center gap-1 text-emerald-750">Σ TERM (100)</span>
                             </th>
                             <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20">
                               <span className="flex items-center justify-center gap-1"># 1ST TERM (20)</span>
@@ -1306,7 +1344,7 @@ export default function TeacherDashboard({
                             <th className="py-2.5 px-3 border-r border-slate-205 text-center text-[10px] w-20">
                               <span className="flex items-center justify-center gap-1"># 3RD TERM (60)</span>
                             </th>
-                            <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-indigo-50/20 w-28 text-slate-800 font-bold">
+                            <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/10 w-28 text-slate-800 font-bold">
                               <span className="flex items-center justify-center gap-1 text-slate-805 font-bold">Σ SESSION AVE</span>
                             </th>
                             <th className="py-2.5 px-3 border-r border-slate-200 text-center w-20">
@@ -1337,11 +1375,11 @@ export default function TeacherDashboard({
                                 <td className="py-2.5 px-3 border-r border-slate-100 font-extrabold text-slate-1000 bg-slate-50/20">{subj.name}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-500">{subj.testScore}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-500">{subj.examScore}</td>
-                                <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-indigo-755 bg-indigo-50/20">{tot}</td>
+                                <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-750 bg-emerald-50/10">{tot}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{firstTerm}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{secondTerm}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-455">{thirdTerm}</td>
-                                <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-indigo-700 bg-slate-50/40">{sessionAvg}</td>
+                                <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-700 bg-slate-50/40">{sessionAvg}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-100 text-center">
                                   <span className={`px-2 py-0.5 text-[10px] font-black rounded-sm tracking-wider ${ratingClass}`}>
                                     {letter}
@@ -1372,7 +1410,7 @@ export default function TeacherDashboard({
                                 return (examSum / tCount).toFixed(1);
                               })()}
                             </td>
-                            <td className="py-2 px-3 text-center font-black text-indigo-705 bg-indigo-50/20">
+                            <td className="py-2 px-3 text-center font-black text-indigo-705 bg-emerald-50/10">
                               Average: {stats.avgScore.toFixed(1)}%
                             </td>
                             <td className="py-2 px-3 text-center font-bold">
@@ -1433,7 +1471,7 @@ export default function TeacherDashboard({
 
                     <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Calculated GPA</span>
-                      <p className="font-extrabold text-indigo-700 text-base leading-none">
+                      <p className="font-extrabold text-emerald-700 text-base leading-none">
                         {stats.gpa} <span className="text-[10px] text-slate-400 font-normal">/ 5.0</span>
                       </p>
                     </div>
@@ -1449,7 +1487,7 @@ export default function TeacherDashboard({
                   {/* Part B: Character Assessment */}
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
                     <div className="lg:col-span-6 bg-[#FCFCFC]/60 border border-slate-150 p-5 rounded-2xl space-y-3.5 shadow-3xs">
-                      <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-indigo-600 pl-2 select-none">
+                      <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-emerald-600 pl-2 select-none">
                         Part B: Character & Behavioral Conduct
                       </h4>
 
@@ -1457,7 +1495,7 @@ export default function TeacherDashboard({
                         {viewingReportStudent.behaviour.map(b => (
                           <div key={b.name} className="flex items-center justify-between py-1 border-b border-dashed border-slate-150">
                             <span className="font-semibold text-slate-600">{b.name}</span>
-                            <span className="font-mono font-black text-[10px] text-indigo-755 bg-indigo-50 border border-indigo-100/60 px-1.5 py-0.5 rounded-md">
+                            <span className="font-mono font-black text-[10px] text-emerald-750 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
                               {b.rating} / 5
                             </span>
                           </div>
@@ -1523,7 +1561,7 @@ export default function TeacherDashboard({
                             <span>Very Good Behavior</span>
                           </li>
                           <li className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-md bg-indigo-50 text-indigo-705 text-[10px] flex items-center justify-center font-mono">3</span>
+                            <span className="w-5 h-5 rounded-md bg-emerald-50 text-indigo-705 text-[10px] flex items-center justify-center font-mono">3</span>
                             <span>Satisfactory Conduct</span>
                           </li>
                           <li className="flex items-center gap-2">
@@ -1563,7 +1601,7 @@ export default function TeacherDashboard({
                                 <p className="font-black text-slate-900 font-sans">{displayTeacherName}</p>
                               </div>
                               <div className="text-right select-none">
-                                <div className="text-sm font-serif italic text-indigo-950 font-semibold h-5 tracking-wide">
+                                <div className="text-sm font-serif italic text-emerald-950 font-semibold h-5 tracking-wide">
                                   {displayTeacherName.replace("Mrs.", "").replace("Mr.","").trim()}
                                 </div>
                                 <span className="text-[8px] text-slate-400 uppercase tracking-wider block border-t border-slate-200 pt-0.5 mt-0.5">Signature & Stamp</span>
@@ -1594,7 +1632,7 @@ export default function TeacherDashboard({
                                 <p className="font-black text-slate-900">{displayPrincipalName}</p>
                               </div>
                               <div className="text-right select-none">
-                                <div className="text-sm font-serif italic text-indigo-950 font-semibold h-5 tracking-wide">
+                                <div className="text-sm font-serif italic text-emerald-950 font-semibold h-5 tracking-wide">
                                   {displayPrincipalName.replace("Dr.","").trim()}
                                 </div>
                                 <span className="text-[8px] text-slate-400 uppercase tracking-wider block border-t border-slate-200 pt-0.5 mt-0.5">Seal & Signature</span>
@@ -1613,7 +1651,7 @@ export default function TeacherDashboard({
                       <span>Candidate Academic Status: <strong className="text-white">Active and Promoted</strong></span>
                     </span>
                     
-                    <span className="bg-indigo-700 text-white font-extrabold px-3 py-1 text-[10px] rounded tracking-widest uppercase font-bold">
+                    <span className="bg-emerald-600 text-white font-extrabold px-3 py-1 text-[10px] rounded tracking-widest uppercase font-bold">
                       ★ Official Seal Verified
                     </span>
                   </div>
@@ -1626,7 +1664,7 @@ export default function TeacherDashboard({
             {/* Editor Top Navigation header */}
             <div className="flex justify-between items-center border-b pb-4 mb-6">
               <div className="flex items-center gap-2.5">
-                <FileSpreadsheet className="w-6 h-6 text-indigo-900" />
+                <FileSpreadsheet className="w-6 h-6 text-emerald-900" />
                 <div>
                   <h3 className="text-base font-black text-slate-900">Digital Grade Marks Entry & Conduct Ratings</h3>
                   <p className="text-xs text-slate-400">Editing profile for student <strong className="text-slate-800">{editingStudent.name}</strong> ({editingStudent.id})</p>
@@ -1690,7 +1728,7 @@ export default function TeacherDashboard({
                   placeholder="Default: 123456"
                   value={editPassword}
                   onChange={(e) => setEditPassword(e.target.value)}
-                  className="bg-white border rounded p-1.5 w-full font-bold text-indigo-700 outline-none text-center font-mono"
+                  className="bg-white border rounded p-1.5 w-full font-bold text-emerald-700 outline-none text-center font-mono"
                 />
               </div>
             </div>
@@ -1702,17 +1740,17 @@ export default function TeacherDashboard({
                   <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider">
                     Academic Subject Grades Record
                   </h4>
-                  <span className="bg-indigo-900 text-amber-400 text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded border border-indigo-950">
+                  <span className="bg-emerald-800 text-amber-400 text-[9px] font-black tracking-widest uppercase px-2 py-0.5 rounded border border-indigo-950">
                     📂 {activeTermTab} Session Active
                   </span>
                 </div>
 
                 {/* Dynamic Term isolation helper notice */}
-                <div className="bg-indigo-950 text-indigo-100 border border-indigo-900 rounded-2xl p-4 text-[11px] font-semibold flex items-start gap-2.5 shadow-sm">
+                <div className="bg-emerald-950 text-emerald-100 border border-emerald-900 rounded-2xl p-4 text-[11px] font-semibold flex items-start gap-2.5 shadow-sm">
                   <span className="text-sm select-none">ℹ️</span>
                   <div>
                     <span className="font-extrabold text-amber-350">Workspace Session Isolation: {activeTermTab} Mode</span>
-                    <p className="text-[10px] text-indigo-200 mt-0.5 leading-relaxed">
+                    <p className="text-[10px] text-emerald-200 mt-0.5 leading-relaxed">
                       You are editing grades for the <strong className="text-white underline underline-offset-1">{activeTermTab} folder</strong>. The standard Test (30) and Exam (70) scores correspond to {activeTermTab}'s work. Summaries for other terms are read-only to preserve records. To edit other terms, change the active session folder at the top of the Student Registry Roster.
                     </p>
                   </div>
@@ -1724,16 +1762,16 @@ export default function TeacherDashboard({
                     <span className="col-span-1 text-center font-bold">Test (30)</span>
                     <span className="col-span-1 text-center font-bold">Exam (70)</span>
                     <span className="col-span-1 text-center font-bold">Live Total (100)</span>
-                    <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-blue-900 bg-blue-150 border border-blue-300">
+                    <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-emerald-800 bg-emerald-100/70 border border-emerald-300">
                       1st Term# (20)
                     </span>
                     <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300">
                       2nd Term# (20)
                     </span>
-                    <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-indigo-900 bg-indigo-150 border border-indigo-300">
+                    <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300">
                       3rd Term# (60)
                     </span>
-                    <span className="col-span-2 text-center font-bold font-sans py-1 rounded text-indigo-900 bg-indigo-150 border border-indigo-300">
+                    <span className="col-span-2 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300">
                       # Position
                     </span>
                     <span className="col-span-1 text-center font-bold text-slate-400">Action</span>
@@ -1754,7 +1792,7 @@ export default function TeacherDashboard({
                               value={subj.name}
                               onChange={(e) => handleSubjectNameChange(subj.id, e.target.value)}
                               placeholder="e.g. Mathematics"
-                              className="w-full bg-slate-50 border border-slate-200 py-1 px-1.5 rounded text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-indigo-600 focus:ring-1 focus:ring-indigo-155 transition-all font-sans"
+                              className="w-full bg-slate-50 border border-slate-200 py-1 px-1.5 rounded text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100 transition-all font-sans"
                             />
                           </div>
                           <span className="col-span-1 flex justify-center px-1">
@@ -1766,7 +1804,7 @@ export default function TeacherDashboard({
                               onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_test`]: true }))}
                               onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_test`]: false }))}
                               onChange={(e) => handleScoreChange(subj.id, 'test', parseInt(e.target.value) || 0)}
-                              className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-indigo-805 font-bold font-mono text-slate-800"
+                              className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-emerald-600 font-bold font-mono text-slate-800"
                             />
                           </span>
                           <span className="col-span-1 flex justify-center px-1">
@@ -1778,10 +1816,10 @@ export default function TeacherDashboard({
                               onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_exam`]: true }))}
                               onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_exam`]: false }))}
                               onChange={(e) => handleScoreChange(subj.id, 'exam', parseInt(e.target.value) || 0)}
-                              className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-indigo-805 font-bold font-mono text-slate-800"
+                              className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-emerald-600 font-bold font-mono text-slate-800"
                             />
                           </span>
-                          <span className="col-span-1 text-center font-extrabold font-mono text-indigo-900 bg-indigo-50/50 py-1 rounded border">
+                          <span className="col-span-1 text-center font-extrabold font-mono text-emerald-900 bg-emerald-50/40 py-1 rounded border">
                             {subjTotal}
                           </span>
                           
@@ -1795,7 +1833,7 @@ export default function TeacherDashboard({
                               onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: true }))}
                               onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: false }))}
                               onChange={(e) => handleScoreChange(subj.id, 'firstTerm', parseInt(e.target.value) || 0)}
-                              className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-blue-50 border border-blue-200 focus:border-blue-500 text-blue-900 font-extrabold scale-[1.03]"
+                              className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50/50 border border-emerald-200 focus:border-emerald-500 text-emerald-800 font-extrabold scale-[1.03]"
                             />
                           </span>
 
@@ -1823,7 +1861,7 @@ export default function TeacherDashboard({
                               onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_thirdTerm`]: true }))}
                               onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_thirdTerm`]: false }))}
                               onChange={(e) => handleScoreChange(subj.id, 'thirdTerm', parseInt(e.target.value) || 0)}
-                              className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-indigo-50 border border-indigo-200 focus:border-indigo-500 text-indigo-900 font-extrabold scale-[1.03]"
+                              className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50 border border-emerald-200 focus:border-indigo-500 text-emerald-900 font-extrabold scale-[1.03]"
                             />
                           </span>
 
@@ -1836,10 +1874,10 @@ export default function TeacherDashboard({
                                 max={150}
                                 value={subj.position || 1}
                                 onChange={(e) => handleScoreChange(subj.id, 'position', parseInt(e.target.value) || 1)}
-                                className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-indigo-600 font-bold font-mono text-slate-800"
+                                className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-emerald-600 font-bold font-mono text-slate-800"
                               />
                               {subj.isPositionManual && (
-                                <span className="text-[10px] text-indigo-600 font-black select-none" title="Manually edited position">✍️</span>
+                                <span className="text-[10px] text-emerald-600 font-black select-none" title="Manually edited position">✍️</span>
                               )}
                             </div>
                           </span>
@@ -1867,7 +1905,7 @@ export default function TeacherDashboard({
                     <button
                       type="button"
                       onClick={handleAddNewSubject}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[10px] tracking-wider uppercase px-4 py-2 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                      className="bg-emerald-600 hover:bg-emerald-600 text-white font-extrabold text-[10px] tracking-wider uppercase px-4 py-2 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" /> Add New Subject Course Row
                     </button>
@@ -1890,7 +1928,7 @@ export default function TeacherDashboard({
                         <select
                           value={b.rating}
                           onChange={(e) => handleBehaviourChange(b.name, parseInt(e.target.value))}
-                          className="bg-white border rounded text-xs px-1.5 py-0.5 outline-none font-bold text-indigo-900"
+                          className="bg-white border rounded text-xs px-1.5 py-0.5 outline-none font-bold text-emerald-900"
                         >
                           {[1, 2, 3, 4, 5].map(v => (
                             <option key={v} value={v}>{v}</option>
@@ -1914,7 +1952,7 @@ export default function TeacherDashboard({
                         onChange={(e) => setEditFormComment(e.target.value)}
                         rows={3}
                         placeholder="Write term summary remark..."
-                        className="w-full bg-white border p-2 text-xs rounded-lg outline-none font-medium text-slate-700 focus:border-indigo-800"
+                        className="w-full bg-white border p-2 text-xs rounded-lg outline-none font-medium text-slate-700 focus:border-emerald-600"
                       />
                     </div>
 
@@ -1925,7 +1963,7 @@ export default function TeacherDashboard({
                         onChange={(e) => setEditPrincipalRemark(e.target.value)}
                         rows={3}
                         placeholder="Write principal's performance summary comment..."
-                        className="w-full bg-white border p-2 text-xs rounded-lg outline-none font-medium text-slate-700 focus:border-indigo-800"
+                        className="w-full bg-white border p-2 text-xs rounded-lg outline-none font-medium text-slate-700 focus:border-emerald-600"
                       />
                     </div>
 
@@ -1945,7 +1983,7 @@ export default function TeacherDashboard({
                         type="text"
                         value={editResumeDate}
                         onChange={(e) => setEditResumeDate(e.target.value)}
-                        className="w-full bg-white border p-1.5 text-xs rounded-lg outline-none font-bold text-indigo-800 font-mono"
+                        className="w-full bg-white border p-1.5 text-xs rounded-lg outline-none font-bold text-emerald-800 font-mono"
                       />
                     </div>
                   </div>
@@ -1979,7 +2017,7 @@ export default function TeacherDashboard({
                 </button>
                 <button
                   onClick={saveStudentChanges}
-                  className="bg-indigo-900 hover:bg-indigo-950 text-white font-bold text-xs px-6 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-indigo-900/10 cursor-pointer whitespace-nowrap"
+                  className="bg-emerald-800 hover:bg-emerald-950 text-white font-bold text-xs px-6 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-emerald-900/10 cursor-pointer whitespace-nowrap"
                 >
                   <Save className="w-4 h-4" /> Save Score Updates
                 </button>
@@ -2054,7 +2092,7 @@ export default function TeacherDashboard({
                         <h1 className="text-xl sm:text-2.5xl font-black text-slate-900 tracking-tight leading-none uppercase">
                           {template.schoolName}
                         </h1>
-                        <p className="text-[10px] uppercase tracking-wider text-indigo-700 font-bold flex items-center gap-1.5">
+                        <p className="text-[10px] uppercase tracking-wider text-emerald-700 font-bold flex items-center gap-1.5">
                           <span className="w-1.5 h-1.5 rounded-full bg-indigo-650"></span>
                           Motto: {template.motto}
                         </p>
@@ -2068,7 +2106,7 @@ export default function TeacherDashboard({
                       {/* Official status banner title */}
                       <div className="py-1">
                         <h2 className="text-xs sm:text-sm font-extrabold text-slate-805 tracking-tight uppercase flex items-center gap-2">
-                          <span className="inline-block px-2 py-0.5 bg-indigo-900 text-white text-[9px] font-black rounded tracking-wider">WORKING DRAFT</span>
+                          <span className="inline-block px-2 py-0.5 bg-emerald-800 text-white text-[9px] font-black rounded tracking-wider">WORKING DRAFT</span>
                           STUDENT’S TERMLY REPORT SHEET FOR {previewStudent.className.startsWith('JSS') ? 'JUNIOR' : 'SENIOR'} SECONDARY SCHOOL
                         </h2>
                       </div>
@@ -2088,7 +2126,7 @@ export default function TeacherDashboard({
                           <span className="font-semibold text-slate-400 flex items-center gap-1.5 w-1/2">
                             <span>🔑</span> Student ID
                           </span>
-                          <span className="font-mono font-bold text-indigo-700 text-right w-1/2">{previewStudent.id}</span>
+                          <span className="font-mono font-bold text-emerald-700 text-right w-1/2">{previewStudent.id}</span>
                         </div>
 
                         <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
@@ -2137,7 +2175,7 @@ export default function TeacherDashboard({
                           <span className="font-semibold text-slate-400 flex items-center gap-1.5 w-1/2">
                             <span>🔄</span> Resumption Date
                           </span>
-                          <span className="font-extrabold text-indigo-750 text-right w-1/2">{template.resumptionDate}</span>
+                          <span className="font-extrabold text-emerald-750 text-right w-1/2">{template.resumptionDate}</span>
                         </div>
                       </div>
                     </div>
@@ -2156,11 +2194,11 @@ export default function TeacherDashboard({
                               <th className="py-2.5 px-3 border-r border-slate-200 min-w-[150px]">📝 Subjects</th>
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center w-24"># TEST (30)</th>
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center w-24"># EXAM (70)</th>
-                              <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-indigo-50/20 w-24 text-indigo-750">Σ TERM (100)</th>
+                              <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/10 w-24 text-emerald-750">Σ TERM (100)</th>
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20"># 1ST TERM</th>
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20"># 2ND TERM</th>
                               <th className="py-2.5 px-3 border-r border-slate-205 text-center text-[10px] w-20"># 3RD TERM</th>
-                              <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-indigo-50/10 w-28 text-slate-800 font-bold">Σ SESSION AVE</th>
+                              <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/10 w-28 text-slate-800 font-bold">Σ SESSION AVE</th>
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center w-20">Σ GRADE</th>
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center w-16"># RANK</th>
                               <th className="py-2.5 px-4 font-bold text-slate-500">💬 TEACHER'S REMARK</th>
@@ -2182,11 +2220,11 @@ export default function TeacherDashboard({
                                   <td className="py-2.5 px-3 border-r border-slate-100 font-extrabold text-slate-1000 bg-slate-50/20">{subj.name}</td>
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-550">{subj.testScore}</td>
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-550">{subj.examScore}</td>
-                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-indigo-755 bg-indigo-50/20">{tot}</td>
+                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-750 bg-emerald-50/10">{tot}</td>
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{firstTerm}</td>
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{secondTerm}</td>
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{thirdTerm}</td>
-                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-indigo-700 bg-slate-50/40">{sessionAvg}</td>
+                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-700 bg-slate-50/40">{sessionAvg}</td>
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center">
                                     <span className={`px-2 py-0.5 text-[10px] font-black rounded-sm tracking-wider ${ratingClass}`}>
                                       {letter}
@@ -2220,7 +2258,7 @@ export default function TeacherDashboard({
 
                       <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Calculated GPA</span>
-                        <p className="font-extrabold text-indigo-700 text-base leading-none">
+                        <p className="font-extrabold text-emerald-700 text-base leading-none">
                           {stats.gpa} <span className="text-[10px] text-slate-400 font-normal">/ 5.0</span>
                         </p>
                       </div>
@@ -2236,7 +2274,7 @@ export default function TeacherDashboard({
                     {/* Behavioral & Conduct assessment Part B */}
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
                       <div className="lg:col-span-12 bg-[#FCFCFC]/60 border border-slate-150 p-5 rounded-2xl space-y-3.5 shadow-3xs">
-                        <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-indigo-600 pl-2">
+                        <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-emerald-600 pl-2">
                           Part B: Character & Behavioral Conduct Ratings
                         </h4>
 
@@ -2244,7 +2282,7 @@ export default function TeacherDashboard({
                           {previewStudent.behaviour.map(b => (
                             <div key={b.name} className="flex items-center justify-between py-1 border-b border-dashed border-slate-150">
                               <span className="font-semibold text-slate-600 text-left truncate max-w-[200px]">{b.name}</span>
-                              <span className="font-mono font-black text-[10px] text-indigo-755 bg-indigo-50 border border-indigo-100/60 px-1.5 py-0.5 rounded-md">
+                              <span className="font-mono font-black text-[10px] text-emerald-750 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
                                 {b.rating} / 5
                               </span>
                             </div>
@@ -2275,7 +2313,7 @@ export default function TeacherDashboard({
                                 <p className="font-black text-slate-900 font-sans">{displayTeacherName}</p>
                               </div>
                               <div className="text-right select-none">
-                                <div className="text-sm font-serif italic text-indigo-950 font-semibold h-5 tracking-wide">
+                                <div className="text-sm font-serif italic text-emerald-950 font-semibold h-5 tracking-wide">
                                   {displayTeacherName.replace("Mrs.", "").replace("Mr.","").trim()}
                                 </div>
                                 <span className="text-[8px] text-slate-400 uppercase tracking-wider block border-t border-slate-200 pt-0.5 mt-0.5">Signature & Stamp</span>
@@ -2319,7 +2357,7 @@ export default function TeacherDashboard({
           /* VIEW 3: WORKSPACE 15 PROPERTIES EDITABLE TEMPLATE FOR TEACHERS */
           <div className="bg-white border rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm animate-fade-in text-slate-800">
             <div className="border-b pb-4">
-              <span className="text-[10px] bg-indigo-50 border border-indigo-200 text-indigo-700 font-extrabold tracking-widest uppercase px-2.5 py-1 rounded-md">
+              <span className="text-[10px] bg-emerald-50 border border-emerald-200 text-emerald-700 font-extrabold tracking-widest uppercase px-2.5 py-1 rounded-md">
                 Workspace Configuration Panel
               </span>
               <h2 className="text-sm font-extrabold text-slate-900 mt-3 flex items-center gap-1.5 uppercase tracking-tight">
@@ -2463,7 +2501,7 @@ export default function TeacherDashboard({
                       placeholder="e.g. ₦120,000"
                       value={tempNextTermFee}
                       onChange={(e) => setTempNextTermFee(e.target.value)}
-                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-indigo-700 font-mono text-center"
+                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-emerald-700 font-mono text-center"
                     />
                   </div>
                   <div>
@@ -2567,7 +2605,7 @@ export default function TeacherDashboard({
                 {isAdmin ? (
                   <button
                     type="submit"
-                    className="bg-indigo-900 hover:bg-indigo-950 text-white font-extrabold text-[10px] tracking-wider uppercase px-6 py-3 rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                    className="bg-emerald-800 hover:bg-emerald-950 text-white font-extrabold text-[10px] tracking-wider uppercase px-6 py-3 rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-1.5"
                   >
                     ⚡ Save & Publish Workspace Template
                   </button>
@@ -2610,10 +2648,10 @@ export default function TeacherDashboard({
             </div>
 
             {editingFaculty && (
-              <form onSubmit={handleSaveFacultyEdit} className="bg-slate-50 border border-indigo-150 p-5 rounded-2xl space-y-4 animate-fade-in">
-                <div className="border-b border-indigo-100 pb-2 flex items-center justify-between">
+              <form onSubmit={handleSaveFacultyEdit} className="bg-slate-50 border border-emerald-150 p-5 rounded-2xl space-y-4 animate-fade-in">
+                <div className="border-b border-emerald-100 pb-2 flex items-center justify-between">
                   <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                    ⚙️ Edit Profile & Class Assignment: <span className="text-indigo-700">{editingFaculty.name}</span>
+                    ⚙️ Edit Profile & Class Assignment: <span className="text-emerald-700">{editingFaculty.name}</span>
                   </h3>
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Updates take effect immediately</span>
                 </div>
@@ -2626,7 +2664,7 @@ export default function TeacherDashboard({
                       required
                       value={editingFacultyName}
                       onChange={(e) => setEditingFacultyName(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 outline-none focus:border-indigo-600 transition-all font-semibold"
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 outline-none focus:border-emerald-600 transition-all font-semibold"
                     />
                   </div>
 
@@ -2638,7 +2676,7 @@ export default function TeacherDashboard({
                       placeholder="e.g. gladys@ezibeckacademy.edu.ng"
                       value={editingFacultyEmail}
                       onChange={(e) => setEditingFacultyEmail(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 outline-none focus:border-indigo-600 transition-all font-semibold font-mono"
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 outline-none focus:border-emerald-600 transition-all font-semibold font-mono"
                     />
                   </div>
 
@@ -2647,7 +2685,7 @@ export default function TeacherDashboard({
                     <select
                       value={editingFacultyClass || ''}
                       onChange={(e) => setEditingFacultyClass(e.target.value as ClassName)}
-                      className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:border-indigo-600 font-black outline-none"
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:border-emerald-600 font-black outline-none"
                     >
                       <option value="JSS1">JSS1 (Junior Secondary 1)</option>
                       <option value="JSS2">JSS2 (Junior Secondary 2)</option>
@@ -2665,7 +2703,7 @@ export default function TeacherDashboard({
                       required
                       value={editingFacultyPassword}
                       onChange={(e) => setEditingFacultyPassword(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 outline-none font-mono font-bold focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 outline-none font-mono font-bold focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
                     />
                   </div>
                 </div>
@@ -2679,7 +2717,7 @@ export default function TeacherDashboard({
                           type="button"
                           key={emoji}
                           onClick={() => setEditingFacultyAvatar(emoji)}
-                          className={`text-xl p-1.5 rounded-xl transition-all border ${editingFacultyAvatar === emoji ? 'bg-indigo-50 border-indigo-200 scale-105' : 'bg-white hover:bg-slate-100 border-slate-200'}`}
+                          className={`text-xl p-1.5 rounded-xl transition-all border ${editingFacultyAvatar === emoji ? 'bg-emerald-50 border-emerald-200 scale-105' : 'bg-white hover:bg-slate-100 border-slate-200'}`}
                         >
                           {emoji}
                         </button>
@@ -2697,7 +2735,7 @@ export default function TeacherDashboard({
                     </button>
                     <button
                       type="submit"
-                      className="bg-indigo-900 hover:bg-indigo-950 text-white rounded-xl px-5 py-2.5 text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer"
+                      className="bg-emerald-800 hover:bg-emerald-950 text-white rounded-xl px-5 py-2.5 text-[10px] font-extrabold tracking-wider uppercase transition-all cursor-pointer"
                     >
                       Save Assigned Class
                     </button>
@@ -2717,7 +2755,7 @@ export default function TeacherDashboard({
                         <h4 className="font-extrabold text-slate-905 text-xs flex flex-wrap items-center gap-2">
                           {p.name}
                           {isSelf && (
-                            <span className="bg-indigo-100 text-indigo-750 text-[9px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded-md">
+                            <span className="bg-emerald-100 text-emerald-750 text-[9px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded-md">
                               You (Admin)
                             </span>
                           )}
@@ -2727,7 +2765,7 @@ export default function TeacherDashboard({
                             </span>
                           )}
                           {p.assignedClass ? (
-                            <span className="bg-indigo-700 text-white text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md">
+                            <span className="bg-emerald-600 text-white text-[9px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md">
                               Class: {p.assignedClass}
                             </span>
                           ) : (
@@ -2739,7 +2777,7 @@ export default function TeacherDashboard({
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{p.role}</p>
                         <p className="text-[10px] text-slate-500 font-mono mt-1 flex flex-wrap gap-x-4">
                           <span>Passcode ID: <strong className="font-bold text-slate-800 tracking-wider font-mono bg-slate-100/80 px-2 py-0.5 rounded">{p.password || 'admin'}</strong></span>
-                          {p.email && <span>Email: <strong className="font-mono text-indigo-650">{p.email}</strong></span>}
+                          {p.email && <span>Email: <strong className="font-mono text-emerald-700">{p.email}</strong></span>}
                         </p>
                       </div>
                     </div>
@@ -2755,7 +2793,7 @@ export default function TeacherDashboard({
                           setEditingFacultyClass(p.assignedClass || 'JSS1');
                           setEditingFacultyAvatar(p.avatar || '👩‍🏫');
                         }}
-                        className="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 px-3.5 py-2 text-[10px] font-bold tracking-wider uppercase rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                        className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 px-3.5 py-2 text-[10px] font-bold tracking-wider uppercase rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
                       >
                         ⚙️ Edit & Assign Class
                       </button>
@@ -2801,9 +2839,9 @@ export default function TeacherDashboard({
           <div className="space-y-6">
             
             {/* 3 Workspace Terminal Sessions Divider */}
-            <div className="bg-indigo-950 text-white rounded-3xl p-6 shadow-xl border border-indigo-900 overflow-hidden relative select-none">
+            <div className="bg-emerald-950 text-white rounded-3xl p-6 shadow-xl border border-emerald-900 overflow-hidden relative select-none">
               {/* Abstract decorative background card elements */}
-              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-800 rounded-full blur-3xl opacity-30 select-none pointer-events-none"></div>
+              <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-emerald-800 rounded-full blur-3xl opacity-30 select-none pointer-events-none"></div>
               <div className="absolute -left-10 -top-10 w-32 h-32 bg-amber-500 rounded-full blur-3xl opacity-10 select-none pointer-events-none"></div>
 
               <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
@@ -2813,16 +2851,16 @@ export default function TeacherDashboard({
                       Terminal Sessions Directory
                     </span>
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span className="text-[10px] text-indigo-200 font-bold uppercase tracking-wider font-mono">STAFF WORKSPACE DESK</span>
+                    <span className="text-[10px] text-emerald-200 font-bold uppercase tracking-wider font-mono">STAFF WORKSPACE DESK</span>
                   </div>
                   <h3 className="text-base font-black tracking-tight">Active Scholar Session: <span className="text-amber-300 underline decoration-amber-300/40 decoration-2 underline-offset-4">{activeTermTab}</span></h3>
-                  <p className="text-xs text-indigo-200 font-medium max-w-xl">
+                  <p className="text-xs text-emerald-200 font-medium max-w-xl">
                     Add new student slips and input terminal assessment marks inside this term workspace. switching active terms redirects and configures report template properties.
                   </p>
                 </div>
                 
                 {/* 3 Segmented Session Toggles */}
-                <div className="w-full md:w-auto bg-indigo-900/40 border border-indigo-805 p-1 rounded-2xl flex gap-1 font-bold text-xs">
+                <div className="w-full md:w-auto bg-emerald-900/30 border border-emerald-600 p-1 rounded-2xl flex gap-1 font-bold text-xs">
                   {(['First Term', 'Second Term', 'Third Term'] as const).map((term) => (
                     <button
                       key={term}
@@ -2835,7 +2873,7 @@ export default function TeacherDashboard({
                       className={`flex-1 md:flex-none uppercase tracking-wider text-[10px] font-extrabold py-2.5 px-5 rounded-xl transition-all cursor-pointer ${
                         activeTermTab === term
                           ? 'bg-amber-350 text-slate-900 shadow-lg font-black scale-[1.01]'
-                          : 'text-indigo-200 hover:bg-indigo-900/60 hover:text-white'
+                          : 'text-emerald-200 hover:bg-emerald-800/60 hover:text-white'
                       }`}
                     >
                       {term}
@@ -2852,7 +2890,7 @@ export default function TeacherDashboard({
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Class Directory ({selectedClass})</span>
                   <p className="text-xl font-bold font-mono text-slate-900">{totalInClass} Students Slips</p>
                 </div>
-                <div className="bg-indigo-50 text-indigo-800 p-2.5 rounded-xl border">
+                <div className="bg-emerald-50 text-emerald-800 p-2.5 rounded-xl border">
                   <Users className="w-5 h-5" />
                 </div>
               </div>
@@ -2889,7 +2927,7 @@ export default function TeacherDashboard({
                           setSelectedClass(cls);
                           setShowAddForm(false);
                         }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedClass === cls ? 'bg-indigo-900 text-white shadow-sm font-black' : 'text-slate-600 hover:bg-slate-200'}`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedClass === cls ? 'bg-emerald-800 text-white shadow-sm font-black' : 'text-slate-600 hover:bg-slate-200'}`}
                       >
                         {cls}
                       </button>
@@ -2900,7 +2938,7 @@ export default function TeacherDashboard({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowAddForm(!showAddForm)}
-                    className="bg-indigo-900 hover:bg-indigo-950 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                    className="bg-emerald-800 hover:bg-emerald-950 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
                   >
                     <Plus className="w-4 h-4" /> Add Student
                   </button>
@@ -2969,7 +3007,7 @@ export default function TeacherDashboard({
                         placeholder="Default: 123456"
                         value={newStudentPassword}
                         onChange={(e) => setNewStudentPassword(e.target.value)}
-                        className="w-full bg-white border p-2 text-xs rounded-lg outline-none font-mono font-black text-indigo-700 text-center"
+                        className="w-full bg-white border p-2 text-xs rounded-lg outline-none font-mono font-black text-emerald-700 text-center"
                       />
                     </div>
                   </div>
@@ -2984,7 +3022,7 @@ export default function TeacherDashboard({
                     </button>
                     <button
                       type="submit"
-                      className="bg-indigo-900 border text-white hover:bg-indigo-950 px-5 py-2 rounded-lg"
+                      className="bg-emerald-800 border text-white hover:bg-emerald-950 px-5 py-2 rounded-lg"
                     >
                       Login Student
                     </button>
@@ -3028,18 +3066,18 @@ export default function TeacherDashboard({
                             <td className="py-3 px-4 font-mono text-slate-500 text-xs">{stud.id}</td>
                             <td className="py-3 px-4 font-extrabold text-slate-900">{stud.name}</td>
                             <td className="py-3 px-4 text-center text-slate-600 font-bold text-xs">{stud.sex}</td>
-                            <td className="py-3 px-4 text-center font-mono text-indigo-900 font-bold text-[13px]">{stats.gpa}</td>
+                            <td className="py-3 px-4 text-center font-mono text-emerald-900 font-bold text-[13px]">{stats.gpa}</td>
                             <td className="py-3 px-4 text-center font-mono font-bold text-xs text-slate-600">{stats.avgScore.toFixed(1)}%</td>
                             <td className="py-3 px-4 text-right flex justify-end gap-1.5 flex-row">
                               <button
                                 onClick={() => setViewingReportStudent(stud)}
-                                className="border border-slate-300 hover:border-indigo-600 hover:text-indigo-900 bg-white hover:bg-slate-50 text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-sm"
+                                className="border border-slate-300 hover:border-emerald-600 hover:text-emerald-900 bg-white hover:bg-slate-50 text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-sm"
                               >
                                 <Eye className="w-3.5 h-3.5" /> Print Preview
                               </button>
                               <button
                                 onClick={() => startEditStudent(stud)}
-                                className="border border-slate-300 hover:border-indigo-600 hover:text-indigo-900 bg-white hover:bg-slate-50 text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-sm"
+                                className="border border-slate-300 hover:border-emerald-600 hover:text-emerald-900 bg-white hover:bg-slate-50 text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-sm"
                               >
                                 <Edit2 className="w-3.5 h-3.5" /> Grade Report
                               </button>
