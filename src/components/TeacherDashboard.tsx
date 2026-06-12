@@ -109,58 +109,71 @@ export default function TeacherDashboard({
     };
 
     try {
-      // Scroll to top of window to avoid rendering defects in html2canvas
-      window.scrollTo(0, 0);
-      
-      // Enforce desktop viewport sizing for high physical layout precision and avoid wrapping
+      // Configure temporary desktop-optimized layout bounds to prevent text folding on mobile screens
       element.style.width = '1024px';
       element.style.minWidth = '1024px';
       element.style.maxWidth = '1024px';
+      element.style.boxSizing = 'border-box';
       
-      // Set all horizontal overflows of tables inside the print wrapper to visible
+      // Force nested tables to render fully visible in layout canvas
       overflowElms.forEach((el) => {
         const htmlEl = el as HTMLElement;
         htmlEl.style.overflowX = 'visible';
         htmlEl.style.width = '100%';
       });
 
-      // Generate canvas
+      // Generate razor sharp canvas ignoring active window scrolls
       const canvas = await html2canvas(element, {
-        scale: 1.5, // High physical definition, lightweight and highly reliable
+        scale: 2.0, // High-DPI razor sharp scaling
         useCORS: true,
         allowTaint: true,
         logging: false,
         backgroundColor: '#ffffff',
-        width: 1024,
+        scrollX: 0,
+        scrollY: 0,
         windowWidth: 1024
       });
       
       restoreStyles();
       
-      const imgData = canvas.toDataURL('image/jpeg', 0.9);
-      
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
       
       // Fit comfortably in portrait A4 width (210mm) with 10mm margins on both sides
       const imgWidth = 190; 
-      const pageHeight = 277; // Margins top/bottom
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      let heightLeft = imgHeight;
-      let position = 10; // Start with 10mm margin
-      
-      pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight, undefined, 'FAST');
-      heightLeft -= pageHeight;
-      
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight + 10;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight, undefined, 'FAST');
-        heightLeft -= pageHeight;
+      let pdf;
+
+      if (imgHeight <= 277) {
+        // Option 1: Fits comfortably within normal A4 printable height. Let's center it vertically.
+        pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+        const yMargin = (297 - imgHeight) / 2;
+        pdf.addImage(imgData, 'JPEG', 10, yMargin, imgWidth, imgHeight, undefined, 'FAST');
+      } else if (imgHeight <= 340) {
+        // Option 2: Slightly taller. Scale down gracefully so the entire report fits beautifully on a single A4 page.
+        const scaleFactor = 277 / imgHeight;
+        const adjustedWidth = imgWidth * scaleFactor;
+        const adjustedHeight = 277;
+        const xMargin = (210 - adjustedWidth) / 2;
+        
+        pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+        pdf.addImage(imgData, 'JPEG', xMargin, 10, adjustedWidth, adjustedHeight, undefined, 'FAST');
+      } else {
+        // Option 3: Extremely long template. Print as an elegant single-page PDF with custom height.
+        pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: [210, imgHeight + 20]
+        });
+        pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight, undefined, 'FAST');
       }
       
       const filename = `Ezibeck_Report_Sheet_${viewingReportStudent.id}_${viewingReportStudent.name.replace(/\s+/g, '_')}.pdf`;
@@ -168,10 +181,10 @@ export default function TeacherDashboard({
     } catch (err) {
       console.error('Direct PDF Generation Error:', err);
       
-      // Fallback style restoration to prevent UI defects
+      // Fallback style restoration
       restoreStyles();
       
-      // Trigger native printing directly without popup distraction
+      // Trigger native printing directly
       window.print();
     } finally {
       setIsGeneratingPdf(false);
