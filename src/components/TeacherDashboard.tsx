@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, Printer, UserCheck, LogOut, Database, Wifi, WifiOff, RefreshCw, CloudLightning } from 'lucide-react';
+import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, Printer, UserCheck, LogOut, Database, Wifi, WifiOff, RefreshCw, CloudLightning, Lock } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile, DbStatus } from '../types';
@@ -198,6 +198,12 @@ export default function TeacherDashboard({
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [warningMsg, setWarningMsg] = useState('');
+
+  const triggerWarning = (msg: string) => {
+    setWarningMsg(msg);
+    setTimeout(() => setWarningMsg(''), 4500);
+  };
   
   // Dashboard Sub-navigation Tab
   const [activeSubTab, setActiveSubTab] = useState<'roster' | 'workspace' | 'staff'>('roster');
@@ -208,6 +214,8 @@ export default function TeacherDashboard({
     }
     return 'First Term';
   });
+
+  const isTermReadOnly = activeTermTab !== 'Third Term';
 
   // Print latest database issues or status to the system console when they occur
   useEffect(() => {
@@ -983,40 +991,10 @@ export default function TeacherDashboard({
               </form>
             )}
 
-            {/* Quick Login Directory panel for ease of testing */}
-            <div className="bg-slate-50 rounded-2xl border border-slate-200 p-3.5 text-left text-[11px] text-slate-505 space-y-2 select-none">
-              <div className="flex items-center justify-between">
-                <span className="font-extrabold text-slate-700 uppercase tracking-wider text-[9px] flex items-center gap-1">
-                  <span>🔐</span> School Staff directory
-                </span>
-                <span className="text-[8px] bg-emerald-100 text-emerald-805 px-1.5 py-0.5 rounded font-mono font-black uppercase">
-                  Fast Fill
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-0.5">
-                {facultyProfiles.map(acc => (
-                  <div 
-                    key={acc.id} 
-                    className="bg-white border border-slate-100 p-2 rounded-xl text-left hover:border-emerald-350 transition-colors shadow-3xs flex items-center gap-2 group cursor-pointer"
-                    onClick={() => {
-                      setUsernameInput(acc.id);
-                      setTeacherPasswordInput(acc.password || 'teacher1');
-                      setTeacherLoginError('');
-                    }}
-                    title="Click to auto-fill"
-                  >
-                    <span className="text-sm select-none p-1 bg-slate-50 rounded-lg group-hover:bg-emerald-50 transition-colors">{acc.avatar}</span>
-                    <div className="min-w-0">
-                      <p className="font-bold text-slate-800 text-[10px] leading-tight truncate group-hover:text-emerald-700">{acc.name}</p>
-                      <p className="text-slate-400 text-[8px] truncate mt-0.5">{acc.assignedClass || "Principal"} • Code: <strong className="font-mono text-slate-650 font-bold">{acc.password || "admin"}</strong></p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <p className="text-[9px] text-slate-400 italic text-center pt-1">
-                💡 Tip: Click any educator card above to auto-fill their username & passcode key instantly!
-              </p>
-            </div>
+            {/* Secure administrative note */}
+            <p className="text-[9px] text-slate-450 text-center select-none pt-2">
+              💡 Staff login credentials are restricted and handled securely. Contact system administrators for your individual activation key.
+            </p>
 
             <p className="text-[9px] text-slate-450">
               Secure administrative console. EZIBECK ACADEMY Academic Information Terminal.
@@ -1091,6 +1069,13 @@ export default function TeacherDashboard({
         <div className="max-w-6xl mx-auto mb-6 bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-4 flex items-center gap-3 text-emerald-900 animate-slide-in print:hidden">
           <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
           <p className="text-xs font-bold">{successMsg}</p>
+        </div>
+      )}
+
+      {warningMsg && (
+        <div className="max-w-6xl mx-auto mb-6 bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 flex items-center gap-3 text-amber-900 animate-slide-in print:hidden">
+          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+          <p className="text-xs font-bold">{warningMsg}</p>
         </div>
       )}
 
@@ -1789,10 +1774,11 @@ export default function TeacherDashboard({
                             <input
                               type="text"
                               required
+                              disabled={isTermReadOnly}
                               value={subj.name}
                               onChange={(e) => handleSubjectNameChange(subj.id, e.target.value)}
                               placeholder="e.g. Mathematics"
-                              className="w-full bg-slate-50 border border-slate-200 py-1 px-1.5 rounded text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100 transition-all font-sans"
+                              className="w-full bg-slate-50 border border-slate-200 py-1 px-1.5 rounded text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100 transition-all font-sans disabled:opacity-75 disabled:cursor-not-allowed"
                             />
                           </div>
                           <span className="col-span-1 flex justify-center px-1">
@@ -1800,11 +1786,12 @@ export default function TeacherDashboard({
                               type="number"
                               min={0}
                               max={30}
+                              disabled={isTermReadOnly}
                               value={focusedInputs[`${subj.id}_test`] && subj.testScore === 0 ? '' : subj.testScore}
                               onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_test`]: true }))}
                               onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_test`]: false }))}
                               onChange={(e) => handleScoreChange(subj.id, 'test', parseInt(e.target.value) || 0)}
-                              className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-emerald-600 font-bold font-mono text-slate-800"
+                              className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-emerald-600 font-bold font-mono text-slate-800 disabled:opacity-75 disabled:cursor-not-allowed"
                             />
                           </span>
                           <span className="col-span-1 flex justify-center px-1">
@@ -1812,11 +1799,12 @@ export default function TeacherDashboard({
                               type="number"
                               min={0}
                               max={70}
+                              disabled={isTermReadOnly}
                               value={focusedInputs[`${subj.id}_exam`] && subj.examScore === 0 ? '' : subj.examScore}
                               onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_exam`]: true }))}
                               onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_exam`]: false }))}
                               onChange={(e) => handleScoreChange(subj.id, 'exam', parseInt(e.target.value) || 0)}
-                              className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-emerald-600 font-bold font-mono text-slate-800"
+                              className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-emerald-600 font-bold font-mono text-slate-800 disabled:opacity-75 disabled:cursor-not-allowed"
                             />
                           </span>
                           <span className="col-span-1 text-center font-extrabold font-mono text-emerald-900 bg-emerald-50/40 py-1 rounded border">
@@ -1829,11 +1817,12 @@ export default function TeacherDashboard({
                               type="number"
                               min={0}
                               max={100}
+                              disabled={isTermReadOnly}
                               value={focusedInputs[`${subj.id}_firstTerm`] && fTermVal === 0 ? '' : fTermVal}
                               onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: true }))}
                               onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: false }))}
                               onChange={(e) => handleScoreChange(subj.id, 'firstTerm', parseInt(e.target.value) || 0)}
-                              className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50/50 border border-emerald-200 focus:border-emerald-500 text-emerald-800 font-extrabold scale-[1.03]"
+                              className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50/50 border border-emerald-200 focus:border-emerald-500 text-emerald-800 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
                             />
                           </span>
 
@@ -1843,11 +1832,12 @@ export default function TeacherDashboard({
                               type="number"
                               min={0}
                               max={100}
+                              disabled={isTermReadOnly}
                               value={focusedInputs[`${subj.id}_secondTerm`] && sTermVal === 0 ? '' : sTermVal}
                               onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_secondTerm`]: true }))}
                               onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_secondTerm`]: false }))}
                               onChange={(e) => handleScoreChange(subj.id, 'secondTerm', parseInt(e.target.value) || 0)}
-                              className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50 border border-emerald-200 focus:border-emerald-500 text-emerald-990 font-extrabold scale-[1.03]"
+                              className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50 border border-emerald-200 focus:border-emerald-500 text-emerald-990 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
                             />
                           </span>
 
@@ -1857,11 +1847,12 @@ export default function TeacherDashboard({
                               type="number"
                               min={0}
                               max={100}
+                              disabled={isTermReadOnly}
                               value={focusedInputs[`${subj.id}_thirdTerm`] && tTermVal === 0 ? '' : tTermVal}
                               onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_thirdTerm`]: true }))}
                               onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_thirdTerm`]: false }))}
                               onChange={(e) => handleScoreChange(subj.id, 'thirdTerm', parseInt(e.target.value) || 0)}
-                              className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50 border border-emerald-200 focus:border-indigo-500 text-emerald-900 font-extrabold scale-[1.03]"
+                              className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50 border border-emerald-200 focus:border-indigo-500 text-emerald-900 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
                             />
                           </span>
 
@@ -1872,9 +1863,10 @@ export default function TeacherDashboard({
                                 type="number"
                                 min={1}
                                 max={150}
+                                disabled={isTermReadOnly}
                                 value={subj.position || 1}
                                 onChange={(e) => handleScoreChange(subj.id, 'position', parseInt(e.target.value) || 1)}
-                                className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-emerald-600 font-bold font-mono text-slate-800"
+                                className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-emerald-600 font-bold font-mono text-slate-800 disabled:opacity-75 disabled:cursor-not-allowed"
                               />
                               {subj.isPositionManual && (
                                 <span className="text-[10px] text-emerald-600 font-black select-none" title="Manually edited position">✍️</span>
@@ -1884,14 +1876,18 @@ export default function TeacherDashboard({
 
                           {/* Action Button */}
                           <div className="col-span-1 flex justify-center">
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteSubject(subj.id, subj.name)}
-                              title={`Delete ${subj.name}`}
-                              className="p-1.5 text-slate-450 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all cursor-pointer flex-shrink-0"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            {!isTermReadOnly ? (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteSubject(subj.id, subj.name)}
+                                title={`Delete ${subj.name}`}
+                                className="p-1.5 text-slate-450 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all cursor-pointer flex-shrink-0"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            ) : (
+                              <span className="text-slate-350 select-none text-[10px]">🔒 Locked</span>
+                            )}
                           </div>
                         </div>
                       );
@@ -1904,10 +1900,16 @@ export default function TeacherDashboard({
                     </span>
                     <button
                       type="button"
+                      disabled={isTermReadOnly}
                       onClick={handleAddNewSubject}
-                      className="bg-emerald-600 hover:bg-emerald-600 text-white font-extrabold text-[10px] tracking-wider uppercase px-4 py-2 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                      className={`font-extrabold text-[10px] tracking-wider uppercase px-4 py-2 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer ${
+                        isTermReadOnly 
+                          ? 'bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed select-none' 
+                          : 'bg-emerald-600 hover:bg-emerald-750 text-white'
+                      }`}
                     >
-                      <Plus className="w-3.5 h-3.5" /> Add New Subject Course Row
+                      {isTermReadOnly ? <Lock className="w-3.5 h-3.5 text-slate-400" /> : <Plus className="w-3.5 h-3.5" />} 
+                      Add New Subject Course Row
                     </button>
                   </div>
                 </div>
@@ -1926,9 +1928,10 @@ export default function TeacherDashboard({
                       <div key={b.name} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200 py-1.5 last:border-none">
                         <span className="font-bold text-slate-700 text-[11px]">{b.name}</span>
                         <select
+                          disabled={isTermReadOnly}
                           value={b.rating}
                           onChange={(e) => handleBehaviourChange(b.name, parseInt(e.target.value))}
-                          className="bg-white border rounded text-xs px-1.5 py-0.5 outline-none font-bold text-emerald-900"
+                          className="bg-white border rounded text-xs px-1.5 py-0.5 outline-none font-bold text-emerald-900 disabled:opacity-75 disabled:cursor-not-allowed"
                         >
                           {[1, 2, 3, 4, 5].map(v => (
                             <option key={v} value={v}>{v}</option>
@@ -1948,22 +1951,24 @@ export default function TeacherDashboard({
                     <div>
                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Form Teacher Remarks</label>
                       <textarea
+                        disabled={isTermReadOnly}
                         value={editFormComment}
                         onChange={(e) => setEditFormComment(e.target.value)}
                         rows={3}
                         placeholder="Write term summary remark..."
-                        className="w-full bg-white border p-2 text-xs rounded-lg outline-none font-medium text-slate-700 focus:border-emerald-600"
+                        className="w-full bg-slate-50 border p-2 text-xs rounded-lg outline-none font-medium text-slate-700 focus:border-emerald-600 disabled:opacity-75 disabled:cursor-not-allowed"
                       />
                     </div>
 
                     <div>
                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Principal's Remarks (Optional, Overrides Dynamic Default)</label>
                       <textarea
+                        disabled={isTermReadOnly}
                         value={editPrincipalRemark}
                         onChange={(e) => setEditPrincipalRemark(e.target.value)}
                         rows={3}
                         placeholder="Write principal's performance summary comment..."
-                        className="w-full bg-white border p-2 text-xs rounded-lg outline-none font-medium text-slate-700 focus:border-emerald-600"
+                        className="w-full bg-slate-50 border p-2 text-xs rounded-lg outline-none font-medium text-slate-700 focus:border-emerald-600 disabled:opacity-75 disabled:cursor-not-allowed"
                       />
                     </div>
 
@@ -1971,9 +1976,10 @@ export default function TeacherDashboard({
                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Form Teacher’s Authorized Name</label>
                       <input
                         type="text"
+                        disabled={isTermReadOnly}
                         value={editTeacherName}
                         onChange={(e) => setEditTeacherName(e.target.value)}
-                        className="w-full bg-white border p-1.5 text-xs rounded-lg outline-none font-bold text-slate-700"
+                        className="w-full bg-slate-50 border p-1.5 text-xs rounded-lg outline-none font-bold text-slate-700 disabled:opacity-75 disabled:cursor-not-allowed"
                       />
                     </div>
 
@@ -1981,9 +1987,10 @@ export default function TeacherDashboard({
                       <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Resumption Date (Next Term)</label>
                       <input
                         type="text"
+                        disabled={isTermReadOnly}
                         value={editResumeDate}
                         onChange={(e) => setEditResumeDate(e.target.value)}
-                        className="w-full bg-white border p-1.5 text-xs rounded-lg outline-none font-bold text-emerald-800 font-mono"
+                        className="w-full bg-slate-50 border p-1.5 text-xs rounded-lg outline-none font-bold text-emerald-800 font-mono disabled:opacity-75 disabled:cursor-not-allowed"
                       />
                     </div>
                   </div>
@@ -1994,6 +2001,7 @@ export default function TeacherDashboard({
             {/* Save Buttons and actions */}
             <div className="border-t pt-6 mt-8 flex flex-wrap justify-between items-center gap-3 print:hidden">
               <button
+                disabled={isTermReadOnly}
                 onClick={() => {
                   setDeleteConfirmStudent({
                     id: editingStudent.id,
@@ -2002,25 +2010,32 @@ export default function TeacherDashboard({
                     source: 'edit'
                   });
                 }}
-                className="border border-red-200 bg-red-50 hover:bg-red-100 hover:border-red-400 text-red-650 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer"
+                className={`font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer ${
+                  isTermReadOnly 
+                    ? 'bg-slate-100 text-slate-450 border border-slate-250 cursor-not-allowed select-none' 
+                    : 'border border-red-200 bg-red-50 hover:bg-red-100 hover:border-red-400 text-red-650'
+                }`}
                 title="Delete student and their report card"
               >
-                <Trash2 className="w-3.5 h-3.5" /> Delete Report Card
+                {isTermReadOnly ? <Lock className="w-3.5 h-3.5 text-slate-400" /> : <Trash2 className="w-3.5 h-3.5" />} 
+                Delete Report Card
               </button>
 
               <div className="flex gap-2">
                 <button
                   onClick={() => setEditingStudent(null)}
-                  className="border border-slate-350 hover:bg-slate-50 text-slate-600 font-bold text-xs px-6 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap"
+                  className="border border-slate-350 hover:bg-slate-50 text-slate-650 font-bold text-xs px-6 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap"
                 >
-                  Discard Changes
+                  {isTermReadOnly ? 'Close Profile' : 'Discard Changes'}
                 </button>
-                <button
-                  onClick={saveStudentChanges}
-                  className="bg-emerald-800 hover:bg-emerald-950 text-white font-bold text-xs px-6 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-emerald-900/10 cursor-pointer whitespace-nowrap"
-                >
-                  <Save className="w-4 h-4" /> Save Score Updates
-                </button>
+                {!isTermReadOnly && (
+                  <button
+                    onClick={saveStudentChanges}
+                    className="bg-emerald-800 hover:bg-emerald-950 text-white font-bold text-xs px-6 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-emerald-900/10 cursor-pointer whitespace-nowrap"
+                  >
+                    <Save className="w-4 h-4" /> Save Score Updates
+                  </button>
+                )}
               </div>
             </div>
 
@@ -2937,10 +2952,21 @@ export default function TeacherDashboard({
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setShowAddForm(!showAddForm)}
-                    className="bg-emerald-800 hover:bg-emerald-950 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+                    onClick={() => {
+                      if (isTermReadOnly) {
+                        triggerWarning("Adding student profiles is restricted for archived terms. Academic details are in read-only mode.");
+                      } else {
+                        setShowAddForm(!showAddForm);
+                      }
+                    }}
+                    className={`font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-sm cursor-pointer ${
+                      isTermReadOnly 
+                        ? 'bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed select-none' 
+                        : 'bg-emerald-800 hover:bg-emerald-950 text-white'
+                    }`}
                   >
-                    <Plus className="w-4 h-4" /> Add Student
+                    {isTermReadOnly ? <Lock className="w-4 h-4 text-slate-400" /> : <Plus className="w-4 h-4" />} 
+                    Add Student
                   </button>
                 </div>
               </div>
@@ -3079,15 +3105,18 @@ export default function TeacherDashboard({
                                 onClick={() => startEditStudent(stud)}
                                 className="border border-slate-300 hover:border-emerald-600 hover:text-emerald-900 bg-white hover:bg-slate-50 text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 shadow-sm"
                               >
-                                <Edit2 className="w-3.5 h-3.5" /> Grade Report
+                                {isTermReadOnly ? <Eye className="w-3.5 h-3.5" /> : <Edit2 className="w-3.5 h-3.5" />}
+                                {isTermReadOnly ? 'View Grades' : 'Grade Report'}
                               </button>
-                              <button
-                                onClick={() => deleteStudentProfile(stud.id, stud.name)}
-                                className="border border-red-250 hover:border-red-500 hover:bg-red-50 text-red-600 hover:text-red-900 p-1.5 rounded-lg transition-all shadow-sm"
-                                title="Delete student and report card"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              {!isTermReadOnly && (
+                                <button
+                                  onClick={() => deleteStudentProfile(stud.id, stud.name)}
+                                  className="border border-red-250 hover:border-red-500 hover:bg-red-50 text-red-650 hover:text-red-900 p-1.5 rounded-lg transition-all shadow-sm"
+                                  title="Delete student and report card"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
                             </td>
                           </tr>
                         );

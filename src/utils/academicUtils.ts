@@ -175,17 +175,36 @@ export function calculateClassPositions(students: Student[], className?: ClassNa
   return positioned;
 }
 
-// Generate realistic grades for a student - modified to default to 0 so everything is 0 until scores are inputed
-export function generateRandomGrades(subjects: string[]): SubjectGrade[] {
+// Generate realistic grades for a student - modified to seeded values if term is given
+export function generateRandomGrades(subjects: string[], term?: string, studentIdx?: number): SubjectGrade[] {
+  const activeTerm = term || 'Third Term';
+  const isFirst = activeTerm === 'First Term';
+  const isSecond = activeTerm === 'Second Term';
+  const sIdx = studentIdx !== undefined ? studentIdx : Math.floor(Math.random() * 4);
+
   return subjects.map((sub, idx) => {
+    let testScore = 0;
+    let examScore = 0;
+    
+    if (isFirst) {
+      testScore = 15 + ((sIdx * 3 + idx * 7) % 11);
+      examScore = 35 + ((sIdx * 4 + idx * 11) % 25);
+    } else if (isSecond) {
+      testScore = 18 + ((sIdx * 2 + idx * 5) % 9);
+      examScore = 40 + ((sIdx * 5 + idx * 13) % 20);
+    } else { // Third Term
+      testScore = 20 + ((sIdx * 4 + idx * 3) % 8);
+      examScore = 45 + ((sIdx * 3 + idx * 17) % 21);
+    }
+
     return {
-      id: `${idx}-${Date.now()}-${Math.random()}`,
+      id: `${idx}-${activeTerm.toLowerCase().replace(/\s+/g, '_')}-${sIdx}-${idx}`,
       name: sub,
-      testScore: 0,
-      examScore: 0,
-      firstTermSummary: 0,
-      secondTermSummary: 0,
-      thirdTermSummary: 0
+      testScore,
+      examScore,
+      firstTermSummary: isFirst ? (testScore + examScore) : 15 + ((sIdx + idx) % 5),
+      secondTermSummary: isSecond ? (testScore + examScore) : 16 + ((sIdx + idx * 2) % 4),
+      thirdTermSummary: !isFirst && !isSecond ? (testScore + examScore) : 50 + ((sIdx + idx * 3) % 10)
     };
   });
 }
@@ -205,7 +224,8 @@ export function generateDefaultBehaviour(): BehaviourRating[] {
 const FIRST_NAMES = ["Tobi", "Chinedu", "Amina", "Divine", "Emeka", "Zainab", "Olumide", "Favor", "Bassey", "Somtochukwu", "Eseoghene", "Fatima", "Chibuike", "Tega", "Kelechi", "Olamide", "Ejiro", "Blessing", "Samuel", "Tunde", "Uche", "Nkechi", "Seyi", "Funke", "Chidi", "Yinka", "Ifeoma", "Yusuf", "Ozo", "Efe"];
 const LAST_NAMES = ["Alao", "Okafor", "Yusuf", "Nwosu", "Abubakar", "Johnson", "Okoye", "Ekong", "Ani", "Oghenekevwe", "Bello", "Obi", "Akpobome", "Nwachukwu", "Bakare", "Onome", "Sunday", "Kalu", "Ojo", "Balogun", "Ogah", "Ibrahim", "Adeyemi", "Uzoh", "Okonkwo", "Suleiman", "Igwe", "Olawale", "Okoronkwo", "Dada"];
 
-export function createStudent(name: string, className: ClassName, idx: number): Student {
+export function createStudent(name: string, className: ClassName, idx: number, term?: string): Student {
+  const activeTerm = term || 'Third Term';
   const isJSS = className.startsWith('JSS');
   const subjectsList = isJSS ? JSS_SUBJECTS : SS_SUBJECTS;
   const age = isJSS 
@@ -214,22 +234,68 @@ export function createStudent(name: string, className: ClassName, idx: number): 
     
   const sex = idx % 2 === 0 ? 'Male' : 'Female';
   
-  // Custom teacher comments based on grade caliber
-  const remarks = [
-    "An outstanding academic result. Keep leading your peers!",
-    "A very good result. Continue with this level of focus and hard work.",
-    "A solid outcome, though there is room for improvement in science subjects.",
-    "A satisfactory outcome. Please encourage active study habits at home.",
-    "Academic results are fair. More dedication is needed next term."
-  ];
+  // Custom teacher comments based on term
+  let remarks: string[];
+  let principalComments: string[];
+  let termDateStr = "2026-07-24";
+  let attendancePresentVal = 100 - (idx % 5);
+  let attendanceTotalVal = 105;
 
-  const principalComments = [
-    "Excellent behavior and scholarly diligence. Promoted with honor.",
-    "Very commendable results. Keep up the high standards.",
-    "Satisfactory progress. Focused effort in math will yield higher levels next term.",
-    "A pass, but needs serious study focus in core subjects.",
-    "Close guidance is required. Dedicate more study time."
-  ];
+  if (activeTerm === 'First Term') {
+    termDateStr = "2025-12-18";
+    attendancePresentVal = 85 - (idx % 6);
+    attendanceTotalVal = 90;
+    remarks = [
+      "A magnificent start to the academic session. Exceptional work!",
+      "A highly encouraging first term performance. Continue with this vigor.",
+      "Good progress made, though double effort is recommended in core topics.",
+      "Satisfactory outcome, though a better focus will yield greater heights.",
+      "A fair attempt. More individual study is expected in the coming term."
+    ];
+    principalComments = [
+      "Excellent conduct. Warmest Christmas holiday wishes.",
+      "Promising student with good scholastic growth capabilities.",
+      "Satisfactory result. Happy holidays to you.",
+      "A pass. Requires dedicated preparation before resumption.",
+      "Needs comprehensive academic guidance and monitoring."
+    ];
+  } else if (activeTerm === 'Second Term') {
+    termDateStr = "2026-03-27";
+    attendancePresentVal = 92 - (idx % 8);
+    attendanceTotalVal = 96;
+    remarks = [
+      "An outstanding second-term run. Truly impressive depth!",
+      "Very good academic performance. Keep leading standard marks.",
+      "Strong performance in most modules. Improve on science assignments.",
+      "Acceptable performance, but you must strive for standard excellence.",
+      "Moderate marks. Consistent revision is critical to prevent slips."
+    ];
+    principalComments = [
+      "Scholarly work. Exceptional leadership in class.",
+      "Wonderful behavioral qualities. Continue to shine.",
+      "Good progress. Keep the focus clear for the final lap.",
+      "A modest grade sheet. Study hours must be strictly quadrupled.",
+      "Academic supervision must be prioritized this break."
+    ];
+  } else { // Third Term
+    termDateStr = "2026-07-24";
+    attendancePresentVal = 104 - (idx % 5);
+    attendanceTotalVal = 110;
+    remarks = [
+      "A stellar completion of the academic year. Superb class standard!",
+      "Highly commendable year-end results. Promoted in style.",
+      "Good terminal performance. Ready for the advanced syllabus challenges.",
+      "Satisfactory outcomes. Ensure holiday tasks are perfectly finished.",
+      "A simple pass grade. General academic effort required across subjects."
+    ];
+    principalComments = [
+      "Outstanding champion. Promoted to next class with high distinction!",
+      "Very polite and diligent student. Promoted.",
+      "Solid standard work. Promoted.",
+      "Fair grade total. Promoted to next class level on trial.",
+      "Promoted with close academic warning. Please monitor closely."
+    ];
+  }
 
   const remarkIdx = idx % remarks.length;
 
@@ -239,21 +305,23 @@ export function createStudent(name: string, className: ClassName, idx: number): 
     age,
     sex,
     className,
-    termDate: "2026-04-10",
+    termDate: termDateStr,
     session: "2025/2026",
-    attendancePresent: 104 - (idx % 8),
-    attendanceTotal: 110,
-    subjects: generateRandomGrades(subjectsList),
+    attendancePresent: attendancePresentVal,
+    attendanceTotal: attendanceTotalVal,
+    subjects: generateRandomGrades(subjectsList, activeTerm, idx),
     behaviour: generateDefaultBehaviour(),
     formTeacherRemark: remarks[remarkIdx],
     formTeacherName: isJSS ? "Mrs. Gladys Alabi" : "Mr. Anthony Okon",
     principalName: "Dr. Ezekiel Beck",
-    resumptionDate: "2026-09-14",
-    password: "123456"
+    resumptionDate: activeTerm === 'First Term' ? "2026-01-08" : activeTerm === 'Second Term' ? "2026-04-20" : "2026-09-14",
+    password: "123456",
+    principalRemark: principalComments[remarkIdx]
   };
 }
 
-export function getInitialStudents(): Student[] {
+export function getInitialStudents(term?: string): Student[] {
+  const activeTerm = term || 'Third Term';
   const classes: ClassName[] = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
   let students: Student[] = [];
 
@@ -262,7 +330,7 @@ export function getInitialStudents(): Student[] {
     for (let i = 0; i < 4; i++) {
       const nameIndex = (classes.indexOf(cls) * 4 + i) % FIRST_NAMES.length;
       const name = `${FIRST_NAMES[nameIndex]} ${LAST_NAMES[(nameIndex + i) % LAST_NAMES.length]}`;
-      students.push(createStudent(name, cls, i));
+      students.push(createStudent(name, cls, i, activeTerm));
     }
   });
 
@@ -275,8 +343,8 @@ export function getInitialStudents(): Student[] {
 }
 
 export function loadStoredStudents(term?: string): Student[] {
-  if (typeof window === 'undefined') return getInitialStudents();
-  const activeTerm = term || 'Second Term';
+  const activeTerm = term || 'Third Term';
+  if (typeof window === 'undefined') return getInitialStudents(activeTerm);
   const termKey = `ezibeck_students_${activeTerm.toLowerCase().replace(/\s+/g, '_')}`;
   try {
     const val = localStorage.getItem(termKey);
@@ -285,7 +353,7 @@ export function loadStoredStudents(term?: string): Student[] {
     }
     // Fallback: migrate from legacy key if available, so they don't lose progress
     const legacyVal = localStorage.getItem('ezibeck_students');
-    if (legacyVal) {
+    if (legacyVal && activeTerm === 'Third Term') {
       const parsed = JSON.parse(legacyVal);
       saveStudents(parsed, activeTerm);
       return parsed;
@@ -293,14 +361,14 @@ export function loadStoredStudents(term?: string): Student[] {
   } catch (e) {
     console.error(`Error loading students for ${activeTerm} from localStorage`, e);
   }
-  const students = getInitialStudents();
+  const students = getInitialStudents(activeTerm);
   saveStudents(students, activeTerm);
   return students;
 }
 
 export function saveStudents(students: Student[], term?: string) {
   if (typeof window === 'undefined') return;
-  const activeTerm = term || 'Second Term';
+  const activeTerm = term || 'Third Term';
   const termKey = `ezibeck_students_${activeTerm.toLowerCase().replace(/\s+/g, '_')}`;
   try {
     localStorage.setItem(termKey, JSON.stringify(students));
