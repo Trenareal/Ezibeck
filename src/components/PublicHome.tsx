@@ -847,6 +847,79 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
 
                 </div>
               </div>
+
+              {/* Term Sessions Schedule Section */}
+              <div className="bg-gradient-to-br from-emerald-50/50 via-white to-slate-50/50 border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-3xs space-y-6 text-left mt-12">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-emerald-55 border border-emerald-100 rounded-2xl">
+                    <Clock className="w-6 h-6 text-emerald-705" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-900 uppercase">Academic Session Terms</h3>
+                    <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Official School Calendar Terms & Timelines</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* First Term Card */}
+                  <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-3xs flex flex-col justify-between hover:border-emerald-300 transition-all group">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] bg-slate-100 border border-slate-200 text-slate-700 font-extrabold tracking-widest uppercase px-2.5 py-0.5 rounded-md">First Term</span>
+                        <span className="text-[10px] font-mono text-slate-400 font-bold">Sept - Dec</span>
+                      </div>
+                      <h4 className="font-extrabold text-slate-900 text-sm">Autumn Term Session</h4>
+                      <p className="text-slate-500 text-xs leading-relaxed font-semibold">
+                        Lays down academic foundations and class orientations. Runs from <strong className="text-emerald-750 font-black">September</strong> to the <strong className="text-emerald-700 font-black">3rd week of December</strong>. Matches curriculum orientation blocks.
+                      </p>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[9px] text-slate-400 font-bold group-hover:text-emerald-700 transition-colors">
+                      <span>STATUS: AUTUMN TERM ARCHIVE</span>
+                      <span>&rarr;</span>
+                    </div>
+                  </div>
+
+                  {/* Second Term Card */}
+                  <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-3xs flex flex-col justify-between hover:border-emerald-300 transition-all group">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] bg-slate-100 border border-slate-200 text-slate-700 font-extrabold tracking-widest uppercase px-2.5 py-0.5 rounded-md">Second Term</span>
+                        <span className="text-[10px] font-mono text-slate-400 font-bold">Jan - Mar</span>
+                      </div>
+                      <h4 className="font-extrabold text-slate-900 text-sm">Winter Term Session</h4>
+                      <p className="text-slate-500 text-xs leading-relaxed font-semibold">
+                        Heavy intellectual content delivery cycles and class assessment slates. Runs from <strong className="text-emerald-750 font-black">January</strong> to the <strong className="text-emerald-700 font-black">last week of March</strong>.
+                      </p>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[9px] text-slate-400 font-bold group-hover:text-emerald-700 transition-colors">
+                      <span>STATUS: WINTER TERM ARCHIVE</span>
+                      <span>&rarr;</span>
+                    </div>
+                  </div>
+
+                  {/* Third Term Card */}
+                  <div className="bg-white border border-emerald-300 p-5 rounded-2xl shadow-3xs flex flex-col justify-between hover:border-emerald-400 transition-all group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-bl-full pointer-events-none flex items-center justify-center">
+                      <span className="text-[8px] font-black text-emerald-800 uppercase tracking-widest -rotate-45 translate-x-2 -translate-y-2">Current</span>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] bg-emerald-50 border border-emerald-100 text-emerald-800 font-extrabold tracking-widest uppercase px-2.5 py-0.5 rounded-md">Third Term</span>
+                        <span className="text-[10px] font-mono text-slate-400 font-bold">Apr - Jul</span>
+                      </div>
+                      <h4 className="font-extrabold text-slate-905 text-sm">Summer Term Session</h4>
+                      <p className="text-slate-500 text-xs leading-relaxed font-semibold">
+                        Final promotional examination sequences and graduation ceremonies. Runs from the <strong className="text-emerald-750 font-black">last week of April</strong> to the <strong className="text-emerald-700 font-black">last week of July</strong>.
+                      </p>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[9px] text-emerald-700 font-black">
+                      <span>STATUS: ACTIVE CALENDAR</span>
+                      <span>&rarr;</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           )}
 

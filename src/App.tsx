@@ -40,17 +40,35 @@ export default function App() {
   const [students, setStudents] = useState<Student[]>([]);
   const [currentView, setCurrentView] = useState<'home' | 'student' | 'teacher'>(() => {
     if (typeof window !== 'undefined') {
-      // 1. First priority: check query parameter to support opening portal in new tabs seamlessly
+      // 1. Check query parameter to support opening portal in new tabs seamlessly
       const params = new URLSearchParams(window.location.search);
       const viewParam = params.get('view');
       if (viewParam === 'student' || viewParam === 'teacher' || viewParam === 'home') {
         localStorage.setItem('ezibeck_current_view', viewParam);
         return viewParam;
       }
-      // 2. Second priority: read from persistent state
-      const savedView = localStorage.getItem('ezibeck_current_view');
-      if (savedView === 'student' || savedView === 'teacher' || savedView === 'home') {
-        return savedView;
+
+      // 2. Check if the page is being reloaded/refreshed
+      let isReload = false;
+      try {
+        const navEntries = performance.getEntriesByType('navigation');
+        if (navEntries.length > 0) {
+          isReload = (navEntries[0] as PerformanceNavigationTiming).type === 'reload';
+        } else {
+          isReload = (window.performance as any)?.navigation?.type === 1;
+        }
+      } catch (e) {
+        console.warn('Navigation timing check failed or unsupported:', e);
+      }
+
+      // 3. If it is a reload, retrieve the saved view state; otherwise, reset to homepage
+      if (isReload) {
+        const savedView = localStorage.getItem('ezibeck_current_view');
+        if (savedView === 'student' || savedView === 'teacher' || savedView === 'home') {
+          return savedView;
+        }
+      } else {
+        localStorage.removeItem('ezibeck_current_view');
       }
     }
     return 'home';
@@ -399,6 +417,7 @@ export default function App() {
             template={template}
             onBack={() => handleNavigate('home')} 
             onUpdateStudents={handleUpdateStudents}
+            onUpdateTemplate={handleUpdateTemplate}
             dbStatus={dbStatus}
             onPushLocalToSupabase={handlePushLocalToSupabase}
             onPullFromSupabase={handlePullFromSupabase}

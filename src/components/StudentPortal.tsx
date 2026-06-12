@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, GraduationCap, Search, BookOpen, Eye, Layers, Printer, Star, Wifi, WifiOff, CloudLightning } from 'lucide-react';
+import { ArrowLeft, GraduationCap, Search, BookOpen, Eye, Layers, Printer, Star, Wifi, WifiOff, CloudLightning, Clock } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Student, ClassName, Workspace15Template, DbStatus } from '../types';
@@ -18,6 +18,7 @@ interface StudentPortalProps {
   dbStatus?: DbStatus;
   onPushLocalToSupabase?: () => Promise<{ success: boolean; message: string }>;
   onPullFromSupabase?: () => Promise<{ success: boolean; message: string }>;
+  onUpdateTemplate?: (updatedTpl: Workspace15Template) => void;
 }
 
 export default function StudentPortal({ 
@@ -27,7 +28,8 @@ export default function StudentPortal({
   onUpdateStudents,
   dbStatus,
   onPushLocalToSupabase,
-  onPullFromSupabase
+  onPullFromSupabase,
+  onUpdateTemplate
 }: StudentPortalProps) {
   const [selectedClass, setSelectedClass] = useState<ClassName>('JSS1');
   const [searchQuery, setSearchQuery] = useState('');
@@ -325,6 +327,56 @@ export default function StudentPortal({
         >
           <ArrowLeft className="w-4 h-4" /> Back to School Homepage
         </button>
+
+        {/* Terminal Sessions Directory inside Student Portal */}
+        <div className="bg-slate-900 border border-slate-800 text-white rounded-3xl p-6 mb-6 shadow-md overflow-hidden relative select-none">
+          <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-emerald-800 rounded-full blur-3xl opacity-20 pointer-events-none"></div>
+          <div className="absolute -left-10 -top-10 w-24 h-24 bg-amber-500 rounded-full blur-3xl opacity-10 pointer-events-none"></div>
+
+          <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="bg-amber-300 text-slate-950 font-black text-[9px] tracking-widest uppercase px-2 py-0.5 rounded-md">
+                  Terminal Sessions Directory
+                </span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-405 animate-pulse"></span>
+                <span className="text-[10px] text-emerald-250 font-bold uppercase tracking-wider font-mono">Student Access Portal</span>
+              </div>
+              <h3 className="text-sm font-black tracking-tight flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-amber-300" />
+                Active Scorecard Folder: <span className="text-amber-300 underline decoration-amber-300/40 decoration-2 underline-offset-4">{template.currentTerm}</span>
+              </h3>
+              <p className="text-[11px] text-slate-400 font-medium max-w-lg leading-relaxed">
+                Choose an academic term slot to view the recorded candidate report profile, total grade logs and term averages.
+              </p>
+            </div>
+            
+            {/* 3 Segmented Session Toggles */}
+            <div className="w-full md:w-auto bg-slate-850 border border-slate-700/80 p-1 rounded-2xl flex gap-1 font-bold text-[11px]">
+              {(['First Term', 'Second Term', 'Third Term'] as const).map((term) => (
+                <button
+                  key={term}
+                  onClick={() => {
+                    if (onUpdateTemplate) {
+                      onUpdateTemplate({ ...template, currentTerm: term });
+                    }
+                    setSelectedStudent(null);
+                    setIsUnlocked(false);
+                    setPasswordInput('');
+                    setLoginError('');
+                  }}
+                  className={`flex-1 md:flex-none uppercase tracking-wider text-[9px] font-extrabold py-2.5 px-4 rounded-xl transition-all cursor-pointer ${
+                    template.currentTerm === term
+                      ? 'bg-amber-300 text-slate-900 shadow-md font-black scale-[1.01]'
+                      : 'text-slate-350 hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  {term}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
 
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-5 sm:p-8 space-y-6">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-5">
