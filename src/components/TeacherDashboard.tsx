@@ -4,10 +4,10 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, Printer, UserCheck, LogOut } from 'lucide-react';
+import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, Printer, UserCheck, LogOut, Database, Wifi, WifiOff, RefreshCw, CloudLightning } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile } from '../types';
+import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile, DbStatus } from '../types';
 import { createStudent, calculateStudentStats, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal } from '../utils/academicUtils';
 
 interface TeacherDashboardProps {
@@ -16,6 +16,9 @@ interface TeacherDashboardProps {
   onBack: () => void;
   onUpdateStudents: (updatedList: Student[]) => void;
   onUpdateTemplate: (newTemplate: Workspace15Template) => void;
+  dbStatus?: DbStatus;
+  onPushLocalToSupabase?: () => Promise<{ success: boolean; message: string }>;
+  onPullFromSupabase?: () => Promise<{ success: boolean; message: string }>;
 }
 
 const DEFAULT_FACULTY: FacultyProfile[] = [
@@ -28,7 +31,16 @@ const DEFAULT_FACULTY: FacultyProfile[] = [
   { id: "david", name: "Mr. David Ibrahim", role: "Form Teacher - SS3", avatar: "👨‍💻", password: "teacher6", email: "david@ezibeckacademy.edu.ng", assignedClass: "SS3" }
 ];
 
-export default function TeacherDashboard({ students, template, onBack, onUpdateStudents, onUpdateTemplate }: TeacherDashboardProps) {
+export default function TeacherDashboard({ 
+  students, 
+  template, 
+  onBack, 
+  onUpdateStudents, 
+  onUpdateTemplate,
+  dbStatus,
+  onPushLocalToSupabase,
+  onPullFromSupabase
+}: TeacherDashboardProps) {
   const [currentUser, setCurrentUser] = useState<FacultyProfile | null>(() => {
     if (typeof window !== 'undefined') {
       const savedUser = localStorage.getItem('ezibeck_faculty_user');
@@ -165,6 +177,10 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
       setIsGeneratingPdf(false);
     }
   };
+  const [showDbSyncModal, setShowDbSyncModal] = useState(false);
+  const [isSyncingDb, setIsSyncingDb] = useState(false);
+  const [syncDbResult, setSyncDbResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
   const [deleteConfirmStudent, setDeleteConfirmStudent] = useState<{ id: string; name: string; className: ClassName; source: 'list' | 'view' | 'edit' } | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -968,6 +984,50 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
               <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">{currentUser.role}</p>
             </div>
           </div>
+        </div>
+
+        {/* Supabase Connection Status Card */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              setSyncDbResult(null);
+              setShowDbSyncModal(true);
+            }}
+            className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border text-xs font-bold transition-all shadow-xs cursor-pointer ${
+              !dbStatus || !dbStatus.configured
+                ? 'bg-amber-50/70 border-amber-200 text-amber-800 hover:bg-amber-100'
+                : dbStatus.connected
+                ? 'bg-emerald-50/70 border-emerald-250 text-emerald-800 hover:bg-emerald-100'
+                : 'bg-rose-50/70 border-rose-250 text-rose-850 hover:bg-rose-100'
+            }`}
+          >
+            {!dbStatus || !dbStatus.configured ? (
+              <>
+                <WifiOff className="w-4 h-4 text-amber-600 animate-pulse" />
+                <div className="text-left font-sans">
+                  <div className="leading-none text-[11px] font-extrabold">Database: Local Offline</div>
+                  <div className="text-[9px] text-amber-500 font-medium mt-1">Multi-device not active</div>
+                </div>
+              </>
+            ) : dbStatus.connected ? (
+              <>
+                <Wifi className="w-4 h-4 text-emerald-600 animate-pulse" />
+                <div className="text-left font-sans">
+                  <div className="leading-none text-[11px] font-extrabold">Database: Supabase Live</div>
+                  <div className="text-[9px] text-emerald-500 font-medium mt-1">Syncing across devices!</div>
+                </div>
+              </>
+            ) : (
+              <>
+                <CloudLightning className="w-4 h-4 text-rose-600 animate-pulse" />
+                <div className="text-left font-sans">
+                  <div className="leading-none text-[11px] font-extrabold">Database Sync Blocked</div>
+                  <div className="text-[9px] text-rose-500 font-medium mt-1">Click to view error log</div>
+                </div>
+              </>
+            )}
+            <span className="bg-white/90 px-2 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 text-[9px] font-black uppercase text-indigo-700 ml-1.5 transition-all shadow-2xs">Hub ⚙️</span>
+          </button>
         </div>
       </div>
 
@@ -3087,6 +3147,209 @@ export default function TeacherDashboard({ students, template, onBack, onUpdateS
                 className="px-5 py-2 bg-red-600 hover:bg-red-750 text-white text-xs font-extrabold rounded-xl transition-all shadow-md shadow-red-500/20 cursor-pointer"
               >
                 Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Supabase Database Sync & Troubleshooting Modal Panel */}
+      {showDbSyncModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 print:hidden animate-fade-in animate-once">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-150 mx-4 max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100 font-sans text-slate-800">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-indigo-50 rounded-2xl">
+                  <Database className="w-5 h-5 text-indigo-600" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 uppercase">Database & Sync Hub</h3>
+                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Multi-device Alignment</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDbSyncModal(false)}
+                className="text-slate-400 hover:text-slate-600 text-sm font-bold bg-slate-100 border border-slate-205 w-7 h-7 rounded-full flex items-center justify-center cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Sync State Card */}
+            <div className="space-y-4">
+              <div className={`p-4 rounded-2xl border ${
+                !dbStatus || !dbStatus.configured
+                  ? 'bg-amber-50/50 border-amber-250'
+                  : dbStatus.connected
+                  ? 'bg-emerald-50/50 border-emerald-250'
+                  : 'bg-rose-50/50 border-rose-250'
+              }`}>
+                <div className="flex items-start gap-3">
+                  {!dbStatus || !dbStatus.configured ? (
+                    <>
+                      <WifiOff className="w-5 h-5 text-amber-600 mt-0.5" />
+                      <div>
+                        <h4 className="text-xs font-black text-amber-900">Running on Local Fallback (Offline Mode)</h4>
+                        <p className="text-[11px] text-amber-700 font-medium mt-1 leading-relaxed">
+                          You are currently using local browser storage (`localStorage`) to save academic records. This data exists **only on this device**. 
+                          To make report cards identical and sync across Device A and Device B, you must configure Supabase.
+                        </p>
+                      </div>
+                    </>
+                  ) : dbStatus.connected ? (
+                    <>
+                      <Wifi className="w-5 h-5 text-emerald-600 mt-0.5" />
+                      <div>
+                        <h4 className="text-xs font-black text-emerald-950">Supabase Connected & Synchronized (Online Mode)</h4>
+                        <p className="text-[11px] text-emerald-700 font-medium mt-1 leading-relaxed">
+                          Your live database at <code className="bg-white/80 px-1 py-0.5 rounded text-[10px] text-emerald-900 break-all font-mono">{dbStatus.supabaseUrl}</code> is successfully connected!
+                          All devices sharing these keys will pull and save the exact same student report cards.
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <CloudLightning className="w-5 h-5 text-rose-600 mt-0.5" />
+                      <div>
+                        <h4 className="text-xs font-black text-rose-950">Database Sync Blocked (Connection Issue)</h4>
+                        <p className="text-[11px] text-rose-700 font-medium mt-1 leading-relaxed">
+                          The application is configured to connect to Supabase but encounters a block or error. The system has automatically defaulted to local Offline Mode until this is resolved.
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Exact Error Log Display */}
+              {dbStatus && dbStatus.error && (
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                  <div className="flex items-center gap-1.5 text-xs font-black text-slate-800 mb-2">
+                    <ShieldAlert className="w-4 h-4 text-rose-500" />
+                    <span>SYSLOG CONNECTION ERROR DETAILS</span>
+                  </div>
+                  <pre className="text-[10px] leading-relaxed text-rose-600 font-mono bg-white p-3 rounded-xl border border-slate-200 overflow-x-auto select-text">
+                    {dbStatus.error}
+                  </pre>
+                  
+                  {/* Smart Diagnostic Advice based on actual error text */}
+                  <div className="mt-3 text-[11px] text-slate-650 font-medium space-y-1 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 leading-relaxed">
+                    <span className="block font-bold text-indigo-950">💡 Recommended Diagnostic Steps:</span>
+                    {dbStatus.error.includes('relation') || dbStatus.error.includes('does not exist') ? (
+                      <p>
+                        <strong>Schema Missing:</strong> Your Supabase database is online, but the tables do not exist yet! 
+                        To fix this, copy the contents of the file <code>supabase_schema.sql</code>, open the **SQL Editor** inside your Supabase project dashboard, paste it, and click **Run**.
+                      </p>
+                    ) : dbStatus.error.includes('API key') || dbStatus.error.includes('invalid') || dbStatus.error.includes('JWTS') || dbStatus.error.includes('key') ? (
+                      <p>
+                        <strong>Invalid API Key:</strong> The <code>VITE_SUPABASE_ANON_KEY</code> value triggers a permissions error. 
+                        Double check that you copied the correct "anon public" API key from your Supabase Settings and API page, and that there are no extra spaces.
+                      </p>
+                    ) : (
+                      <p>
+                        <strong>Network / Policy Check:</strong> Ensure your network is online and your Supabase Row Level Security (RLS) policies allow public/anonymous reads & writes. 
+                        Enable the policies defined inside the <code>supabase_schema.sql</code> file!
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Synchronization Actions */}
+              {dbStatus && dbStatus.configured && (
+                <div className="p-4 bg-white border border-slate-200 rounded-2xl space-y-3">
+                  <h4 className="text-xs font-black text-slate-900 uppercase">Synchronize Report Card Data</h4>
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                    If you filled out report cards on this device while offline or before setting up your database, push them to the cloud to sync with Device B!
+                  </p>
+                  
+                  {syncDbResult && (
+                    <div className={`p-3 rounded-xl text-xs font-bold ${
+                      syncDbResult.type === 'success' ? 'bg-emerald-50 border border-emerald-250 text-emerald-800' : 'bg-red-50 border border-red-250 text-red-800'
+                    }`}>
+                      {syncDbResult.text}
+                    </div>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      onClick={async () => {
+                        if (!onPushLocalToSupabase) return;
+                        setIsSyncingDb(true);
+                        setSyncDbResult(null);
+                        const result = await onPushLocalToSupabase();
+                        setSyncDbResult({ type: result.success ? 'success' : 'error', text: result.message });
+                        setIsSyncingDb(false);
+                      }}
+                      disabled={isSyncingDb}
+                      className="flex-1 bg-indigo-700 hover:bg-indigo-800 disabled:opacity-50 text-white text-xs font-black py-2.5 px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      {isSyncingDb ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="w-4 h-4" />
+                          Push Local to Supabase
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={async () => {
+                        if (!onPullFromSupabase) return;
+                        setIsSyncingDb(true);
+                        setSyncDbResult(null);
+                        const result = await onPullFromSupabase();
+                        setSyncDbResult({ type: result.success ? 'success' : 'error', text: result.message });
+                        setIsSyncingDb(false);
+                      }}
+                      disabled={isSyncingDb}
+                      className="flex-1 bg-white hover:bg-slate-50 disabled:opacity-50 border border-slate-250 text-slate-705 text-xs font-bold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      Refresh (Pull Online Data)
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Setup Secrets Guide */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2.5">
+                <h4 className="text-xs font-black text-slate-900 uppercase">Configuration Checklist</h4>
+                <ol className="text-[11px] text-slate-650 font-medium list-decimal list-inside space-y-2 leading-relaxed">
+                  <li>
+                    Create a free project at <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline font-bold">supabase.com</a>
+                  </li>
+                  <li>
+                    Copy your database parameters from your project's dashboard.
+                  </li>
+                  <li>
+                    In this **AI Studio Code Builder** workspace, open the **Secrets Panel** on the left settings menu of your screen (or variables section).
+                  </li>
+                  <li>
+                    Define two configuration variables:
+                    <ul className="list-disc list-inside ml-4 mt-1 space-y-1 font-semibold text-slate-800">
+                      <li><code>VITE_SUPABASE_URL</code> <span className="font-normal text-slate-400 font-mono text-[9px]">(e.g. https://xxx.supabase.co)</span></li>
+                      <li><code>VITE_SUPABASE_ANON_KEY</code> <span className="font-normal text-slate-400 font-mono text-[9px]">(e.g. eyJhbGciOi...)</span></li>
+                    </ul>
+                  </li>
+                  <li>
+                    Open SQL Editor in Supabase, copy the contents of the file <code>supabase_schema.sql</code>, paste it, and run the query!
+                  </li>
+                </ol>
+              </div>
+            </div>
+
+            {/* Footer Close */}
+            <div className="border-t border-slate-100 mt-6 pt-4 flex justify-end">
+              <button
+                onClick={() => setShowDbSyncModal(false)}
+                className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition-all cursor-pointer shadow-md"
+              >
+                Close Panel
               </button>
             </div>
           </div>

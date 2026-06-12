@@ -4,10 +4,10 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, GraduationCap, Search, BookOpen, Eye, Layers, Printer, Star } from 'lucide-react';
+import { ArrowLeft, GraduationCap, Search, BookOpen, Eye, Layers, Printer, Star, Wifi, WifiOff, CloudLightning } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Student, ClassName, Workspace15Template } from '../types';
+import { Student, ClassName, Workspace15Template, DbStatus } from '../types';
 import { SCHOOL_INFO, calculateStudentStats, getLetterAndRemark, calculateSubjectTotal, BEHAVIOUR_TRAITS } from '../utils/academicUtils';
 
 interface StudentPortalProps {
@@ -15,9 +15,20 @@ interface StudentPortalProps {
   template: Workspace15Template;
   onBack: () => void;
   onUpdateStudents?: (updatedList: Student[]) => void;
+  dbStatus?: DbStatus;
+  onPushLocalToSupabase?: () => Promise<{ success: boolean; message: string }>;
+  onPullFromSupabase?: () => Promise<{ success: boolean; message: string }>;
 }
 
-export default function StudentPortal({ students, template, onBack, onUpdateStudents }: StudentPortalProps) {
+export default function StudentPortal({ 
+  students, 
+  template, 
+  onBack, 
+  onUpdateStudents,
+  dbStatus,
+  onPushLocalToSupabase,
+  onPullFromSupabase
+}: StudentPortalProps) {
   const [selectedClass, setSelectedClass] = useState<ClassName>('JSS1');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -309,7 +320,35 @@ export default function StudentPortal({ students, template, onBack, onUpdateStud
                 <GraduationCap className="w-6 h-6" />
               </div>
               <div className="max-w-[calc(100%-60px)]">
-                <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight uppercase truncate">{template.schoolName}</h2>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight uppercase truncate">{template.schoolName}</h2>
+                  {dbStatus && (
+                    <span className={`px-2 py-0.5 rounded-full border text-[9px] font-extrabold uppercase flex items-center gap-1 ${
+                      !dbStatus.configured 
+                        ? 'bg-amber-50 border-amber-200 text-amber-800' 
+                        : dbStatus.connected 
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+                        : 'bg-rose-50 border-rose-250 text-rose-800'
+                    }`}>
+                      {!dbStatus.configured ? (
+                        <>
+                          <WifiOff className="w-3 h-3 text-amber-500" />
+                          Local Mode
+                        </>
+                      ) : dbStatus.connected ? (
+                        <>
+                          <Wifi className="w-3 h-3 text-emerald-500 animate-pulse" />
+                          Live Connected
+                        </>
+                      ) : (
+                        <>
+                          <CloudLightning className="w-3 h-3 text-rose-500 animate-pulse" />
+                          Sync Blocked
+                        </>
+                      )}
+                    </span>
+                  )}
+                </div>
                 <p className="text-[11px] sm:text-xs text-slate-500 mt-1">Select class and choose student ID to unlock secure report sheet</p>
               </div>
             </div>

@@ -7,7 +7,7 @@ import React, { useState, useEffect } from 'react';
 import PublicHome from './components/PublicHome';
 import StudentPortal from './components/StudentPortal';
 import TeacherDashboard from './components/TeacherDashboard';
-import { Student, Workspace15Template } from './types';
+import { Student, Workspace15Template, DbStatus } from './types';
 import { loadStoredStudents, saveStudents, getInitialStudents } from './utils/academicUtils';
 import { 
   isSupabaseConfigured, 
@@ -110,8 +110,77 @@ export default function App() {
     return DEFAULT_WORKSPACE_15;
   });
 
+  const [dbStatus, setDbStatus] = useState<DbStatus>({
+    configured: isSupabaseConfigured,
+    connected: false,
+    checking: isSupabaseConfigured,
+    error: null,
+    supabaseUrl: (import.meta as any).env?.VITE_SUPABASE_URL || ''
+  });
+
   const [syncTrigger, setSyncTrigger] = useState(0);
   const activeChannelsRef = React.useRef<Record<string, any>>({});
+
+  const handlePushLocalToSupabase = async (): Promise<{ success: boolean; message: string }> => {
+    if (!isSupabaseConfigured) {
+      return { success: false, message: "Supabase environment variables are not configured in AI Studio Secrets." };
+    }
+    setDbStatus(prev => ({ ...prev, checking: true }));
+    try {
+      // 1. Get current local students
+      const localStudents = loadStoredStudents(template.currentTerm);
+      
+      // 2. Clear & Save in Supabase
+      await dbService.saveAllStudents(localStudents);
+
+      // 3. Save template in Supabase
+      const cfg = await dbService.getSchoolConfig().catch(() => null);
+      const dbTpl = mapTemplateToDbConfig(template);
+      if (cfg && cfg.id) {
+        await dbService.updateSchoolConfig(cfg.id, dbTpl);
+      } else {
+        await supabase.from('school_config').insert(dbTpl);
+      }
+
+      setDbStatus({
+        configured: true,
+        connected: true,
+        checking: false,
+        error: null,
+        supabaseUrl: (import.meta as any).env?.VITE_SUPABASE_URL
+      });
+
+      // Broadcast changes so other active devices pull immediately
+      broadcastChange('public:students');
+      broadcastChange('public:school_config');
+      setSyncTrigger(prev => prev + 1);
+
+      return { success: true, message: "All local report cards & configuration successfully uploaded and synced to your live Supabase database!" };
+    } catch (e: any) {
+      console.error("Failed to push to Supabase", e);
+      setDbStatus({
+        configured: true,
+        connected: false,
+        checking: false,
+        error: e?.message || String(e),
+        supabaseUrl: (import.meta as any).env?.VITE_SUPABASE_URL
+      });
+      return { success: false, message: `Failed to sync data: ${e?.message || String(e)}. Ensure your Supabase schema SQL is loaded and write permissions are allowed.` };
+    }
+  };
+
+  const handlePullFromSupabase = async (): Promise<{ success: boolean; message: string }> => {
+    if (!isSupabaseConfigured) {
+      return { success: false, message: "Supabase is not configured." };
+    }
+    setDbStatus(prev => ({ ...prev, checking: true }));
+    try {
+      setSyncTrigger(prev => prev + 1);
+      return { success: true, message: "Fresh data retrieved and synchronized from live Supabase!" };
+    } catch (e: any) {
+      return { success: false, message: `Failed to retrieve data: ${e?.message || String(e)}` };
+    }
+  };
 
   // Helper to send real-time broadcast notifications to other devices
   const broadcastChange = (topic: string) => {
@@ -193,17 +262,20 @@ export default function App() {
   useEffect(() => {
     async function loadData() {
       if (isSupabaseConfigured) {
+        setDbStatus(prev => ({ ...prev, checking: true }));
         try {
           // 1. Try loading school config from Supabase
           let cfg;
           try {
             cfg = await dbService.getSchoolConfig();
-          } catch (e) {
+          } catch (e: any) {
             console.log("No school config found in Supabase, seeding default config row...");
             const dbTpl = mapTemplateToDbConfig(template);
             const { data, error } = await supabase.from('school_config').insert(dbTpl).select().single();
             if (!error && data) {
               cfg = data;
+            } else if (error) {
+              throw error;
             }
           }
           if (cfg) {
@@ -226,12 +298,33 @@ export default function App() {
             setStudents(initial);
             await dbService.saveAllStudents(initial);
           }
-        } catch (error) {
+          setDbStatus({
+            configured: true,
+            connected: true,
+            checking: false,
+            error: null,
+            supabaseUrl: (import.meta as any).env?.VITE_SUPABASE_URL
+          });
+        } catch (error: any) {
           console.error("Error communicating with Supabase:", error);
+          setDbStatus({
+            configured: true,
+            connected: false,
+            checking: false,
+            error: error?.message || String(error),
+            supabaseUrl: (import.meta as any).env?.VITE_SUPABASE_URL
+          });
           const loaded = loadStoredStudents(template.currentTerm);
           setStudents(loaded);
         }
       } else {
+        setDbStatus({
+          configured: false,
+          connected: false,
+          checking: false,
+          error: null,
+          supabaseUrl: (import.meta as any).env?.VITE_SUPABASE_URL || ''
+        });
         const loaded = loadStoredStudents(template.currentTerm);
         setStudents(loaded);
       }
@@ -306,6 +399,9 @@ export default function App() {
             template={template}
             onBack={() => handleNavigate('home')} 
             onUpdateStudents={handleUpdateStudents}
+            dbStatus={dbStatus}
+            onPushLocalToSupabase={handlePushLocalToSupabase}
+            onPullFromSupabase={handlePullFromSupabase}
           />
         </div>
       )}
@@ -318,6 +414,9 @@ export default function App() {
             onBack={() => handleNavigate('home')} 
             onUpdateStudents={handleUpdateStudents}
             onUpdateTemplate={handleUpdateTemplate}
+            dbStatus={dbStatus}
+            onPushLocalToSupabase={handlePushLocalToSupabase}
+            onPullFromSupabase={handlePullFromSupabase}
           />
         </div>
       )}

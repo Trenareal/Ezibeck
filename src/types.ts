@@ -78,3 +78,12 @@ export interface SchoolInfo {
   phone: string;
   email: string;
 }
+
+export interface DbStatus {
+  configured: boolean;
+  connected: boolean;
+  checking: boolean;
+  error: string | null;
+  supabaseUrl?: string;
+}
+
