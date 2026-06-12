@@ -1,5 +1,5 @@
 -- Real Production-Ready Supabase Schema for School Report Card System
--- Created: 2026-06-10
+-- Updated: 2026-06-12 (Global access policies loaded)
 
 -- Enable UUID extension
 create extension if not exists "uuid-ossp";
@@ -97,21 +97,31 @@ alter table public.students enable row level security;
 alter table public.subject_grades enable row level security;
 alter table public.behavioural_ratings enable row level security;
 
--- Create Open Read/Write Policies (or authenticate as necessary based on project needs)
-create policy "Allow public read access to school config" on public.school_config for select using (true);
-create policy "Allow authenticated write access to school config" on public.school_config for all using (true);
+-- Drop all old policies to avoid collisions
+drop policy if exists "Allow public read access to school config" on public.school_config;
+drop policy if exists "Allow authenticated write access to school config" on public.school_config;
+drop policy if exists "Allow select profiles" on public.faculty_profiles;
+drop policy if exists "Allow modifications to profiles" on public.faculty_profiles;
+drop policy if exists "Allow select students" on public.students;
+drop policy if exists "Allow modifications to students" on public.students;
+drop policy if exists "Allow select subject_grades" on public.subject_grades;
+drop policy if exists "Allow modifications to subject_grades" on public.subject_grades;
+drop policy if exists "Allow select behavioural_ratings" on public.behavioural_ratings;
+drop policy if exists "Allow modifications to behavioural_ratings" on public.behavioural_ratings;
 
-create policy "Allow select profiles" on public.faculty_profiles for select using (true);
-create policy "Allow modifications to profiles" on public.faculty_profiles for all using (true);
+-- Drop new format policies if they exist to prevent duplicates
+drop policy if exists "Global access school_config" on public.school_config;
+drop policy if exists "Global access faculty_profiles" on public.faculty_profiles;
+drop policy if exists "Global access students" on public.students;
+drop policy if exists "Global access subject_grades" on public.subject_grades;
+drop policy if exists "Global access behavioural_ratings" on public.behavioural_ratings;
 
-create policy "Allow select students" on public.students for select using (true);
-create policy "Allow modifications to students" on public.students for all using (true);
-
-create policy "Allow select subject_grades" on public.subject_grades for select using (true);
-create policy "Allow modifications to subject_grades" on public.subject_grades for all using (true);
-
-create policy "Allow select behavioural_ratings" on public.behavioural_ratings for select using (true);
-create policy "Allow modifications to behavioural_ratings" on public.behavioural_ratings for all using (true);
+-- Create proper global access policies (Allows SELECT, INSERT, UPDATE, DELETE)
+create policy "Global access school_config" on public.school_config for all using (true) with check (true);
+create policy "Global access faculty_profiles" on public.faculty_profiles for all using (true) with check (true);
+create policy "Global access students" on public.students for all using (true) with check (true);
+create policy "Global access subject_grades" on public.subject_grades for all using (true) with check (true);
+create policy "Global access behavioural_ratings" on public.behavioural_ratings for all using (true) with check (true);
 
 -- Insert Default Config
 insert into public.school_config (school_name, motto, address, phone, email) 
@@ -122,3 +132,37 @@ on conflict do nothing;
 insert into public.faculty_profiles (name, role, password)
 values ('Administrator', 'Admin', 'admin123')
 on conflict do nothing;
+
+-- =====================================================================
+-- 6. SAFE MIGRATION HELPER (SAVES CODES / PREVENTS "COLUMN NOT FOUND IN SCHEMA CACHE")
+-- =====================================================================
+-- Run these statements in Supabase to safely add any missing columns to your existing tables 
+-- without dropping them or losing your students' saved data!
+
+-- Safe column additions for `public.students` table
+alter table public.students add column if not exists age integer not null default 15;
+alter table public.students add column if not exists sex text check (sex in ('Male', 'Female'));
+alter table public.students add column if not exists attendance_present integer not null default 0;
+alter table public.students add column if not exists attendance_total integer not null default 110;
+alter table public.students add column if not exists form_teacher_remark text default '';
+alter table public.students add column if not exists form_teacher_name text default '';
+alter table public.students add column if not exists principal_name text default '';
+alter table public.students add column if not exists resumption_date text default '';
+alter table public.students add column if not exists password text not null default '123456';
+alter table public.students add column if not exists principal_remark text default '';
+
+-- Safe column additions for `public.school_config` table
+alter table public.school_config add column if not exists next_term_fee text not null default '$2,500.00';
+alter table public.school_config add column if not exists distinction_threshold integer not null default 85;
+alter table public.school_config add column if not exists pass_threshold integer not null default 50;
+
+-- Safe column additions for `public.subject_grades` table
+alter table public.subject_grades add column if not exists first_term_summary integer default 0;
+alter table public.subject_grades add column if not exists second_term_summary integer default 0;
+alter table public.subject_grades add column if not exists third_term_summary integer default 0;
+alter table public.subject_grades add column if not exists position integer;
+alter table public.subject_grades add column if not exists is_position_manual boolean default false;
+
+-- Force reload of Supabase schema cache to instantly recognize the newly added columns
+notify pgrst, 'reload schema';
+
