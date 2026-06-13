@@ -89,3 +89,15 @@ export interface DbStatus {
   supabaseUrl?: string;
 }
 
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string; // ISO String
+  studentId: string;
+  studentName: string;
+  studentClass: string;
+  action: 'Created' | 'Manual Reset' | 'Rollover' | 'Self Reset';
+  performedBy: string; // Educator name, or 'Student Portal', 'System Auto-Rollover'
+  oldPasscode?: string;
+  newPasscode: string;
+}
+

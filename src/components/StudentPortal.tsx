@@ -7,8 +7,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, GraduationCap, Search, BookOpen, Eye, Layers, Printer, Star, Wifi, WifiOff, CloudLightning, Clock } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Student, ClassName, Workspace15Template, DbStatus } from '../types';
+import { Student, ClassName, Workspace15Template, DbStatus, AuditLogEntry } from '../types';
 import { SCHOOL_INFO, calculateStudentStats, getLetterAndRemark, calculateSubjectTotal, BEHAVIOUR_TRAITS, generateUnique6DigitPassword, getStudentPasscodesFromOtherTerms } from '../utils/academicUtils';
+import { logPasscodeEvent } from '../utils/auditLogger';
 
 interface StudentPortalProps {
   students: Student[];
@@ -258,6 +259,16 @@ export default function StudentPortal({
         updatedStudent.passwordUseCount = 0;
         updatedStudent.passwordRolledOver = true;
         rollMsg = `🔒 ROLLOVER SECURITY NOTICE: This password has been verified successfully 3 times and is now expired. For maximum account security, a fresh 6-digit passcode has been automatically generated. For security reasons, you have been temporarily logged in, but you will not be able to use your previous password again. Please contact your class teacher or a school administrator to retrieve your new, freshly-generated 6-digit passcode for future logins!`;
+        
+        logPasscodeEvent({
+          studentId: selectedStudent.id,
+          studentName: selectedStudent.name,
+          studentClass: selectedStudent.className,
+          action: 'Rollover',
+          performedBy: 'System Auto-Rollover',
+          oldPasscode: requiredPassword,
+          newPasscode: newPasscode
+        });
       }
       
       if (onUpdateStudents) {
@@ -328,6 +339,7 @@ export default function StudentPortal({
 
     // Update password in the database / main state
     if (onUpdateStudents) {
+      const oldPass = selectedStudent.password || '123455';
       const updatedList = students.map(s => {
         if (s.id === selectedStudent.id) {
           return { ...s, password: newPass };
@@ -337,6 +349,17 @@ export default function StudentPortal({
       onUpdateStudents(updatedList);
       // Also update selectedStudent state to keep it synchronized!
       setSelectedStudent({ ...selectedStudent, password: newPass });
+
+      // Log event
+      logPasscodeEvent({
+        studentId: selectedStudent.id,
+        studentName: selectedStudent.name,
+        studentClass: selectedStudent.className,
+        action: 'Self Reset',
+        performedBy: 'Student Portal Self-Reset',
+        oldPasscode: oldPass,
+        newPasscode: newPass
+      });
     }
 
     setResetSuccess('Password updated successfully! You can now log in using your new password.');

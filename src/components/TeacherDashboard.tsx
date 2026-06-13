@@ -4,11 +4,12 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, Printer, UserCheck, LogOut, Database, Wifi, WifiOff, RefreshCw, CloudLightning, Lock } from 'lucide-react';
+import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, Printer, UserCheck, LogOut, Database, Wifi, WifiOff, RefreshCw, CloudLightning, Lock, Search, Clock } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile, DbStatus } from '../types';
+import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile, DbStatus, AuditLogEntry } from '../types';
 import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal, generateUnique6DigitPassword, getDeterministicPasscode, getStudentPasscodesFromOtherTerms } from '../utils/academicUtils';
+import { logPasscodeEvent, getAuditLogs, clearAuditLogs } from '../utils/auditLogger';
 
 interface TeacherDashboardProps {
   students: Student[];
@@ -206,7 +207,13 @@ export default function TeacherDashboard({
   };
   
   // Dashboard Sub-navigation Tab
-  const [activeSubTab, setActiveSubTab] = useState<'roster' | 'workspace' | 'staff'>('roster');
+  const [activeSubTab, setActiveSubTab] = useState<'roster' | 'workspace' | 'staff' | 'audit'>('roster');
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+
+  // Update audit logs state on mount and tab activations
+  useEffect(() => {
+    setAuditLogs(getAuditLogs());
+  }, [activeSubTab]);
 
   const [activeTermTab, setActiveTermTab] = useState<'First Term' | 'Second Term' | 'Third Term'>(() => {
     if (template.currentTerm === 'First Term' || template.currentTerm === 'Second Term' || template.currentTerm === 'Third Term') {
@@ -332,6 +339,16 @@ export default function TeacherDashboard({
   const [regRole, setRegRole] = useState('Secondary Subject Educator');
   const [regAvatar, setRegAvatar] = useState('👩‍🏫');
   const [regPassword, setRegPassword] = useState('');
+
+  // Passcode audit search and clear state controls
+  const [auditSearch, setAuditSearch] = useState('');
+  const handleClearAuditLogs = () => {
+    if (window.confirm("Are you sure you want to permanently clear all security passcode audit logs? This action is irreversible.")) {
+      clearAuditLogs();
+      setAuditLogs([]);
+      triggerSuccess("🛡️ Security master audit ledger cleared successfully!");
+    }
+  };
 
   // 15 properties Editable Workspace template states
   const [tempSchoolName, setTempSchoolName] = useState(template.schoolName);
@@ -632,6 +649,17 @@ export default function TeacherDashboard({
     refreshed = calculateClassPositions(refreshed, selectedClass, activeTermTab);
     
     onUpdateStudents(refreshed);
+    
+    // Log passcode generation event
+    logPasscodeEvent({
+      studentId: added.id,
+      studentName: added.name,
+      studentClass: added.className,
+      action: 'Created',
+      performedBy: currentUser?.name || 'Academic Educator',
+      newPasscode: added.password || '123456'
+    });
+
     setNewStudentName('');
     setNewStudentPassword(Math.floor(100000 + Math.random() * 900000).toString());
     setShowAddForm(false);
@@ -728,6 +756,19 @@ export default function TeacherDashboard({
         triggerWarning("Security Alert: This passcode is already used by this student in another academic term! Please enter a unique 6-digit passcode.");
         return;
       }
+    }
+
+    // Log Manual Reset if password changed
+    if (editPassword && editPassword !== editingStudent.password) {
+      logPasscodeEvent({
+        studentId: editingStudent.id,
+        studentName: editingStudent.name,
+        studentClass: editingStudent.className,
+        action: 'Manual Reset',
+        performedBy: currentUser?.name || 'Academic Educator',
+        oldPasscode: editingStudent.password || '123455',
+        newPasscode: editPassword
+      });
     }
 
     const updatedStudent: Student = {
@@ -1100,16 +1141,16 @@ export default function TeacherDashboard({
 
       {/* Roster & Editable Workspace Template navigation bar */}
       {!viewingReportStudent && !editingStudent && (
-        <div className="max-w-6xl mx-auto mb-6 flex gap-2 border-b border-slate-200 pb-px print:hidden">
+        <div className="max-w-6xl mx-auto mb-6 flex gap-2 border-b border-slate-200 pb-px print:hidden overflow-x-auto">
           <button
             onClick={() => setActiveSubTab('roster')}
-            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${activeSubTab === 'roster' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${activeSubTab === 'roster' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
           >
             📂 Students Registry Roster
           </button>
           <button
             onClick={() => setActiveSubTab('workspace')}
-            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${activeSubTab === 'workspace' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-650'}`}
+            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${activeSubTab === 'workspace' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-650'}`}
           >
             ⚙️ Workspace Config Template (15 properties)
           </button>
@@ -1117,11 +1158,17 @@ export default function TeacherDashboard({
             <button
               id="subtab-manage-staff-restrict"
               onClick={() => setActiveSubTab('staff')}
-              className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer ${activeSubTab === 'staff' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-650'}`}
+              className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${activeSubTab === 'staff' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-650'}`}
             >
               🔒 Manage Staff Access ({facultyProfiles.length - 1})
             </button>
           )}
+          <button
+            onClick={() => setActiveSubTab('audit')}
+            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${activeSubTab === 'audit' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-650'}`}
+          >
+            📋 Passcode Audit Log ({auditLogs.length})
+          </button>
         </div>
       )}
 
@@ -2939,6 +2986,159 @@ export default function TeacherDashboard({
                 );
               })}
             </div>
+          </div>
+        ) : activeSubTab === 'audit' ? (
+          /* VIEW 5: PASSCODE SECURITY AUDIT master LEDGER */
+          <div className="bg-white border rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm animate-fade-in text-slate-800">
+            <div className="border-b pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <span className="text-[10px] bg-emerald-50 border border-emerald-250 text-emerald-850 font-extrabold tracking-widest uppercase px-2.5 py-1 rounded-md">
+                  Security Log Desk
+                </span>
+                <h2 className="text-sm font-extrabold text-slate-900 mt-3 flex items-center gap-1.5 uppercase tracking-tight">
+                  📋 Student Passcode & Access Audit Logs
+                </h2>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Chronological master ledger tracking passcode generations, manual security resets, and student portal rollover expirations school-wide.
+                </p>
+              </div>
+              {isAdmin && auditLogs.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearAuditLogs}
+                  className="bg-rose-50 hover:bg-rose-150 border border-rose-250 text-rose-750 px-4 py-2.5 text-[10.5px] font-bold tracking-wider uppercase rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+                >
+                  🗑️ Clear Security Logs
+                </button>
+              )}
+            </div>
+
+            {/* Quick Metrics Statistics Widget Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="bg-slate-50 border rounded-2xl p-4 text-center">
+                <p className="text-[9px] text-slate-450 font-black uppercase tracking-wider">Total Events</p>
+                <p className="text-xl font-black text-slate-800 mt-1">{auditLogs.length}</p>
+              </div>
+              <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-4 text-center">
+                <p className="text-[9px] text-emerald-600 font-black uppercase tracking-wider">Passcodes Created</p>
+                <p className="text-xl font-black text-emerald-800 mt-1">{auditLogs.filter(l => l.action === 'Created').length}</p>
+              </div>
+              <div className="bg-amber-50/50 border border-amber-100 rounded-2xl p-4 text-center">
+                <p className="text-[9px] text-amber-650 font-black uppercase tracking-wider">Manual Resets</p>
+                <p className="text-xl font-black text-amber-800 mt-1">{auditLogs.filter(l => l.action === 'Manual Reset').length}</p>
+              </div>
+              <div className="bg-rose-50/50 border border-rose-100 rounded-2xl p-4 text-center">
+                <p className="text-[9px] text-rose-650 font-black uppercase tracking-wider">Total Rollovers</p>
+                <p className="text-xl font-black text-rose-800 mt-1">{auditLogs.filter(l => l.action === 'Rollover').length}</p>
+              </div>
+            </div>
+
+            {/* Audit Logs Filter Search Input */}
+            <div className="flex bg-slate-50 border rounded-xl px-3.5 py-3 items-center gap-2">
+              <Search className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="Search logs by student name, ID, class, action or educator..."
+                value={auditSearch}
+                onChange={(e) => setAuditSearch(e.target.value)}
+                className="bg-transparent text-xs w-full focus:outline-none placeholder-slate-400 font-semibold"
+              />
+              {auditSearch && (
+                <button
+                  type="button"
+                  onClick={() => setAuditSearch('')}
+                  className="text-[10px] text-slate-400 hover:text-slate-650 font-black uppercase cursor-pointer"
+                >
+                  Clear Clear
+                </button>
+              )}
+            </div>
+
+            {/* Chronological Logs List */}
+            {(() => {
+              const filteredLogs = auditLogs.filter(log => {
+                const q = auditSearch.toLowerCase();
+                return log.studentName.toLowerCase().includes(q) || 
+                       log.studentId.toLowerCase().includes(q) || 
+                       log.studentClass.toLowerCase().includes(q) || 
+                       log.performedBy.toLowerCase().includes(q) ||
+                       log.action.toLowerCase().includes(q);
+              });
+
+              if (filteredLogs.length === 0) {
+                return (
+                  <div className="bg-slate-50 border rounded-2xl p-8 text-center space-y-2">
+                    <p className="text-2xl select-none">📋</p>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">No Security Log Entries Found</p>
+                    <p className="text-[10px] text-slate-400">
+                      {auditLogs.length === 0 
+                        ? "Passcode and security credentials logs will appear here as additions, resets, and logins rollover occur."
+                        : "No log records matched your search query filter. Try general search letters."
+                      }
+                    </p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="space-y-3.5 max-h-[500px] overflow-y-auto pr-1">
+                  {filteredLogs.map((log) => {
+                    let badgeColor = "bg-slate-100 text-slate-700 border-slate-200";
+                    if (log.action === 'Created') badgeColor = "bg-emerald-50 text-emerald-800 border-emerald-100";
+                    else if (log.action === 'Manual Reset') badgeColor = "bg-amber-50 text-amber-800 border-amber-200";
+                    else if (log.action === 'Rollover') badgeColor = "bg-rose-50 text-rose-850 border-rose-200";
+                    else if (log.action === 'Self Reset') badgeColor = "bg-blue-50 text-blue-800 border-blue-200";
+
+                    return (
+                      <div
+                        key={log.id}
+                        className="border rounded-2xl p-4 hover:bg-slate-50 border-slate-100 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs"
+                      >
+                        <div className="space-y-2.5">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase border tracking-wide ${badgeColor}`}>
+                              {log.action}
+                            </span>
+                            <span className="font-extrabold text-slate-800 text-xs">{log.studentName}</span>
+                            <span className="bg-slate-100 text-slate-655 font-bold text-[9px] px-2 py-0.5 rounded-md border text-center uppercase tracking-wide">
+                              {log.studentClass}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-mono">ID: {log.studentId}</span>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-[11px]">
+                            <p className="text-slate-500 font-medium font-sans">
+                              🔑 Active Credentials: <strong className="font-mono text-emerald-700 bg-emerald-50/50 px-1.5 py-0.5 rounded border border-emerald-110 font-extrabold">{log.newPasscode}</strong>
+                              {log.oldPasscode && (
+                                <span className="text-slate-450 text-[10px] font-sans font-medium"> (Rolled from: <span className="font-mono line-through">{log.oldPasscode}</span>)</span>
+                              )}
+                            </p>
+                            <p className="text-slate-500 font-medium font-sans">
+                              👤 Initiator: <strong className="text-slate-700 font-extrabold">{log.performedBy}</strong>
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="text-right flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center w-full md:w-auto border-t md:border-t-0 pt-2.5 md:pt-0 gap-2 border-slate-100">
+                          <p className="text-[10px] text-slate-450 font-bold uppercase tracking-wider">Timestamp</p>
+                          <p className="text-[10px] text-slate-500 font-mono font-semibold mt-0.5 flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-slate-350" />
+                            {new Date(log.timestamp).toLocaleString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              second: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         ) : (
           
