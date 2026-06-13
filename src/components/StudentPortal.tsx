@@ -40,6 +40,7 @@ export default function StudentPortal({
   const [passwordInput, setPasswordInput] = useState('');
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [rollNotification, setRollNotification] = useState<string | null>(null);
 
   // Password reset via simulated OTP states
   const [showResetForm, setShowResetForm] = useState(false);
@@ -230,6 +231,7 @@ export default function StudentPortal({
   };
 
   const handleDeselectStudent = () => {
+    setRollNotification(null);
     if (typeof window !== 'undefined' && window.history.state && window.history.state.studentId) {
       window.history.back();
     } else {
@@ -246,8 +248,30 @@ export default function StudentPortal({
     
     const requiredPassword = selectedStudent.password || '123456';
     if (passwordInput === requiredPassword) {
+      const currentUses = (selectedStudent.passwordUseCount || 0) + 1;
+      const updatedStudent = { ...selectedStudent, passwordUseCount: currentUses };
+      let rollMsg = "";
+      
+      if (currentUses >= 3) {
+        const newPasscode = Math.floor(100000 + Math.random() * 900000).toString();
+        updatedStudent.password = newPasscode;
+        updatedStudent.passwordUseCount = 0;
+        rollMsg = `🔒 ROLLOVER SECURITY NOTICE: This password has been verified successfully 3 times and is now expired. For maximum account security, a fresh 6-digit passcode has been automatically generated for you: ${newPasscode}. Please write this down for future logins!`;
+      }
+      
+      if (onUpdateStudents) {
+        const updatedList = students.map(s => s.id === selectedStudent.id ? updatedStudent : s);
+        onUpdateStudents(updatedList);
+      }
+      
+      setSelectedStudent(updatedStudent);
       setIsUnlocked(true);
       setLoginError('');
+      if (rollMsg) {
+        setRollNotification(rollMsg);
+      } else {
+        setRollNotification(null);
+      }
     } else {
       setLoginError('Invalid Student Password Code. Please try again!');
     }
@@ -540,16 +564,30 @@ export default function StudentPortal({
             </div>
           </form>
 
-          <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 text-left">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-700 block mb-0.5">Demo Credentials Helper</span>
+          <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 text-left space-y-1">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-700 block select-none">Demo Credentials Helper</span>
             <p className="text-[10px] text-slate-400 leading-normal">
               Candidate Student ID: <span className="font-mono font-bold text-slate-700">{selectedStudent.id}</span>
+            </p>
+            <p className="text-[10px] text-slate-400 leading-normal">
+              Portal Passcode Key (6-digit): <strong className="font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">{selectedStudent.password || '123456'}</strong> <span className="text-[10px] text-slate-450 italic">({3 - (selectedStudent.passwordUseCount || 0)} uses remaining before rollover)</span>
             </p>
           </div>
         </div>
       ) : (
         // Decrypted View
         <div className="max-w-4xl mx-auto space-y-6">
+          
+          {rollNotification && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-3xl p-5 shadow-xs relative z-20 flex gap-3.5 items-start print:hidden">
+              <span className="text-xl">⚠️</span>
+              <div className="space-y-1">
+                <h4 className="text-xs font-black uppercase tracking-wider text-amber-800">Security Password Expiry & Rollover</h4>
+                <p className="text-xs font-medium leading-relaxed">{rollNotification}</p>
+                <p className="text-[10px] text-amber-700/80 font-bold italic">Note: Remember to note down this passcode! This alert will dismiss once you lock the session or navigate away.</p>
+              </div>
+            </div>
+          )}
           
           {/* Sub menu inside student viewer (hidden during print) */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-100 rounded-3xl p-4 sm:px-5 sm:py-4 print:hidden shadow-xs">
@@ -571,6 +609,7 @@ export default function StudentPortal({
                   setIsUnlocked(false);
                   setPasswordInput('');
                   setLoginError('');
+                  setRollNotification(null);
                 }}
                 className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-red-650 hover:bg-red-50 transition-all cursor-pointer border border-red-100/50 flex-1 xs:flex-initial"
               >
@@ -835,18 +874,22 @@ export default function StudentPortal({
                           <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/30 w-24">
                             <span className="flex items-center justify-center gap-1 text-emerald-750">Σ TERM (100)</span>
                           </th>
-                          <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20">
-                            <span className="flex items-center justify-center gap-1"># 1ST TERM (20)</span>
-                          </th>
-                          <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20">
-                            <span className="flex items-center justify-center gap-1"># 2ND TERM (20)</span>
-                          </th>
-                          <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20">
-                            <span className="flex items-center justify-center gap-1"># 3RD TERM (60)</span>
-                          </th>
-                          <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/20 w-28">
-                            <span className="flex items-center justify-center gap-1 text-slate-800 font-bold">Σ SESSION AVE</span>
-                          </th>
+                          {template.currentTerm === 'Third Term' && (
+                            <>
+                              <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20">
+                                <span className="flex items-center justify-center gap-1"># 1ST TERM (20)</span>
+                              </th>
+                              <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20">
+                                <span className="flex items-center justify-center gap-1"># 2ND TERM (20)</span>
+                              </th>
+                              <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20">
+                                <span className="flex items-center justify-center gap-1"># 3RD TERM (60)</span>
+                              </th>
+                              <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/20 w-28">
+                                <span className="flex items-center justify-center gap-1 text-slate-800 font-bold">Σ SESSION AVE</span>
+                              </th>
+                            </>
+                          )}
                           <th className="py-2.5 px-3 border-r border-slate-200 text-center w-20">
                             <span className="flex items-center justify-center gap-1">Σ GRADE</span>
                           </th>
@@ -868,7 +911,9 @@ export default function StudentPortal({
                           const thirdTerm = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
                           const sessionAvg = firstTerm + secondTerm + thirdTerm;
 
-                          const { letter, remark, ratingClass } = getLetterAndRemark(sessionAvg);
+                          const { letter, remark, ratingClass } = getLetterAndRemark(
+                            template.currentTerm === 'Third Term' ? sessionAvg : tot
+                          );
 
                           return (
                             <tr key={subj.id} className="hover:bg-slate-50/60 transition-all">
@@ -876,10 +921,14 @@ export default function StudentPortal({
                               <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-500">{subj.testScore}</td>
                               <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-500">{subj.examScore}</td>
                               <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-700 bg-emerald-50/20">{tot}</td>
-                              <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{firstTerm}</td>
-                              <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-455">{secondTerm}</td>
-                              <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-455">{thirdTerm}</td>
-                              <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-700/80 bg-slate-50/40">{sessionAvg}</td>
+                              {template.currentTerm === 'Third Term' && (
+                                <>
+                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{firstTerm}</td>
+                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-455">{secondTerm}</td>
+                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-455">{thirdTerm}</td>
+                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-700/80 bg-slate-50/40">{sessionAvg}</td>
+                                </>
+                              )}
                               <td className="py-2.5 px-3 border-r border-slate-100 text-center">
                                 <span className={`px-2 py-0.5 text-[10px] font-black rounded-sm tracking-wider ${ratingClass}`}>
                                   {letter}
@@ -913,39 +962,43 @@ export default function StudentPortal({
                           <td className="py-2 px-3 text-center font-black text-emerald-705 bg-emerald-50/20">
                             Average: {stats.avgScore.toFixed(1)}%
                           </td>
-                          <td className="py-2 px-3 text-center font-bold">
-                            Average: {(() => {
-                              const tCount = selectedStudent.subjects.length || 1;
-                              const fSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
-                              return (fSum / tCount).toFixed(1);
-                            })()}
-                          </td>
-                          <td className="py-2 px-3 text-center font-bold">
-                            Average: {(() => {
-                              const tCount = selectedStudent.subjects.length || 1;
-                              const sSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
-                              return (sSum / tCount).toFixed(1);
-                            })()}
-                          </td>
-                          <td className="py-2 px-3 text-center font-bold">
-                            Average: {(() => {
-                              const tCount = selectedStudent.subjects.length || 1;
-                              const thSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
-                              return (thSum / tCount).toFixed(1);
-                            })()}
-                          </td>
-                          <td className="py-2 px-3 text-center font-black bg-slate-100/50">
-                            Average: {(() => {
-                              const tCount = selectedStudent.subjects.length || 1;
-                              const sessionSum = selectedStudent.subjects.reduce((sum, s) => {
-                                const f = s.firstTermSummary !== undefined ? s.firstTermSummary : 0;
-                                const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : 0;
-                                const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0;
-                                return sum + (f + sec + th);
-                              }, 0);
-                              return (sessionSum / tCount).toFixed(1);
-                            })()}%
-                          </td>
+                          {template.currentTerm === 'Third Term' && (
+                            <>
+                              <td className="py-2 px-3 text-center font-bold">
+                                Average: {(() => {
+                                  const tCount = selectedStudent.subjects.length || 1;
+                                  const fSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
+                                  return (fSum / tCount).toFixed(1);
+                                })()}
+                              </td>
+                              <td className="py-2 px-3 text-center font-bold">
+                                Average: {(() => {
+                                  const tCount = selectedStudent.subjects.length || 1;
+                                  const sSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
+                                  return (sSum / tCount).toFixed(1);
+                                })()}
+                              </td>
+                              <td className="py-2 px-3 text-center font-bold">
+                                Average: {(() => {
+                                  const tCount = selectedStudent.subjects.length || 1;
+                                  const thSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
+                                  return (thSum / tCount).toFixed(1);
+                                })()}
+                              </td>
+                              <td className="py-2 px-3 text-center font-black bg-slate-100/50">
+                                Average: {(() => {
+                                  const tCount = selectedStudent.subjects.length || 1;
+                                  const sessionSum = selectedStudent.subjects.reduce((sum, s) => {
+                                    const f = s.firstTermSummary !== undefined ? s.firstTermSummary : 0;
+                                    const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : 0;
+                                    const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0;
+                                    return sum + (f + sec + th);
+                                  }, 0);
+                                  return (sessionSum / tCount).toFixed(1);
+                                })()}%
+                              </td>
+                            </>
+                          )}
                           <td className="py-2 px-3" colSpan={3}>
                             {/* Empty spacing for other columns */}
                           </td>

@@ -8,7 +8,7 @@ import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircl
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile, DbStatus } from '../types';
-import { createStudent, calculateStudentStats, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal } from '../utils/academicUtils';
+import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal } from '../utils/academicUtils';
 
 interface TeacherDashboardProps {
   students: Student[];
@@ -215,7 +215,7 @@ export default function TeacherDashboard({
     return 'First Term';
   });
 
-  const isTermReadOnly = activeTermTab !== 'Third Term';
+  const isTermReadOnly = activeTermTab !== template.currentTerm;
 
   // Print latest database issues or status to the system console when they occur
   useEffect(() => {
@@ -389,7 +389,7 @@ export default function TeacherDashboard({
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentSex, setNewStudentSex] = useState<'Male' | 'Female'>('Male');
   const [newStudentAge, setNewStudentAge] = useState(12);
-  const [newStudentPassword, setNewStudentPassword] = useState('123456');
+  const [newStudentPassword, setNewStudentPassword] = useState(() => Math.floor(100000 + Math.random() * 900000).toString());
 
   // Edit Student form fields state including password
   const [editAge, setEditAge] = useState(12);
@@ -598,13 +598,13 @@ export default function TeacherDashboard({
   // Stats for current class overview
   const totalInClass = classStudents.length;
   const highestScore = classStudents.length > 0 
-    ? Math.max(...classStudents.map(s => calculateStudentStats(s).totalScore))
+    ? Math.max(...classStudents.map(s => calculateStudentStatsForTerm(s, activeTermTab).totalScore))
     : 0;
   const maxClassCumulative = classStudents.length > 0
     ? (classStudents[0].subjects.length * 100)
     : 1000;
   const averageGPAInClass = classStudents.length > 0
-    ? (classStudents.reduce((sum, s) => sum + parseFloat(calculateStudentStats(s).gpa), 0) / classStudents.length).toFixed(2)
+    ? (classStudents.reduce((sum, s) => sum + parseFloat(calculateStudentStatsForTerm(s, activeTermTab).gpa), 0) / classStudents.length).toFixed(2)
     : "0.00";
 
   // Create Student
@@ -613,18 +613,18 @@ export default function TeacherDashboard({
     if (!newStudentName.trim()) return;
 
     const newIdx = students.filter(s => s.className === selectedClass).length;
-    const added = createStudent(newStudentName.trim(), selectedClass, newIdx);
+    const added = createStudent(newStudentName.trim(), selectedClass, newIdx, activeTermTab);
     added.age = newStudentAge;
     added.sex = newStudentSex;
     added.password = newStudentPassword || '123456';
     
     // Add student, trigger ranking refresh
     let refreshed = [...students, added];
-    refreshed = calculateClassPositions(refreshed, selectedClass);
+    refreshed = calculateClassPositions(refreshed, selectedClass, activeTermTab);
     
     onUpdateStudents(refreshed);
     setNewStudentName('');
-    setNewStudentPassword('123456');
+    setNewStudentPassword(Math.floor(100000 + Math.random() * 900000).toString());
     setShowAddForm(false);
     triggerSuccess(`Added ${added.name} of school standard JSS1-SS3 registration catalog!`);
   };
@@ -731,7 +731,7 @@ export default function TeacherDashboard({
 
     // Replace in full list, trigger rank recalculation
     let refreshed = students.map(s => s.id === editingStudent.id ? updatedStudent : s);
-    refreshed = calculateClassPositions(refreshed, selectedClass);
+    refreshed = calculateClassPositions(refreshed, selectedClass, activeTermTab);
 
     onUpdateStudents(refreshed);
     setEditingStudent(null);
@@ -1168,7 +1168,7 @@ export default function TeacherDashboard({
 
             {/* Notion Style Report Sheet Card */}
             {(() => {
-              const stats = calculateStudentStats(viewingReportStudent);
+              const stats = calculateStudentStatsForTerm(viewingReportStudent, activeTermTab);
               return (
                 <div 
                   ref={teacherPrintAreaRef}
@@ -1320,18 +1320,22 @@ export default function TeacherDashboard({
                             <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/20 w-24">
                               <span className="flex items-center justify-center gap-1 text-emerald-750">Σ TERM (100)</span>
                             </th>
-                            <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20">
-                              <span className="flex items-center justify-center gap-1"># 1ST TERM (20)</span>
-                            </th>
-                            <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20">
-                              <span className="flex items-center justify-center gap-1"># 2ND TERM (20)</span>
-                            </th>
-                            <th className="py-2.5 px-3 border-r border-slate-205 text-center text-[10px] w-20">
-                              <span className="flex items-center justify-center gap-1"># 3RD TERM (60)</span>
-                            </th>
-                            <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/10 w-28 text-slate-800 font-bold">
-                              <span className="flex items-center justify-center gap-1 text-slate-805 font-bold">Σ SESSION AVE</span>
-                            </th>
+                            {activeTermTab === 'Third Term' && (
+                              <>
+                                <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20">
+                                  <span className="flex items-center justify-center gap-1"># 1ST TERM (20)</span>
+                                </th>
+                                <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20">
+                                  <span className="flex items-center justify-center gap-1"># 2ND TERM (20)</span>
+                                </th>
+                                <th className="py-2.5 px-3 border-r border-slate-205 text-center text-[10px] w-20">
+                                  <span className="flex items-center justify-center gap-1"># 3RD TERM (60)</span>
+                                </th>
+                                <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/10 w-28 text-slate-800 font-bold">
+                                  <span className="flex items-center justify-center gap-1 text-slate-805 font-bold">Σ SESSION AVE</span>
+                                </th>
+                              </>
+                            )}
                             <th className="py-2.5 px-3 border-r border-slate-200 text-center w-20">
                               <span className="flex items-center justify-center gap-1">Σ GRADE</span>
                             </th>
@@ -1353,7 +1357,9 @@ export default function TeacherDashboard({
                             const thirdTerm = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
                             const sessionAvg = firstTerm + secondTerm + thirdTerm;
 
-                            const { letter, remark, ratingClass } = getLetterAndRemark(sessionAvg);
+                            const { letter, remark, ratingClass } = getLetterAndRemark(
+                              activeTermTab === 'Third Term' ? sessionAvg : tot
+                            );
 
                             return (
                               <tr key={subj.id} className="hover:bg-slate-50/60 transition-all">
@@ -1361,10 +1367,14 @@ export default function TeacherDashboard({
                                 <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-500">{subj.testScore}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-500">{subj.examScore}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-750 bg-emerald-50/10">{tot}</td>
-                                <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{firstTerm}</td>
-                                <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{secondTerm}</td>
-                                <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-455">{thirdTerm}</td>
-                                <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-700 bg-slate-50/40">{sessionAvg}</td>
+                                {activeTermTab === 'Third Term' && (
+                                  <>
+                                    <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{firstTerm}</td>
+                                    <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{secondTerm}</td>
+                                    <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-455">{thirdTerm}</td>
+                                    <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-700 bg-slate-50/40">{sessionAvg}</td>
+                                  </>
+                                )}
                                 <td className="py-2.5 px-3 border-r border-slate-100 text-center">
                                   <span className={`px-2 py-0.5 text-[10px] font-black rounded-sm tracking-wider ${ratingClass}`}>
                                     {letter}
@@ -1398,39 +1408,43 @@ export default function TeacherDashboard({
                             <td className="py-2 px-3 text-center font-black text-indigo-705 bg-emerald-50/10">
                               Average: {stats.avgScore.toFixed(1)}%
                             </td>
-                            <td className="py-2 px-3 text-center font-bold">
-                              Average: {(() => {
-                                const tCount = viewingReportStudent.subjects.length || 1;
-                                const fSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
-                                return (fSum / tCount).toFixed(1);
-                              })()}
-                            </td>
-                            <td className="py-2 px-3 text-center font-bold">
-                              Average: {(() => {
-                                const tCount = viewingReportStudent.subjects.length || 1;
-                                const sSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
-                                return (sSum / tCount).toFixed(1);
-                              })()}
-                            </td>
-                            <td className="py-2 px-3 text-center font-bold">
-                              Average: {(() => {
-                                const tCount = viewingReportStudent.subjects.length || 1;
-                                const thSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
-                                return (thSum / tCount).toFixed(1);
-                              })()}
-                            </td>
-                            <td className="py-2 px-3 text-center font-black bg-slate-100/50">
-                              Average: {(() => {
-                                const tCount = viewingReportStudent.subjects.length || 1;
-                                const sessionSum = viewingReportStudent.subjects.reduce((sum, s) => {
-                                  const f = s.firstTermSummary !== undefined ? s.firstTermSummary : 0;
-                                  const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : 0;
-                                  const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0;
-                                  return sum + (f + sec + th);
-                                }, 0);
-                                return (sessionSum / tCount).toFixed(1);
-                              })()}%
-                            </td>
+                            {activeTermTab === 'Third Term' && (
+                              <>
+                                <td className="py-2 px-3 text-center font-bold">
+                                  Average: {(() => {
+                                    const tCount = viewingReportStudent.subjects.length || 1;
+                                    const fSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
+                                    return (fSum / tCount).toFixed(1);
+                                  })()}
+                                </td>
+                                <td className="py-2 px-3 text-center font-bold">
+                                  Average: {(() => {
+                                    const tCount = viewingReportStudent.subjects.length || 1;
+                                    const sSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
+                                    return (sSum / tCount).toFixed(1);
+                                  })()}
+                                </td>
+                                <td className="py-2 px-3 text-center font-bold">
+                                  Average: {(() => {
+                                    const tCount = viewingReportStudent.subjects.length || 1;
+                                    const thSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
+                                    return (thSum / tCount).toFixed(1);
+                                  })()}
+                                </td>
+                                <td className="py-2 px-3 text-center font-black bg-slate-100/50">
+                                  Average: {(() => {
+                                    const tCount = viewingReportStudent.subjects.length || 1;
+                                    const sessionSum = viewingReportStudent.subjects.reduce((sum, s) => {
+                                      const f = s.firstTermSummary !== undefined ? s.firstTermSummary : 0;
+                                      const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : 0;
+                                      const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0;
+                                      return sum + (f + sec + th);
+                                    }, 0);
+                                    return (sessionSum / tCount).toFixed(1);
+                                  })()}%
+                                </td>
+                              </>
+                            )}
                             <td className="py-2 px-3" colSpan={3}></td>
                           </tr>
                         </tbody>
@@ -1743,19 +1757,25 @@ export default function TeacherDashboard({
 
                 <div className="space-y-2 border rounded-2xl overflow-x-auto shadow-inner">
                   <div className="bg-slate-100 border-b p-3 grid grid-cols-12 text-[10px] font-bold uppercase text-slate-500 tracking-wider min-w-[850px] items-center">
-                    <span className="col-span-3">Subject Course Title</span>
-                    <span className="col-span-1 text-center font-bold">Test (30)</span>
-                    <span className="col-span-1 text-center font-bold">Exam (70)</span>
-                    <span className="col-span-1 text-center font-bold">Live Total (100)</span>
-                    <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-emerald-800 bg-emerald-100/70 border border-emerald-300">
-                      1st Term# (20)
+                    <span className={activeTermTab === 'Third Term' ? "col-span-3" : "col-span-4"}>Subject Course Title</span>
+                    <span className={activeTermTab === 'Third Term' ? "col-span-1 text-center font-bold" : "col-span-2 text-center font-bold"}>Test (30)</span>
+                    <span className={activeTermTab === 'Third Term' ? "col-span-1 text-center font-bold" : "col-span-2 text-center font-bold"}>Exam (70)</span>
+                    <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-indigo-900 bg-indigo-50 border border-slate-200">
+                      Live Total
                     </span>
-                    <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300">
-                      2nd Term# (20)
-                    </span>
-                    <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300">
-                      3rd Term# (60)
-                    </span>
+                    {activeTermTab === 'Third Term' && (
+                      <>
+                        <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-emerald-800 bg-emerald-100/70 border border-emerald-300">
+                          1st Term# (20)
+                        </span>
+                        <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300">
+                          2nd Term# (20)
+                        </span>
+                        <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300">
+                          3rd Term# (60)
+                        </span>
+                      </>
+                    )}
                     <span className="col-span-2 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300">
                       # Position
                     </span>
@@ -1770,7 +1790,7 @@ export default function TeacherDashboard({
                       const tTermVal = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
                       return (
                         <div key={subj.id} className="p-3 grid grid-cols-12 items-center text-xs font-semibold text-slate-800 hover:bg-slate-50">
-                          <div className="col-span-3 flex items-center pr-2">
+                          <div className={activeTermTab === 'Third Term' ? "col-span-3 flex items-center pr-2" : "col-span-4 flex items-center pr-2"}>
                             <input
                               type="text"
                               required
@@ -1781,7 +1801,7 @@ export default function TeacherDashboard({
                               className="w-full bg-slate-50 border border-slate-200 py-1 px-1.5 rounded text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100 transition-all font-sans disabled:opacity-75 disabled:cursor-not-allowed"
                             />
                           </div>
-                          <span className="col-span-1 flex justify-center px-1">
+                          <span className={activeTermTab === 'Third Term' ? "col-span-1 flex justify-center px-1" : "col-span-2 flex justify-center px-1"}>
                             <input
                               type="number"
                               min={0}
@@ -1794,7 +1814,7 @@ export default function TeacherDashboard({
                               className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-emerald-600 font-bold font-mono text-slate-800 disabled:opacity-75 disabled:cursor-not-allowed"
                             />
                           </span>
-                          <span className="col-span-1 flex justify-center px-1">
+                          <span className={activeTermTab === 'Third Term' ? "col-span-1 flex justify-center px-1" : "col-span-2 flex justify-center px-1"}>
                             <input
                               type="number"
                               min={0}
@@ -1807,54 +1827,58 @@ export default function TeacherDashboard({
                               className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-emerald-600 font-bold font-mono text-slate-800 disabled:opacity-75 disabled:cursor-not-allowed"
                             />
                           </span>
-                          <span className="col-span-1 text-center font-extrabold font-mono text-emerald-900 bg-emerald-50/40 py-1 rounded border">
+                          <span className="col-span-1 text-center font-extrabold font-mono text-emerald-900 bg-emerald-50/40 py-1 rounded border font-sans select-none">
                             {subjTotal}
                           </span>
                           
-                          {/* First Term Summary */}
-                          <span className="col-span-1 flex justify-center px-1">
-                            <input
-                              type="number"
-                              min={0}
-                              max={100}
-                              disabled={isTermReadOnly}
-                              value={focusedInputs[`${subj.id}_firstTerm`] && fTermVal === 0 ? '' : fTermVal}
-                              onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: true }))}
-                              onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: false }))}
-                              onChange={(e) => handleScoreChange(subj.id, 'firstTerm', parseInt(e.target.value) || 0)}
-                              className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50/50 border border-emerald-200 focus:border-emerald-500 text-emerald-800 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
-                            />
-                          </span>
+                          {activeTermTab === 'Third Term' && (
+                            <>
+                              {/* First Term Summary */}
+                              <span className="col-span-1 flex justify-center px-1">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={100}
+                                  disabled={isTermReadOnly}
+                                  value={focusedInputs[`${subj.id}_firstTerm`] && fTermVal === 0 ? '' : fTermVal}
+                                  onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: true }))}
+                                  onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: false }))}
+                                  onChange={(e) => handleScoreChange(subj.id, 'firstTerm', parseInt(e.target.value) || 0)}
+                                  className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50/50 border border-emerald-200 focus:border-emerald-500 text-emerald-800 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
+                                />
+                              </span>
 
-                          {/* Second Term Summary */}
-                          <span className="col-span-1 flex justify-center px-1">
-                            <input
-                              type="number"
-                              min={0}
-                              max={100}
-                              disabled={isTermReadOnly}
-                              value={focusedInputs[`${subj.id}_secondTerm`] && sTermVal === 0 ? '' : sTermVal}
-                              onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_secondTerm`]: true }))}
-                              onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_secondTerm`]: false }))}
-                              onChange={(e) => handleScoreChange(subj.id, 'secondTerm', parseInt(e.target.value) || 0)}
-                              className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50 border border-emerald-200 focus:border-emerald-500 text-emerald-990 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
-                            />
-                          </span>
+                              {/* Second Term Summary */}
+                              <span className="col-span-1 flex justify-center px-1">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={100}
+                                  disabled={isTermReadOnly}
+                                  value={focusedInputs[`${subj.id}_secondTerm`] && sTermVal === 0 ? '' : sTermVal}
+                                  onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_secondTerm`]: true }))}
+                                  onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_secondTerm`]: false }))}
+                                  onChange={(e) => handleScoreChange(subj.id, 'secondTerm', parseInt(e.target.value) || 0)}
+                                  className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50 border border-emerald-200 focus:border-emerald-505 text-emerald-990 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
+                                />
+                              </span>
 
-                          {/* Third Term Summary */}
-                          <span className="col-span-1 flex justify-center px-1">
-                            <input
-                              type="number"
-                              min={0}
-                              max={100}
-                              disabled={isTermReadOnly}
-                              value={focusedInputs[`${subj.id}_thirdTerm`] && tTermVal === 0 ? '' : tTermVal}
-                              onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_thirdTerm`]: true }))}
-                              onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_thirdTerm`]: false }))}
-                              onChange={(e) => handleScoreChange(subj.id, 'thirdTerm', parseInt(e.target.value) || 0)}
-                              className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50 border border-emerald-200 focus:border-indigo-500 text-emerald-900 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
-                            />
-                          </span>
+                              {/* Third Term Summary */}
+                              <span className="col-span-1 flex justify-center px-1">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={100}
+                                  disabled={isTermReadOnly}
+                                  value={focusedInputs[`${subj.id}_thirdTerm`] && tTermVal === 0 ? '' : tTermVal}
+                                  onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_thirdTerm`]: true }))}
+                                  onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_thirdTerm`]: false }))}
+                                  onChange={(e) => handleScoreChange(subj.id, 'thirdTerm', parseInt(e.target.value) || 0)}
+                                  className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50 border border-emerald-200 focus:border-indigo-500 text-emerald-900 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
+                                />
+                              </span>
+                            </>
+                          )}
 
                           {/* Position (Editable Rank) */}
                           <span className="col-span-2 flex justify-center px-2">
@@ -2070,7 +2094,7 @@ export default function TeacherDashboard({
                   resumptionDate: editResumeDate
                 };
 
-                const stats = calculateStudentStats(previewStudent);
+                const stats = calculateStudentStatsForTerm(previewStudent, activeTermTab);
                 
                 return (
                   <div 
@@ -2210,10 +2234,14 @@ export default function TeacherDashboard({
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center w-24"># TEST (30)</th>
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center w-24"># EXAM (70)</th>
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/10 w-24 text-emerald-750">Σ TERM (100)</th>
-                              <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20"># 1ST TERM</th>
-                              <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20"># 2ND TERM</th>
-                              <th className="py-2.5 px-3 border-r border-slate-205 text-center text-[10px] w-20"># 3RD TERM</th>
-                              <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/10 w-28 text-slate-800 font-bold">Σ SESSION AVE</th>
+                              {activeTermTab === 'Third Term' && (
+                                <>
+                                  <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20"># 1ST TERM</th>
+                                  <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20"># 2ND TERM</th>
+                                  <th className="py-2.5 px-3 border-r border-slate-205 text-center text-[10px] w-20"># 3RD TERM</th>
+                                  <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/10 w-28 text-slate-800 font-bold">Σ SESSION AVE</th>
+                                </>
+                              )}
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center w-20">Σ GRADE</th>
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center w-16"># RANK</th>
                               <th className="py-2.5 px-4 font-bold text-slate-500">💬 TEACHER'S REMARK</th>
@@ -2228,7 +2256,9 @@ export default function TeacherDashboard({
                               const thirdTerm = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
                               const sessionAvg = firstTerm + secondTerm + thirdTerm;
 
-                              const { letter, remark, ratingClass } = getLetterAndRemark(sessionAvg);
+                              const { letter, remark, ratingClass } = getLetterAndRemark(
+                                activeTermTab === 'Third Term' ? sessionAvg : tot
+                              );
 
                               return (
                                 <tr key={subj.id} className="hover:bg-slate-50/60 transition-all">
@@ -2236,10 +2266,14 @@ export default function TeacherDashboard({
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-550">{subj.testScore}</td>
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-550">{subj.examScore}</td>
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-750 bg-emerald-50/10">{tot}</td>
-                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{firstTerm}</td>
-                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{secondTerm}</td>
-                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{thirdTerm}</td>
-                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-700 bg-slate-50/40">{sessionAvg}</td>
+                                  {activeTermTab === 'Third Term' && (
+                                    <>
+                                      <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{firstTerm}</td>
+                                      <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{secondTerm}</td>
+                                      <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{thirdTerm}</td>
+                                      <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-700 bg-slate-50/40">{sessionAvg}</td>
+                                    </>
+                                  )}
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center">
                                     <span className={`px-2 py-0.5 text-[10px] font-black rounded-sm tracking-wider ${ratingClass}`}>
                                       {letter}
@@ -3079,7 +3113,7 @@ export default function TeacherDashboard({
                     </thead>
                     <tbody className="divide-y font-medium text-slate-900">
                       {classStudents.map((stud, index) => {
-                        const stats = calculateStudentStats(stud);
+                        const stats = calculateStudentStatsForTerm(stud, activeTermTab);
                         const displayRank = index + 1;
                         
                         return (
@@ -3175,7 +3209,7 @@ export default function TeacherDashboard({
                 onClick={() => {
                   const { id, name, className, source } = deleteConfirmStudent;
                   let refreshed = students.filter(s => s.id !== id);
-                  refreshed = calculateClassPositions(refreshed, className);
+                  refreshed = calculateClassPositions(refreshed, className, activeTermTab);
                   onUpdateStudents(refreshed);
                   
                   if (source === 'view') {

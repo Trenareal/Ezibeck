@@ -8,7 +8,7 @@ import PublicHome from './components/PublicHome';
 import StudentPortal from './components/StudentPortal';
 import TeacherDashboard from './components/TeacherDashboard';
 import { Student, Workspace15Template, DbStatus } from './types';
-import { loadStoredStudents, saveStudents, getInitialStudents } from './utils/academicUtils';
+import { loadStoredStudents, saveStudents, getInitialStudents, isStudentInTerm } from './utils/academicUtils';
 import { 
   isSupabaseConfigured, 
   dbService, 
@@ -307,14 +307,16 @@ export default function App() {
 
           // 2. Load students from Supabase
           const rawStudents = await dbService.getStudents();
-          if (rawStudents && rawStudents.length > 0) {
-            const mapped = rawStudents.map(mapDbStudentToFrontend);
-            setStudents(mapped);
+          const mapped = (rawStudents || []).map(mapDbStudentToFrontend);
+          const termFiltered = mapped.filter(s => isStudentInTerm(s.id, template.currentTerm));
+          
+          if (termFiltered.length > 0) {
+            setStudents(termFiltered);
           } else {
-            console.log("Supabase is configured but database is empty. Seeding with default dataset...");
-            const initial = getInitialStudents();
-            setStudents(initial);
-            await dbService.saveAllStudents(initial);
+            console.log(`Supabase: No students found for active term "${template.currentTerm}". Seeding defaults...`);
+            const initialForTerm = getInitialStudents(template.currentTerm);
+            setStudents(initialForTerm);
+            await dbService.saveAllStudents(initialForTerm);
           }
           setDbStatus({
             configured: true,

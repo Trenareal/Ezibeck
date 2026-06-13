@@ -39,6 +39,7 @@ export interface Student {
   principalName: string;
   resumptionDate: string;
   password?: string; // Password field for Student Authentication
+  passwordUseCount?: number; // Tracks number of successful password verification uses (up to 3)
   principalRemark?: string;
 }
 

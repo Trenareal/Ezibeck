@@ -123,15 +123,88 @@ export function calculateStudentStats(s: Student): StudentStats {
   };
 }
 
-export function calculateClassPositions(students: Student[], className?: ClassName): Student[] {
+export function calculateStudentStatsForTerm(s: Student, term: string): StudentStats {
+  const isThirdTerm = term === 'Third Term';
+  const totalScore = s.subjects.reduce((sum, g) => {
+    if (isThirdTerm) {
+      const first = g.firstTermSummary !== undefined ? g.firstTermSummary : 0;
+      const second = g.secondTermSummary !== undefined ? g.secondTermSummary : 0;
+      const third = g.thirdTermSummary !== undefined ? g.thirdTermSummary : 0;
+      return sum + (first + second + third);
+    } else {
+      return sum + ((g.testScore || 0) + (g.examScore || 0));
+    }
+  }, 0);
+
+  const subjectCount = s.subjects.length || 1;
+  const avgScore = totalScore / subjectCount;
+  const maxPossibleScore = s.subjects.length * 100;
+  
+  let creditsAndAbove = 0;
+  let passes = 0;
+  let failures = 0;
+  
+  s.subjects.forEach(g => {
+    let tot = 0;
+    if (isThirdTerm) {
+      const first = g.firstTermSummary !== undefined ? g.firstTermSummary : 0;
+      const second = g.secondTermSummary !== undefined ? g.secondTermSummary : 0;
+      const third = g.thirdTermSummary !== undefined ? g.thirdTermSummary : 0;
+      tot = first + second + third;
+    } else {
+      tot = (g.testScore || 0) + (g.examScore || 0);
+    }
+
+    if (tot >= 60) {
+      creditsAndAbove++;
+    } else if (tot >= 50) {
+      passes++;
+    } else {
+      failures++;
+    }
+  });
+
+  const totalGpaPoints = s.subjects.reduce((sum, g) => {
+    let tot = 0;
+    if (isThirdTerm) {
+      const first = g.firstTermSummary !== undefined ? g.firstTermSummary : 0;
+      const second = g.secondTermSummary !== undefined ? g.secondTermSummary : 0;
+      const third = g.thirdTermSummary !== undefined ? g.thirdTermSummary : 0;
+      tot = first + second + third;
+    } else {
+      tot = (g.testScore || 0) + (g.examScore || 0);
+    }
+
+    if (tot >= 80) return sum + 5;
+    if (tot >= 70) return sum + 4;
+    if (tot >= 60) return sum + 3;
+    if (tot >= 50) return sum + 2;
+    return sum;
+  }, 0);
+  
+  const gpa = s.subjects.length > 0 ? (totalGpaPoints / s.subjects.length).toFixed(2) : "0.00";
+
+  return {
+    gpa,
+    avgScore,
+    totalScore,
+    maxPossibleScore,
+    creditsAndAbove,
+    passes,
+    failures
+  };
+}
+
+export function calculateClassPositions(students: Student[], className?: ClassName, term?: string): Student[] {
+  const activeTerm = term || 'Third Term';
   // Group students by class if className not specified (or filter first)
   const groupedList = className 
     ? students.filter(s => s.className === className)
     : students;
 
-  // Calculate average scores and sort
+  // Calculate average scores and sort using the term-specific stats helper
   const scoredStudents = groupedList.map(s => {
-    const { totalScore } = calculateStudentStats(s);
+    const { totalScore } = calculateStudentStatsForTerm(s, activeTerm);
     return { student: s, totalScore };
   });
 
@@ -139,17 +212,27 @@ export function calculateClassPositions(students: Student[], className?: ClassNa
 
   // Set position inside subjects or class positioning
   const positioned = scoredStudents.map((item, idx) => {
-    const position = idx + 1;
     // We update each subject position if wanted, or just keep class rank
     const updatedStudent = {
       ...item.student,
       subjects: item.student.subjects.map(subj => {
-        // Find subject rank across matching class students
+        // Find subject rank across matching class students using term-specific subject score
         const allScoresForSubj = groupedList.map(otherStud => {
           const matchSubj = otherStud.subjects.find(os => os.name === subj.name);
+          let matchTotal = 0;
+          if (matchSubj) {
+            if (activeTerm === 'Third Term') {
+              const first = matchSubj.firstTermSummary !== undefined ? matchSubj.firstTermSummary : 0;
+              const second = matchSubj.secondTermSummary !== undefined ? matchSubj.secondTermSummary : 0;
+              const third = matchSubj.thirdTermSummary !== undefined ? matchSubj.thirdTermSummary : 0;
+              matchTotal = first + second + third;
+            } else {
+              matchTotal = (matchSubj.testScore || 0) + (matchSubj.examScore || 0);
+            }
+          }
           return {
             id: otherStud.id,
-            total: matchSubj ? calculateSubjectTotal(matchSubj) : 0
+            total: matchTotal
           };
         }).sort((x, y) => y.total - x.total);
         
@@ -298,9 +381,10 @@ export function createStudent(name: string, className: ClassName, idx: number, t
   }
 
   const remarkIdx = idx % remarks.length;
+  const termSlug = activeTerm.toLowerCase().replace(/\s+/g, '_');
 
   return {
-    id: `EZB-${className}-${101 + idx}`,
+    id: `EZB-${className}-${101 + idx}_${termSlug}`,
     name,
     age,
     sex,
@@ -315,9 +399,19 @@ export function createStudent(name: string, className: ClassName, idx: number, t
     formTeacherName: isJSS ? "Mrs. Gladys Alabi" : "Mr. Anthony Okon",
     principalName: "Dr. Ezekiel Beck",
     resumptionDate: activeTerm === 'First Term' ? "2026-01-08" : activeTerm === 'Second Term' ? "2026-04-20" : "2026-09-14",
-    password: "123456",
+    password: Math.floor(100000 + Math.random() * 900000).toString(),
+    passwordUseCount: 0,
     principalRemark: principalComments[remarkIdx]
   };
+}
+
+export function isStudentInTerm(studentId: string, termName: string): boolean {
+  const termSlug = termName.toLowerCase().replace(/\s+/g, '_');
+  if (studentId.includes('_first_term') || studentId.includes('_second_term') || studentId.includes('_third_term')) {
+    return studentId.endsWith(`_${termSlug}`);
+  }
+  // Default legacy / no-suffix students belong to Third Term
+  return termSlug === 'third_term';
 }
 
 export function getInitialStudents(term?: string): Student[] {
@@ -336,7 +430,7 @@ export function getInitialStudents(term?: string): Student[] {
 
   // Calculate ranks across each class
   classes.forEach(cls => {
-    students = calculateClassPositions(students, cls);
+    students = calculateClassPositions(students, cls, activeTerm);
   });
 
   return students;
