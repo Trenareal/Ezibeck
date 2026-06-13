@@ -207,7 +207,7 @@ export default function TeacherDashboard({
   };
   
   // Dashboard Sub-navigation Tab
-  const [activeSubTab, setActiveSubTab] = useState<'roster' | 'workspace' | 'staff' | 'audit'>('roster');
+  const [activeSubTab, setActiveSubTab] = useState<'roster' | 'workspace' | 'staff' | 'audit' | 'passcodes'>('roster');
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
 
   // Update audit logs state on mount and tab activations
@@ -342,6 +342,7 @@ export default function TeacherDashboard({
 
   // Passcode audit search and clear state controls
   const [auditSearch, setAuditSearch] = useState('');
+  const [selectedPassClass, setSelectedPassClass] = useState('ALL');
   const handleClearAuditLogs = () => {
     if (window.confirm("Are you sure you want to permanently clear all security passcode audit logs? This action is irreversible.")) {
       clearAuditLogs();
@@ -1169,6 +1170,12 @@ export default function TeacherDashboard({
           >
             📋 Passcode Audit Log ({auditLogs.length})
           </button>
+          <button
+            onClick={() => setActiveSubTab('passcodes')}
+            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${activeSubTab === 'passcodes' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-650'}`}
+          >
+            🔑 Passcards Directory
+          </button>
         </div>
       )}
 
@@ -1550,8 +1557,8 @@ export default function TeacherDashboard({
                   </div>
 
                   {/* Part B: Character Assessment */}
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
-                    <div className="lg:col-span-6 bg-[#FCFCFC]/60 border border-slate-150 p-5 rounded-2xl space-y-3.5 shadow-3xs">
+                  <div id="pdf-partB-character-traits" className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-6 relative z-10 print-card-break">
+                    <div className="bg-[#FCFCFC]/60 border border-slate-150 p-5 rounded-2xl space-y-3.5 shadow-3xs">
                       <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-emerald-600 pl-2 select-none">
                         Part B: Character & Behavioral Conduct
                       </h4>
@@ -1568,74 +1575,74 @@ export default function TeacherDashboard({
                       </div>
                     </div>
 
-                    {/* Right Column Index Guides */}
-                    <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {/* Right Column Index Guides (In one row 2 column relative to behavioral ratings) */}
+                    <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
                       <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5 text-slate-800">
-                        <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-slate-900 pl-2 select-none">
-                          Grades Index Card
+                        <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 select-none">
+                          Grades Index
                         </h4>
                         <div className="border border-slate-150 rounded-xl overflow-hidden shadow-3xs">
-                          <table className="w-full text-[10px] text-left border-collapse text-slate-650">
+                          <table className="w-full text-[9px] text-left border-collapse text-slate-600">
                             <thead>
                               <tr className="bg-[#FAF9F9] border-b border-slate-150 font-bold select-none text-slate-500">
-                                <th className="py-1.5 px-2.5 border-r border-slate-150 w-16">Grade</th>
-                                <th className="py-1.5 px-2.5">Details</th>
+                                <th className="py-1 px-1.5 border-r border-slate-150 w-8">Grade</th>
+                                <th className="py-1 px-1.5">Details</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100 font-medium">
+                            <tbody className="divide-y divide-slate-100 font-semibold">
                               <tr className="hover:bg-slate-50/50">
-                                <td className="py-1.5 px-2.5 border-r border-slate-155 font-bold text-slate-800 bg-emerald-50 text-[10px] text-emerald-700 animate-fade-in">A+</td>
-                                <td className="py-1.5 px-2.5">Distinction 90 - 100</td>
+                                <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-emerald-700 bg-emerald-50 text-[9px]">A+</td>
+                                <td className="py-0.5 px-1.5">90 - 100</td>
                               </tr>
                               <tr className="hover:bg-slate-50/50">
-                                <td className="py-1.5 px-2.5 border-r border-slate-155 font-bold text-slate-800 bg-green-50 text-[10px] text-green-700">A</td>
-                                <td className="py-1.5 px-2.5">Excellent 80 - 89</td>
+                                <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-green-700 bg-green-50 text-[9px]">A</td>
+                                <td className="py-0.5 px-1.5">80 - 89</td>
                               </tr>
                               <tr className="hover:bg-slate-50/50">
-                                <td className="py-1.5 px-2.5 border-r border-slate-155 font-bold text-slate-800 bg-sky-50 text-[10px] text-sky-700">B</td>
-                                <td className="py-1.5 px-2.5">Very Good 70 - 79</td>
+                                <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-sky-700 bg-sky-50 text-[9px]">B</td>
+                                <td className="py-0.5 px-1.5">70 - 79</td>
                               </tr>
                               <tr className="hover:bg-slate-50/50">
-                                <td className="py-1.5 px-2.5 border-r border-slate-155 font-bold text-slate-800 bg-amber-50 text-[10px] text-amber-500">C</td>
-                                <td className="py-1.5 px-2.5">Good 60 - 69</td>
+                                <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-amber-500 bg-amber-50 text-[9px]">C</td>
+                                <td className="py-0.5 px-1.5">60 - 69</td>
                               </tr>
                               <tr className="hover:bg-slate-50/50">
-                                <td className="py-1.5 px-2.5 border-r border-slate-155 font-bold text-slate-800 bg-orange-50 text-[10px] text-orange-600">D</td>
-                                <td className="py-1.5 px-2.5">Fair 50 - 59</td>
+                                <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-orange-600 bg-orange-50 text-[9px]">D</td>
+                                <td className="py-0.5 px-1.5">50 - 59</td>
                               </tr>
                               <tr className="hover:bg-slate-50/50">
-                                <td className="py-1.5 px-2.5 border-r border-slate-155 font-bold text-slate-800 bg-red-50 text-[10px] text-red-500">F</td>
-                                <td className="py-1.5 px-2.5">Fail Below 50</td>
+                                <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-red-500 bg-red-50 text-[9px]">F</td>
+                                <td className="py-0.5 px-1.5">Below 50</td>
                               </tr>
                             </tbody>
                           </table>
                         </div>
                       </div>
 
-                      <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5 text-slate-850">
-                        <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-slate-900 pl-2 select-none">
-                          Conduct Rating Scale
+                      <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-2 text-slate-850">
+                        <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 select-none">
+                          Conduct Scale
                         </h4>
-                        <ul className="text-xs text-slate-500 space-y-1.5 font-bold pt-1.5">
-                          <li className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] flex items-center justify-center font-mono">5</span>
-                            <span>Excellent Standards</span>
+                        <ul className="text-[10px] text-slate-500 space-y-1 font-bold pt-1">
+                          <li className="flex items-center gap-1.5">
+                            <span className="w-4 h-4 rounded-md bg-emerald-50 text-emerald-700 text-[9px] flex items-center justify-center font-mono font-black">5</span>
+                            <span>Excellent</span>
                           </li>
-                          <li className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-md bg-green-50 text-green-700 text-[10px] flex items-center justify-center font-mono">4</span>
-                            <span>Very Good Behavior</span>
+                          <li className="flex items-center gap-1.5">
+                            <span className="w-4 h-4 rounded-md bg-green-50 text-green-700 text-[9px] flex items-center justify-center font-mono font-black">4</span>
+                            <span>Very Good</span>
                           </li>
-                          <li className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-md bg-emerald-50 text-indigo-705 text-[10px] flex items-center justify-center font-mono">3</span>
-                            <span>Satisfactory Conduct</span>
+                          <li className="flex items-center gap-1.5">
+                            <span className="w-4 h-4 rounded-md bg-sky-50 text-sky-700 text-[9px] flex items-center justify-center font-mono font-black">3</span>
+                            <span>Good</span>
                           </li>
-                          <li className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-md bg-amber-50 text-amber-550 text-[10px] flex items-center justify-center font-mono">2</span>
-                            <span>Fair / Passable</span>
+                          <li className="flex items-center gap-1.5">
+                            <span className="w-4 h-4 rounded-md bg-amber-50 text-amber-600 text-[9px] flex items-center justify-center font-mono font-black">2</span>
+                            <span>Fair</span>
                           </li>
-                          <li className="flex items-center gap-2">
-                            <span className="w-5 h-5 rounded-md bg-red-50 text-red-700 text-[10px] flex items-center justify-center font-mono">1</span>
-                            <span>Needs Record Fix</span>
+                          <li className="flex items-center gap-1.5">
+                            <span className="w-4 h-4 rounded-md bg-red-50 text-red-700 text-[9px] flex items-center justify-center font-mono font-black">1</span>
+                            <span>Needs Work</span>
                           </li>
                         </ul>
                       </div>
@@ -2985,6 +2992,225 @@ export default function TeacherDashboard({
                   </div>
                 );
               })}
+            </div>
+          </div>
+        ) : activeSubTab === 'passcodes' ? (
+          /* NEW VIEW 6: PRINTABLE STUDENT PASSCARDS DIRECTORY */
+          <div className="space-y-6 text-slate-800">
+            {/* Custom high-performance CSS injection for perfect, distraction-free browser prints */}
+            <style dangerouslySetInnerHTML={{__html: `
+              @media print {
+                body {
+                  background: white !important;
+                  color: black !important;
+                }
+                body * {
+                  visibility: hidden !important;
+                }
+                #print-passcards-section, #print-passcards-section * {
+                  visibility: visible !important;
+                }
+                #print-passcards-section {
+                  position: absolute !important;
+                  left: 0 !important;
+                  top: 0 !important;
+                  width: 100% !important;
+                  padding: 0 !important;
+                  margin: 0 !important;
+                }
+                .passcard-page-break {
+                  page-break-after: always !important;
+                  break-after: page !important;
+                  padding: 10px !important;
+                  margin-bottom: 0 !important;
+                }
+                .no-print {
+                  display: none !important;
+                }
+              }
+            `}} />
+
+            <div className="bg-white border rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm no-print">
+              <div className="border-b pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <span className="text-[10px] bg-sky-50 border border-sky-200 text-sky-700 font-extrabold tracking-widest uppercase px-2.5 py-1 rounded-md">
+                    Admin Security Centre
+                  </span>
+                  <h2 className="text-sm font-extrabold text-slate-900 mt-3 flex items-center gap-1.5 uppercase tracking-tight">
+                    🔑 Class Student Passcards Directory
+                  </h2>
+                  <p className="text-[11px] text-slate-450 mt-0.5">
+                    Generate and print physical passcode slips for each student. Each printed page is structured in a clean, professional **2-column by 6-row** grid (12 slips per sheet) for easy distribution.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.print();
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700 border border-emerald-500 text-white px-5 py-2.5 text-xs font-bold uppercase rounded-xl transition-all shadow-xs cursor-pointer flex items-center gap-1.5 font-sans"
+                  >
+                    🖨️ Print Active Grid
+                  </button>
+                </div>
+              </div>
+
+              {/* Alert Tips */}
+              <div className="bg-sky-50/50 border border-sky-100 rounded-2xl p-4 text-xs font-medium text-sky-850 flex items-start gap-2.5 leading-relaxed">
+                <span className="text-base select-none">🛡️</span>
+                <div>
+                  <strong className="font-extrabold">Faculty Security Standard:</strong> Keep printed passcard sheets under strict administrative lock. For distribution, scissor-cut along the dashed guidelines and hand over the individual slips to the students or their guardians. We have padded empty slots with blank guides to preserve sheet symmetry.
+                </div>
+              </div>
+
+              {/* Controls */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50 border p-4 rounded-2xl">
+                <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                  <label id="passcode-class-filter-label" className="text-xs font-black uppercase text-slate-450 tracking-wider shrink-0">Filter Class:</label>
+                  <select
+                    id="passcode-class-filter-select"
+                    value={selectedPassClass}
+                    onChange={(e) => setSelectedPassClass(e.target.value)}
+                    className="bg-white border rounded-xl px-3.5 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-400 cursor-pointer"
+                  >
+                    <option value="ALL">All 6 Classes</option>
+                    <option value="JSS1">JSS1</option>
+                    <option value="JSS2">JSS2</option>
+                    <option value="JSS3">JSS3</option>
+                    <option value="SS1">SS1</option>
+                    <option value="SS2">SS2</option>
+                    <option value="SS3">SS3</option>
+                  </select>
+                </div>
+                
+                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider text-right">
+                  System: All {students.length} student passcodes synchronized.
+                </div>
+              </div>
+            </div>
+
+            {/* The Actual Printable Passcard Sheets Container */}
+            <div id="print-passcards-section" className="space-y-8 print:space-y-0 text-slate-800">
+              {(() => {
+                const targetClasses = selectedPassClass === 'ALL' 
+                  ? ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'] 
+                  : [selectedPassClass];
+
+                return targetClasses.map((cls, clsIdx) => {
+                  const classStudents = students.filter(s => s.className === cls);
+                  
+                  // Setup 12-slots pagination (2 columns x 6 rows = 12 slots)
+                  const chunks: (Student | null)[][] = [];
+                  if (classStudents.length === 0) {
+                    // Always show at least 1 sheet with 12 blank slots for empty classes
+                    const emptySheet = Array(12).fill(null);
+                    chunks.push(emptySheet);
+                  } else {
+                    for (let i = 0; i < classStudents.length; i += 12) {
+                      const slice = classStudents.slice(i, i + 12);
+                      const paddedSlice: (Student | null)[] = [...slice];
+                      // Pad the remaining slots to make up exactly 12 slots for a perfect 2x6 grid
+                      while (paddedSlice.length < 12) {
+                        paddedSlice.push(null);
+                      }
+                      chunks.push(paddedSlice);
+                    }
+                  }
+
+                  return (
+                    <div key={cls} className="space-y-4">
+                      {chunks.map((sheet, sheetIdx) => {
+                        const isLastPageOfClass = sheetIdx === chunks.length - 1;
+                        const isLastClassTotal = clsIdx === targetClasses.length - 1;
+                        const pageBreakClass = (isLastPageOfClass && isLastClassTotal) ? "" : "passcard-page-break";
+
+                        return (
+                          <div 
+                            key={`${cls}_sheet_${sheetIdx}`} 
+                            className={`bg-white border rounded-3xl p-6 shadow-xs border-slate-200 print:border-0 print:p-0 print:shadow-none space-y-4 ${pageBreakClass}`}
+                          >
+                            {/* Sheet Title Header */}
+                            <div className="flex justify-between items-center bg-[#FAF9F9] print:bg-slate-50 border p-3 rounded-xl">
+                              <span className="text-[10px] text-slate-800 font-sans font-extrabold tracking-widest uppercase flex items-center gap-1.5 leading-none">
+                                🔑 STUDENT PASSWORDS DIRECTORY CARD
+                              </span>
+                              <span className="font-sans font-extrabold text-[#059669] bg-[#ecfdf5] border border-emerald-100 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider text-center">
+                                CLASS: {cls} (Page {sheetIdx + 1}/{chunks.length})
+                              </span>
+                            </div>
+
+                            {/* Pristine 2 columns x 6 rows printable grid. We loop exactly 12 items */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-3.5">
+                              {sheet.map((student, slotIdx) => {
+                                if (student) {
+                                  return (
+                                    <div 
+                                      key={student.id} 
+                                      className="border-2 border-dashed border-slate-250 p-4 rounded-2xl flex flex-col justify-between bg-slate-50/20 hover:bg-slate-50/50 transition-all h-[145px] relative font-sans text-slate-800"
+                                    >
+                                      {/* Security card border frame */}
+                                      <div className="flex justify-between items-start">
+                                        <div className="space-y-1">
+                                          <p className="text-[9px] font-black text-slate-400 tracking-wider uppercase leading-none">
+                                            {template.schoolName || "EZIBECK ACADEMY"}
+                                          </p>
+                                          <h4 className="text-xs font-black text-slate-800 uppercase tracking-tight mt-1 truncate max-w-[150px]">
+                                            {student.name}
+                                          </h4>
+                                        </div>
+                                        <span className="text-[9px] font-extrabold bg-[#e0fec7] text-emerald-800 border border-[#b2e59b] px-2 py-0.5 rounded leading-none uppercase">
+                                          {student.className}
+                                        </span>
+                                      </div>
+
+                                      <div className="grid grid-cols-2 items-end pt-2">
+                                        <div className="space-y-1">
+                                          <span className="text-[8px] font-black uppercase text-slate-400 block tracking-widest leading-none">REGISTRATION ID</span>
+                                          <code className="text-[10.5px] font-mono font-bold text-slate-650 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                                            {student.id}
+                                          </code>
+                                        </div>
+                                        <div className="space-y-1 text-right">
+                                          <span className="text-[8px] font-black uppercase text-slate-400 block tracking-widest leading-none">PORTAL KEY</span>
+                                          <code className="text-xs font-mono font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 uppercase tracking-widest">
+                                            {student.password || "123456"}
+                                          </code>
+                                        </div>
+                                      </div>
+
+                                      <div className="border-t border-slate-200/60 pt-2 flex justify-between items-center text-[7.5px] text-slate-400 font-extrabold uppercase tracking-wide">
+                                        <span>🔑 Official Portal Passcard</span>
+                                        <span className="text-slate-350 tracking-wider">Do Not Share</span>
+                                      </div>
+                                    </div>
+                                  );
+                                } else {
+                                  // Render a blank slots placeholder, keeping grid exact
+                                  return (
+                                    <div 
+                                      key={`empty_${cls}_${sheetIdx}_${slotIdx}`} 
+                                      className="border-2 border-dashed border-slate-200 bg-transparent rounded-2xl flex flex-col justify-center items-center text-center h-[145px] p-4 select-none font-sans"
+                                    >
+                                      <p className="text-sm">✂️</p>
+                                      <p className="text-[8.5px] font-black uppercase tracking-wider text-slate-350 mt-1">
+                                        Blank Passcard Frame
+                                      </p>
+                                      <p className="text-[7.5px] text-slate-300 mt-0.5">
+                                        No Student Assigned in Slot {slotIdx + 1}
+                                      </p>
+                                    </div>
+                                  );
+                                }
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </div>
         ) : activeSubTab === 'audit' ? (
