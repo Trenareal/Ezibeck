@@ -46,6 +46,17 @@ export const BEHAVIOUR_TRAITS = [
   "Self-reliance"
 ];
 
+export function compareSubjects(aName: string, bName: string): number {
+  if (aName === bName) return 0;
+  const aLower = aName.toLowerCase();
+  const bLower = bName.toLowerCase();
+  if (aLower === "mathematics") return -1;
+  if (bLower === "mathematics") return 1;
+  if (aLower === "english language" || aLower === "english") return -1;
+  if (bLower === "english language" || bLower === "english") return 1;
+  return aName.localeCompare(bName);
+}
+
 export function getLetterAndRemark(score: number | undefined | null): { letter: string; remark: string; ratingClass: string } {
   if (score === undefined || score === null || isNaN(score)) {
     return { letter: "No Score", remark: "No Score", ratingClass: "text-slate-500 bg-slate-50 border-slate-200" };
@@ -307,6 +318,60 @@ export function generateDefaultBehaviour(): BehaviourRating[] {
 const FIRST_NAMES = ["Tobi", "Chinedu", "Amina", "Divine", "Emeka", "Zainab", "Olumide", "Favor", "Bassey", "Somtochukwu", "Eseoghene", "Fatima", "Chibuike", "Tega", "Kelechi", "Olamide", "Ejiro", "Blessing", "Samuel", "Tunde", "Uche", "Nkechi", "Seyi", "Funke", "Chidi", "Yinka", "Ifeoma", "Yusuf", "Ozo", "Efe"];
 const LAST_NAMES = ["Alao", "Okafor", "Yusuf", "Nwosu", "Abubakar", "Johnson", "Okoye", "Ekong", "Ani", "Oghenekevwe", "Bello", "Obi", "Akpobome", "Nwachukwu", "Bakare", "Onome", "Sunday", "Kalu", "Ojo", "Balogun", "Ogah", "Ibrahim", "Adeyemi", "Uzoh", "Okonkwo", "Suleiman", "Igwe", "Olawale", "Okoronkwo", "Dada"];
 
+export function getDeterministicPasscode(name: string, className: string, idx: number, term: string): string {
+  const str = `${name}_${className}_${idx}_${term}`;
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  const num = 100000 + (Math.abs(hash) % 900000);
+  return num.toString();
+}
+
+export function getStudentPasscodesFromOtherTerms(studentNameOrId: string): string[] {
+  if (typeof window === 'undefined') return [];
+  const terms = ['first_term', 'second_term', 'third_term'];
+  const passcodes: string[] = [];
+  const cleanId = studentNameOrId.split('_')[0].toLowerCase().trim();
+
+  terms.forEach(t => {
+    try {
+      const val = localStorage.getItem(`ezibeck_students_${t}`);
+      if (val) {
+        const studentsList: Student[] = JSON.parse(val);
+        studentsList.forEach(s => {
+          const sCleanId = s.id.split('_')[0].toLowerCase().trim();
+          if (s.name.toLowerCase().trim() === cleanId || sCleanId === cleanId) {
+            if (s.password) {
+              passcodes.push(s.password);
+            }
+          }
+        });
+      }
+    } catch (e) {
+      // ignore
+    }
+  });
+  return passcodes;
+}
+
+export function generateUnique6DigitPassword(studentName: string, baseIdOrName: string): string {
+  const otherPasscodes = getStudentPasscodesFromOtherTerms(studentName);
+  if (baseIdOrName) {
+    otherPasscodes.push(...getStudentPasscodesFromOtherTerms(baseIdOrName));
+  }
+  let attempts = 0;
+  while (attempts < 100) {
+    const candidate = Math.floor(100000 + Math.random() * 900000).toString();
+    if (!otherPasscodes.includes(candidate)) {
+      return candidate;
+    }
+    attempts++;
+  }
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
 export function createStudent(name: string, className: ClassName, idx: number, term?: string): Student {
   const activeTerm = term || 'Third Term';
   const isJSS = className.startsWith('JSS');
@@ -399,7 +464,7 @@ export function createStudent(name: string, className: ClassName, idx: number, t
     formTeacherName: isJSS ? "Mrs. Gladys Alabi" : "Mr. Anthony Okon",
     principalName: "Dr. Ezekiel Beck",
     resumptionDate: activeTerm === 'First Term' ? "2026-01-08" : activeTerm === 'Second Term' ? "2026-04-20" : "2026-09-14",
-    password: Math.floor(100000 + Math.random() * 900000).toString(),
+    password: getDeterministicPasscode(name, className, idx, activeTerm),
     passwordUseCount: 0,
     principalRemark: principalComments[remarkIdx]
   };

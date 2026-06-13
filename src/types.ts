@@ -40,6 +40,7 @@ export interface Student {
   resumptionDate: string;
   password?: string; // Password field for Student Authentication
   passwordUseCount?: number; // Tracks number of successful password verification uses (up to 3)
+  passwordRolledOver?: boolean; // Tracks if the passcode has rolled over (to hide/reveal accordingly)
   principalRemark?: string;
 }
 

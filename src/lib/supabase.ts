@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { Student, Workspace15Template, ClassName } from '../types';
+import { compareSubjects } from '../utils/academicUtils';
 
 const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
 const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
@@ -50,7 +51,7 @@ export const mapDbStudentToFrontend = (dbStudent: any): Student => {
       thirdTermSummary: sub.third_term_summary,
       position: sub.position,
       isPositionManual: sub.is_position_manual
-    })).sort((a: any, b: any) => a.name.localeCompare(b.name)),
+    })).sort((a: any, b: any) => compareSubjects(a.name, b.name)),
     behaviour: (dbStudent.behaviour || []).map((b: any) => ({
       name: b.name,
       rating: b.rating

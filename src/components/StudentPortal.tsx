@@ -8,7 +8,7 @@ import { ArrowLeft, GraduationCap, Search, BookOpen, Eye, Layers, Printer, Star,
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Student, ClassName, Workspace15Template, DbStatus } from '../types';
-import { SCHOOL_INFO, calculateStudentStats, getLetterAndRemark, calculateSubjectTotal, BEHAVIOUR_TRAITS } from '../utils/academicUtils';
+import { SCHOOL_INFO, calculateStudentStats, getLetterAndRemark, calculateSubjectTotal, BEHAVIOUR_TRAITS, generateUnique6DigitPassword, getStudentPasscodesFromOtherTerms } from '../utils/academicUtils';
 
 interface StudentPortalProps {
   students: Student[];
@@ -253,10 +253,11 @@ export default function StudentPortal({
       let rollMsg = "";
       
       if (currentUses >= 3) {
-        const newPasscode = Math.floor(100000 + Math.random() * 900000).toString();
+        const newPasscode = generateUnique6DigitPassword(selectedStudent.name, selectedStudent.id);
         updatedStudent.password = newPasscode;
         updatedStudent.passwordUseCount = 0;
-        rollMsg = `🔒 ROLLOVER SECURITY NOTICE: This password has been verified successfully 3 times and is now expired. For maximum account security, a fresh 6-digit passcode has been automatically generated for you: ${newPasscode}. Please write this down for future logins!`;
+        updatedStudent.passwordRolledOver = true;
+        rollMsg = `🔒 ROLLOVER SECURITY NOTICE: This password has been verified successfully 3 times and is now expired. For maximum account security, a fresh 6-digit passcode has been automatically generated. For security reasons, you have been temporarily logged in, but you will not be able to use your previous password again. Please contact your class teacher or a school administrator to retrieve your new, freshly-generated 6-digit passcode for future logins!`;
       }
       
       if (onUpdateStudents) {
@@ -316,6 +317,12 @@ export default function StudentPortal({
     }
     if (newPass !== newPassConfirm) {
       setResetError('Passwords do not match. Please confirm.');
+      return;
+    }
+
+    const otherPasscodes = getStudentPasscodesFromOtherTerms(selectedStudent.id);
+    if (otherPasscodes.includes(newPass)) {
+      setResetError('For security reasons, your passcode cannot be the same as your passcode in other academic terms. Please choose a completely different passcode.');
       return;
     }
 
@@ -570,7 +577,13 @@ export default function StudentPortal({
               Candidate Student ID: <span className="font-mono font-bold text-slate-700">{selectedStudent.id}</span>
             </p>
             <p className="text-[10px] text-slate-400 leading-normal">
-              Portal Passcode Key (6-digit): <strong className="font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">{selectedStudent.password || '123456'}</strong> <span className="text-[10px] text-slate-450 italic">({3 - (selectedStudent.passwordUseCount || 0)} uses remaining before rollover)</span>
+              Portal Passcode Key (6-digit): {selectedStudent.passwordRolledOver ? (
+                <span className="text-red-650 font-bold bg-red-50 border border-red-105 px-1.5 py-0.5 rounded text-[10px]">🔒 Passcode Expired (Rolled over). Request the new passcode from Staff / Admin.</span>
+              ) : (
+                <>
+                  <strong className="font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">{selectedStudent.password || '123456'}</strong> <span className="text-[10px] text-slate-450 italic">({3 - (selectedStudent.passwordUseCount || 0)} uses remaining before rollover)</span>
+                </>
+              )}
             </p>
           </div>
         </div>

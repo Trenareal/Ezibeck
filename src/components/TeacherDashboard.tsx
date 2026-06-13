@@ -8,7 +8,7 @@ import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircl
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile, DbStatus } from '../types';
-import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal } from '../utils/academicUtils';
+import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal, generateUnique6DigitPassword, getDeterministicPasscode, getStudentPasscodesFromOtherTerms } from '../utils/academicUtils';
 
 interface TeacherDashboardProps {
   students: Student[];
@@ -391,6 +391,15 @@ export default function TeacherDashboard({
   const [newStudentAge, setNewStudentAge] = useState(12);
   const [newStudentPassword, setNewStudentPassword] = useState(() => Math.floor(100000 + Math.random() * 900000).toString());
 
+  // Auto-generate a unique 6-digit passcode to avoid matching other term passwords for the same student name
+  useEffect(() => {
+    if (showAddForm) {
+      const studentName = newStudentName.trim() || 'Pre-Launch';
+      const uniquePass = generateUnique6DigitPassword(studentName, '');
+      setNewStudentPassword(uniquePass);
+    }
+  }, [newStudentName, showAddForm]);
+
   // Edit Student form fields state including password
   const [editAge, setEditAge] = useState(12);
   const [editSex, setEditSex] = useState<'Male' | 'Female'>('Male');
@@ -616,7 +625,7 @@ export default function TeacherDashboard({
     const added = createStudent(newStudentName.trim(), selectedClass, newIdx, activeTermTab);
     added.age = newStudentAge;
     added.sex = newStudentSex;
-    added.password = newStudentPassword || '123456';
+    added.password = newStudentPassword || Math.floor(100000 + Math.random() * 900000).toString();
     
     // Add student, trigger ranking refresh
     let refreshed = [...students, added];
@@ -713,11 +722,21 @@ export default function TeacherDashboard({
   const saveStudentChanges = () => {
     if (!editingStudent) return;
 
+    if (editPassword) {
+      const otherPasscodes = getStudentPasscodesFromOtherTerms(editingStudent.id);
+      if (otherPasscodes.includes(editPassword)) {
+        triggerWarning("Security Alert: This passcode is already used by this student in another academic term! Please enter a unique 6-digit passcode.");
+        return;
+      }
+    }
+
     const updatedStudent: Student = {
       ...editingStudent,
       age: editAge,
       sex: editSex,
       password: editPassword,
+      passwordUseCount: editPassword !== editingStudent.password ? 0 : (editingStudent.passwordUseCount || 0),
+      passwordRolledOver: editPassword !== editingStudent.password ? false : (editingStudent.passwordRolledOver || false),
       attendancePresent: editAttendancePresent,
       attendanceTotal: editAttendanceTotal,
       subjects: editSubjects,
@@ -1722,13 +1741,41 @@ export default function TeacherDashboard({
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Student Access Password</label>
-                <input
-                  type="text"
-                  placeholder="Default: 123456"
-                  value={editPassword}
-                  onChange={(e) => setEditPassword(e.target.value)}
-                  className="bg-white border rounded p-1.5 w-full font-bold text-emerald-700 outline-none text-center font-mono"
-                />
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    readOnly
+                    placeholder="Default: 123456"
+                    value={editPassword}
+                    className="bg-slate-100 border rounded p-1.5 flex-1 font-bold text-emerald-700 outline-none text-center font-mono cursor-not-allowed select-all"
+                    title="System auto-generated rolling passcode"
+                  />
+                  <button
+                    type="button"
+                    title="Generate a brand new random secure passcode"
+                    onClick={() => {
+                      if (editingStudent) {
+                        const fresh = generateUnique6DigitPassword(editingStudent.name, editingStudent.id);
+                        setEditPassword(fresh);
+                        triggerSuccess("Successfully auto-generated a fresh secure passcode for the student!");
+                      }
+                    }}
+                    className="bg-slate-800 text-white hover:bg-slate-900 border px-3 py-1 text-[11px] font-bold rounded-lg cursor-pointer flex items-center gap-1 shrink-0"
+                  >
+                    🔄 Auto-Gen
+                  </button>
+                </div>
+                <div className="mt-1 text-[9px] font-bold text-slate-500 flex justify-between items-center px-1">
+                  <span>🔒 Secure automatic rolling password</span>
+                  {(() => {
+                    if (!editingStudent) return null;
+                    const used = editingStudent.passwordUseCount || 0;
+                    if (editingStudent.passwordRolledOver || used >= 3) {
+                      return <span className="text-red-600 font-extrabold uppercase animate-pulse">⚠️ Rolled Over (Expired)</span>;
+                    }
+                    return <span className="text-emerald-700 font-semibold">{3 - used} uses left before auto-reset</span>;
+                  })()}
+                </div>
               </div>
             </div>
 
@@ -2532,15 +2579,26 @@ export default function TeacherDashboard({
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Current Term</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Third Term"
-                      value={tempCurrentTerm}
-                      onChange={(e) => setTempCurrentTerm(e.target.value)}
-                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-slate-800"
-                    />
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Current Active Term (School-wide)</label>
+                    <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 rounded-xl border">
+                      {(['First Term', 'Second Term', 'Third Term'] as const).map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setTempCurrentTerm(t)}
+                          className={`py-2 px-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer text-center ${
+                            tempCurrentTerm === t
+                              ? 'bg-emerald-800 text-white shadow-sm'
+                              : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
+                          }`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[9px] text-slate-450 mt-1 italic">
+                      Admin setting: Determines which term's assessment sheets are open for grade additions and edits school-wide.
+                    </p>
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Next Term School Fees (₦)</label>
@@ -2916,7 +2974,6 @@ export default function TeacherDashboard({
                       id={`session-workspace-tab-${term.toLowerCase().replace(' ', '-')}`}
                       onClick={() => {
                         setActiveTermTab(term);
-                        onUpdateTemplate({ ...template, currentTerm: term });
                         triggerSuccess(`Workspace local terminal directory safely routed to ${term}!`);
                       }}
                       className={`flex-1 md:flex-none uppercase tracking-wider text-[10px] font-extrabold py-2.5 px-5 rounded-xl transition-all cursor-pointer ${
@@ -2930,6 +2987,59 @@ export default function TeacherDashboard({
                   ))}
                 </div>
               </div>
+            </div>
+
+            {/* Live/Activate Term Banner - Only shown to teachers/admins */}
+            <div className={`px-5 py-3.5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs border transition-all ${
+              !isTermReadOnly 
+                ? 'bg-emerald-50/70 border-emerald-100 text-emerald-950' 
+                : 'bg-amber-50/70 border-amber-200 text-amber-950'
+            }`}>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <span className="text-lg select-none">{!isTermReadOnly ? '🟢' : '🔒'}</span>
+                <div>
+                  <p className="font-extrabold uppercase tracking-wide flex items-center gap-2">
+                    {!isTermReadOnly 
+                      ? `Active Term Session: ${activeTermTab} is currently LIVE` 
+                      : `Inactive Term View: ${activeTermTab} is in READ-ONLY mode`
+                    }
+                    {!isTermReadOnly && (
+                      <span className="bg-emerald-600 text-white text-[8px] font-black tracking-widest uppercase px-1.5 py-0.5 rounded animate-pulse">
+                        LIVE
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-[10px] text-slate-500 mt-0.5 leading-normal">
+                    {!isTermReadOnly
+                      ? "Assessment records, grade additions, edits, behavior ratings, and remarks are unlocked school-wide."
+                      : "Assessment sheets are locked. Grade inputs and student roster edits are disabled for this term's directory."
+                    }
+                  </p>
+                </div>
+              </div>
+              {isTermReadOnly && (
+                <div className="w-full sm:w-auto flex justify-end">
+                  {isAdmin ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onUpdateTemplate({
+                          ...template,
+                          currentTerm: activeTermTab
+                        });
+                        triggerSuccess(`🔔 School Academic Term has been officially activated to ${activeTermTab}!`);
+                      }}
+                      className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold tracking-wider uppercase px-4 py-2.5 rounded-xl border border-amber-650 shadow-md transition-all text-[10px] cursor-pointer"
+                    >
+                      ⚡ Activate {activeTermTab} for School
+                    </button>
+                  ) : (
+                    <span className="text-[10px] text-amber-700 font-semibold italic">
+                      🔒 Only Head Principal (Dr. Ezekiel Beck) can activate other terms.
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
             
             {/* Quick Metrics Statistics Widget Grid */}
@@ -3066,9 +3176,13 @@ export default function TeacherDashboard({
                         required
                         placeholder="Default: 123456"
                         value={newStudentPassword}
-                        onChange={(e) => setNewStudentPassword(e.target.value)}
-                        className="w-full bg-white border p-2 text-xs rounded-lg outline-none font-mono font-black text-emerald-700 text-center"
+                        readOnly
+                        className="w-full bg-slate-100 border p-2 text-xs rounded-lg outline-none font-mono font-black text-emerald-700 text-center cursor-not-allowed select-all"
+                        title="Automatic secure 6-digit passcode"
                       />
+                      <p className="text-[9px] text-slate-450 mt-1 italic">
+                        🔒 Auto-generated for security. Only the system chooses passcodes.
+                      </p>
                     </div>
                   </div>
 
