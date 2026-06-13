@@ -1526,7 +1526,7 @@ export default function TeacherDashboard({
                   </div>
 
                   {/* Sub-Score KPI Dashboard metrics */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10 select-none text-slate-800">
+                  <div className={`grid grid-cols-2 ${activeTermTab === 'Third Term' ? 'md:grid-cols-4 lg:grid-cols-7' : 'md:grid-cols-4'} gap-4 relative z-10 select-none text-slate-800`}>
                     <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Cumulative Total</span>
                       <p className="font-extrabold text-slate-900 text-base leading-none">
@@ -1541,6 +1541,43 @@ export default function TeacherDashboard({
                       </p>
                     </div>
 
+                    {activeTermTab === 'Third Term' && (
+                      <>
+                        <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">1st Term Avg</span>
+                          <p className="font-extrabold text-slate-900 text-base leading-none">
+                            {(() => {
+                              const tCount = viewingReportStudent.subjects.length || 1;
+                              const fSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
+                              return (fSum / tCount).toFixed(1);
+                            })()} <span className="text-[10px] text-slate-400 font-normal">/ 20</span>
+                          </p>
+                        </div>
+
+                        <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">2nd Term Avg</span>
+                          <p className="font-extrabold text-slate-900 text-base leading-none">
+                            {(() => {
+                              const tCount = viewingReportStudent.subjects.length || 1;
+                              const sSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
+                              return (sSum / tCount).toFixed(1);
+                            })()} <span className="text-[10px] text-slate-400 font-normal">/ 20</span>
+                          </p>
+                        </div>
+
+                        <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">3rd Term Avg</span>
+                          <p className="font-extrabold text-slate-900 text-base leading-none">
+                            {(() => {
+                              const tCount = viewingReportStudent.subjects.length || 1;
+                              const thSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
+                              return (thSum / tCount).toFixed(1);
+                            })()} <span className="text-[10px] text-slate-400 font-normal">/ 60</span>
+                          </p>
+                        </div>
+                      </>
+                    )}
+
                     <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Calculated GPA</span>
                       <p className="font-extrabold text-emerald-700 text-base leading-none">
@@ -1551,7 +1588,7 @@ export default function TeacherDashboard({
                     <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Attendance Record</span>
                       <p className="font-extrabold text-emerald-600 text-base leading-none">
-                        {Math.round(viewingReportStudent.attendancePresent / viewingReportStudent.attendanceTotal * 100)}% <span className="text-[10px] text-slate-400 font-semibold">Present</span>
+                        {Math.round(viewingReportStudent.attendancePresent / viewingReportStudent.attendanceTotal * 100)}% <span className="text-[10px] text-slate-400 font-semibold flex-none">Present</span>
                       </p>
                     </div>
                   </div>
@@ -2385,16 +2422,77 @@ export default function TeacherDashboard({
                                 </tr>
                               );
                             })}
+                            {/* Calculation Footer styled exactly like Notion database table calculation footer */}
+                            <tr className="bg-[#FAF9F9]/90 border-t border-slate-205 text-slate-400 font-medium select-none text-[10px] uppercase tracking-wider divide-x divide-slate-100">
+                              <td className="py-2 px-3 font-semibold text-slate-500">
+                                Count: {previewStudent.subjects.length}
+                              </td>
+                              <td className="py-2 px-3 text-center font-bold">
+                                Average: {(() => {
+                                  const tCount = previewStudent.subjects.length || 1;
+                                  const testSum = previewStudent.subjects.reduce((sum, s) => sum + (s.testScore || 0), 0);
+                                  return (testSum / tCount).toFixed(1);
+                                })()}
+                              </td>
+                              <td className="py-2 px-3 text-center font-bold">
+                                Average: {(() => {
+                                  const tCount = previewStudent.subjects.length || 1;
+                                  const examSum = previewStudent.subjects.reduce((sum, s) => sum + (s.examScore || 0), 0);
+                                  return (examSum / tCount).toFixed(1);
+                                })()}
+                              </td>
+                              <td className="py-2 px-3 text-center font-black text-indigo-705 bg-emerald-50/10">
+                                Average: {stats.avgScore.toFixed(1)}%
+                              </td>
+                              {activeTermTab === 'Third Term' && (
+                                <>
+                                  <td className="py-2 px-3 text-center font-bold">
+                                    Average: {(() => {
+                                      const tCount = previewStudent.subjects.length || 1;
+                                      const fSum = previewStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
+                                      return (fSum / tCount).toFixed(1);
+                                    })()}
+                                  </td>
+                                  <td className="py-2 px-3 text-center font-bold">
+                                    Average: {(() => {
+                                      const tCount = previewStudent.subjects.length || 1;
+                                      const sSum = previewStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
+                                      return (sSum / tCount).toFixed(1);
+                                    })()}
+                                  </td>
+                                  <td className="py-2 px-3 text-center font-bold">
+                                    Average: {(() => {
+                                      const tCount = previewStudent.subjects.length || 1;
+                                      const thSum = previewStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
+                                      return (thSum / tCount).toFixed(1);
+                                    })()}
+                                  </td>
+                                  <td className="py-2 px-3 text-center font-black bg-slate-100/50">
+                                    Average: {(() => {
+                                      const tCount = previewStudent.subjects.length || 1;
+                                      const sessionSum = previewStudent.subjects.reduce((sum, s) => {
+                                        const f = s.firstTermSummary !== undefined ? s.firstTermSummary : 0;
+                                        const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : 0;
+                                        const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0;
+                                        return sum + (f + sec + th);
+                                      }, 0);
+                                      return (sessionSum / tCount).toFixed(1);
+                                    })()}%
+                                  </td>
+                                </>
+                              )}
+                              <td className="py-2 px-3" colSpan={3}></td>
+                            </tr>
                           </tbody>
                         </table>
                       </div>
                     </div>
 
                     {/* KPI Widget Row */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10 text-slate-800">
+                    <div className={`grid grid-cols-2 ${activeTermTab === 'Third Term' ? 'md:grid-cols-4 lg:grid-cols-7' : 'md:grid-cols-4'} gap-4 relative z-10 text-slate-800`}>
                       <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Cumulative Total</span>
-                        <p className="font-extrabold text-slate-900 text-base leading-none">
+                        <p className="font-extrabold text-slate-900 text-base leading-none flex items-center justify-center gap-1">
                           {stats.totalScore} <span className="text-xs text-slate-400 font-normal">/ {stats.maxPossibleScore}</span>
                         </p>
                       </div>
@@ -2406,6 +2504,43 @@ export default function TeacherDashboard({
                         </p>
                       </div>
 
+                      {activeTermTab === 'Third Term' && (
+                        <>
+                          <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">1st Term Avg</span>
+                            <p className="font-extrabold text-slate-900 text-base leading-none">
+                              {(() => {
+                                const tCount = previewStudent.subjects.length || 1;
+                                const fSum = previewStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
+                                return (fSum / tCount).toFixed(1);
+                              })()} <span className="text-[10px] text-slate-400 font-normal">/ 20</span>
+                            </p>
+                          </div>
+
+                          <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">2nd Term Avg</span>
+                            <p className="font-extrabold text-slate-900 text-base leading-none">
+                              {(() => {
+                                const tCount = previewStudent.subjects.length || 1;
+                                const sSum = previewStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
+                                return (sSum / tCount).toFixed(1);
+                              })()} <span className="text-[10px] text-slate-400 font-normal">/ 20</span>
+                            </p>
+                          </div>
+
+                          <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">3rd Term Avg</span>
+                            <p className="font-extrabold text-slate-900 text-base leading-none">
+                              {(() => {
+                                const tCount = previewStudent.subjects.length || 1;
+                                const thSum = previewStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
+                                return (thSum / tCount).toFixed(1);
+                              })()} <span className="text-[10px] text-slate-400 font-normal">/ 60</span>
+                            </p>
+                          </div>
+                        </>
+                      )}
+
                       <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Calculated GPA</span>
                         <p className="font-extrabold text-emerald-700 text-base leading-none">
@@ -2416,7 +2551,7 @@ export default function TeacherDashboard({
                       <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Attendance Record</span>
                         <p className="font-extrabold text-emerald-600 text-base leading-none">
-                          {Math.round(previewStudent.attendancePresent / previewStudent.attendanceTotal * 100) || 0}% <span className="text-[10px] text-slate-400 font-semibold">Present</span>
+                          {Math.round(previewStudent.attendancePresent / previewStudent.attendanceTotal * 100) || 0}% <span className="text-[10px] text-slate-400 font-semibold flex-none">Present</span>
                         </p>
                       </div>
                     </div>

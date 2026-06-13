@@ -1045,7 +1045,7 @@ export default function StudentPortal({
                 </div>
 
                 {/* Sub-Score KPI Dashboard metrics */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4 relative z-10 select-none">
+                <div className={`grid grid-cols-2 ${template.currentTerm === 'Third Term' ? 'md:grid-cols-4 lg:grid-cols-7' : 'md:grid-cols-4'} gap-2.5 sm:gap-4 relative z-10 select-none`}>
                   <div className="bg-[#FAF9F9] border border-slate-150 p-3 sm:p-4 rounded-xl text-center space-y-1">
                     <span className="text-[8px] xs:text-[9px] font-black text-slate-400 uppercase tracking-widest block">Cumulative Total</span>
                     <p className="font-extrabold text-slate-900 text-sm sm:text-base leading-none">
@@ -1059,6 +1059,43 @@ export default function StudentPortal({
                       {stats.avgScore.toFixed(1)}%
                     </p>
                   </div>
+
+                  {template.currentTerm === 'Third Term' && (
+                    <>
+                      <div className="bg-[#FAF9F9] border border-slate-150 p-3 sm:p-4 rounded-xl text-center space-y-1">
+                        <span className="text-[8px] xs:text-[9px] font-black text-slate-400 uppercase tracking-widest block">1st Term Avg</span>
+                        <p className="font-extrabold text-slate-900 text-xs sm:text-sm leading-none">
+                          {(() => {
+                            const tCount = selectedStudent.subjects.length || 1;
+                            const fSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
+                            return (fSum / tCount).toFixed(1);
+                          })()} <span className="text-[9px] sm:text-[10px] text-slate-400 font-normal">/ 20</span>
+                        </p>
+                      </div>
+
+                      <div className="bg-[#FAF9F9] border border-slate-150 p-3 sm:p-4 rounded-xl text-center space-y-1">
+                        <span className="text-[8px] xs:text-[9px] font-black text-slate-400 uppercase tracking-widest block">2nd Term Avg</span>
+                        <p className="font-extrabold text-slate-900 text-xs sm:text-sm leading-none">
+                          {(() => {
+                            const tCount = selectedStudent.subjects.length || 1;
+                            const sSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
+                            return (sSum / tCount).toFixed(1);
+                          })()} <span className="text-[9px] sm:text-[10px] text-slate-400 font-normal">/ 20</span>
+                        </p>
+                      </div>
+
+                      <div className="bg-[#FAF9F9] border border-slate-150 p-3 sm:p-4 rounded-xl text-center space-y-1">
+                        <span className="text-[8px] xs:text-[9px] font-black text-slate-400 uppercase tracking-widest block">3rd Term Avg</span>
+                        <p className="font-extrabold text-slate-900 text-xs sm:text-sm leading-none">
+                          {(() => {
+                            const tCount = selectedStudent.subjects.length || 1;
+                            const thSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
+                            return (thSum / tCount).toFixed(1);
+                          })()} <span className="text-[9px] sm:text-[10px] text-slate-400 font-normal">/ 60</span>
+                        </p>
+                      </div>
+                    </>
+                  )}
 
                   <div className="bg-[#FAF9F9] border border-slate-150 p-3 sm:p-4 rounded-xl text-center space-y-1">
                     <span className="text-[8px] xs:text-[9px] font-black text-slate-400 uppercase tracking-widest block">Calculated GPA</span>
