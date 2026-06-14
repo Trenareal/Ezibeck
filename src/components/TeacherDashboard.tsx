@@ -725,7 +725,7 @@ export default function TeacherDashboard({
           if (dbProfiles && dbProfiles.length > 0) {
             const mapped = dbProfiles.map(mapDbFacultyToFrontend);
             // Merge with defaults to ensure none are missing
-            const merged = [...mapped];
+            const merged = [...mapped].map(f => f.id === 'ezekiel' ? { ...f, isRestricted: false } : f);
             for (const def of DEFAULT_FACULTY) {
               if (!merged.some(f => f.id === def.id)) {
                 merged.push(def);
@@ -735,9 +735,23 @@ export default function TeacherDashboard({
                 });
               }
             }
-            setFacultyProfiles(merged);
+
+            // Filter to strictly align with the 7 core profiles
+            const allowedIds = DEFAULT_FACULTY.map(f => f.id);
+            const filteredAndCleaned = merged.filter(f => allowedIds.includes(f.id));
+
+            // Clean up/delete any non-core/excessive profiles from the Supabase database
+            const extraProfiles = mapped.filter(f => !allowedIds.includes(f.id));
+            for (const extra of extraProfiles) {
+              console.log("Supabase: Removing non-core educator profile:", extra.name || extra.id);
+              await dbService.deleteFacultyProfile(extra.id).catch(err => {
+                console.error("Failed to clean up non-core faculty profile:", extra.id, err);
+              });
+            }
+
+            setFacultyProfiles(filteredAndCleaned);
             if (typeof window !== 'undefined') {
-              localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(merged));
+              localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(filteredAndCleaned));
             }
           } else {
             // Seed defaults to Supabase so it's always populated initially
@@ -750,14 +764,16 @@ export default function TeacherDashboard({
             const refreshed = await dbService.getFacultyProfiles();
             if (refreshed && refreshed.length > 0) {
               const mapped = refreshed.map(mapDbFacultyToFrontend);
-              setFacultyProfiles(mapped);
+              const allowedIds = DEFAULT_FACULTY.map(f => f.id);
+              const filteredAndCleaned = mapped.filter(f => allowedIds.includes(f.id));
+              setFacultyProfiles(filteredAndCleaned);
               if (typeof window !== 'undefined') {
-                localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(mapped));
+                localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(filteredAndCleaned));
               }
             }
           }
         } catch (error) {
-          console.error("Failed to load/sync faculty profiles from database:", error);
+          console.error("Failed to load/sync/purge external faculty profiles from database:", error);
         }
       }
     }
@@ -787,8 +803,28 @@ export default function TeacherDashboard({
         merged.push(def);
       }
     }
-    return merged;
+    const allowedIds = DEFAULT_FACULTY.map(f => f.id);
+    const filteredAndCleaned = merged.filter(f => allowedIds.includes(f.id));
+    return filteredAndCleaned.map(f => f.id === 'ezekiel' ? { ...f, isRestricted: false } : f);
   });
+
+  // Ensure Administrator is never restricted under any circumstances and clear any stale restriction
+  useEffect(() => {
+    const hasRestrictedEzekiel = facultyProfiles.some(f => f.id === 'ezekiel' && f.isRestricted);
+    if (hasRestrictedEzekiel) {
+      const updated = facultyProfiles.map(f => f.id === 'ezekiel' ? { ...f, isRestricted: false } : f);
+      setFacultyProfiles(updated);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(updated));
+      }
+      const ezekielProfile = updated.find(f => f.id === 'ezekiel');
+      if (ezekielProfile && dbStatus && dbStatus.configured && dbStatus.connected) {
+        dbService.saveFacultyProfile(ezekielProfile).catch(err => {
+          console.error("Failed to unrestrict Ezekiel in database:", err);
+        });
+      }
+    }
+  }, [facultyProfiles, dbStatus?.connected, dbStatus?.configured]);
 
   // Synchronize viewingReportStudent and editingStudent subviews with browser history pop events
   useEffect(() => {
@@ -3646,7 +3682,7 @@ export default function TeacherDashboard({
             )}
 
             <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/55 shadow-xs">
-              {facultyProfiles.filter(p => p.id !== 'ezekiel').map(p => {
+              {facultyProfiles.map(p => {
                 const isSelf = p.id === currentUser?.id;
                 const isUrlAvatar = p.avatar && p.avatar.startsWith('http');
                 
