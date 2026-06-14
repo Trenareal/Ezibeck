@@ -34,6 +34,45 @@ const DEFAULT_FACULTY: FacultyProfile[] = [
   { id: "david", name: "Mr. David Ibrahim", role: "Form Teacher - SS3", avatar: "👨‍💻", password: "teacher6", email: "david@ezibeckacademy.edu.ng", assignedClass: "SS3" }
 ];
 
+function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
+  const slots = [
+    { key: 'Admin', check: (f: FacultyProfile) => !f.assignedClass, def: DEFAULT_FACULTY[0] },
+    { key: 'JSS1', check: (f: FacultyProfile) => f.assignedClass === 'JSS1', def: DEFAULT_FACULTY[1] },
+    { key: 'JSS2', check: (f: FacultyProfile) => f.assignedClass === 'JSS2', def: DEFAULT_FACULTY[2] },
+    { key: 'JSS3', check: (f: FacultyProfile) => f.assignedClass === 'JSS3', def: DEFAULT_FACULTY[3] },
+    { key: 'SS1', check: (f: FacultyProfile) => f.assignedClass === 'SS1', def: DEFAULT_FACULTY[4] },
+    { key: 'SS2', check: (f: FacultyProfile) => f.assignedClass === 'SS2', def: DEFAULT_FACULTY[5] },
+    { key: 'SS3', check: (f: FacultyProfile) => f.assignedClass === 'SS3', def: DEFAULT_FACULTY[6] },
+  ];
+
+  const aligned: FacultyProfile[] = [];
+  const assignedIds = new Set<string>();
+
+  for (const slot of slots) {
+    // Try matching by both exact ID and slot first
+    let match = profiles.find(f => f.id === slot.def.id && slot.check(f) && !assignedIds.has(f.id));
+    if (!match) {
+      // If not found, match by slot check to support renamed/edited IDs
+      match = profiles.find(f => slot.check(f) && !assignedIds.has(f.id));
+    }
+
+    if (match) {
+      aligned.push(match);
+      assignedIds.add(match.id);
+    } else {
+      aligned.push(slot.def);
+      assignedIds.add(slot.def.id);
+    }
+  }
+
+  return aligned.map(f => {
+    if (f.id === 'ezekiel') {
+      return { ...f, isRestricted: false };
+    }
+    return f;
+  });
+}
+
 export default function TeacherDashboard({ 
   students, 
   template, 
@@ -724,24 +763,18 @@ export default function TeacherDashboard({
           const dbProfiles = await dbService.getFacultyProfiles();
           if (dbProfiles && dbProfiles.length > 0) {
             const mapped = dbProfiles.map(mapDbFacultyToFrontend);
-            // Merge with defaults to ensure none are missing
-            const merged = [...mapped].map(f => f.id === 'ezekiel' ? { ...f, isRestricted: false } : f);
-            for (const def of DEFAULT_FACULTY) {
-              if (!merged.some(f => f.id === def.id)) {
-                merged.push(def);
-                // Promptly seed missing defaults to database
-                await dbService.saveFacultyProfile(def).catch(err => {
-                  console.error("Failed to seed default faculty profile during merge:", def.name, err);
-                });
-              }
+            const aligned = alignFacultyProfiles(mapped);
+
+            // Sync any missing or default profiles back to Supabase
+            for (const f of aligned) {
+              await dbService.saveFacultyProfile(f).catch(err => {
+                console.error("Failed to sync faculty profile to database:", f.name, err);
+              });
             }
 
-            // Filter to strictly align with the 7 core profiles
-            const allowedIds = DEFAULT_FACULTY.map(f => f.id);
-            const filteredAndCleaned = merged.filter(f => allowedIds.includes(f.id));
-
             // Clean up/delete any non-core/excessive profiles from the Supabase database
-            const extraProfiles = mapped.filter(f => !allowedIds.includes(f.id));
+            const alignedIds = aligned.map(f => f.id);
+            const extraProfiles = mapped.filter(f => !alignedIds.includes(f.id));
             for (const extra of extraProfiles) {
               console.log("Supabase: Removing non-core educator profile:", extra.name || extra.id);
               await dbService.deleteFacultyProfile(extra.id).catch(err => {
@@ -749,9 +782,9 @@ export default function TeacherDashboard({
               });
             }
 
-            setFacultyProfiles(filteredAndCleaned);
+            setFacultyProfiles(aligned);
             if (typeof window !== 'undefined') {
-              localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(filteredAndCleaned));
+              localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(aligned));
             }
           } else {
             // Seed defaults to Supabase so it's always populated initially
@@ -764,11 +797,10 @@ export default function TeacherDashboard({
             const refreshed = await dbService.getFacultyProfiles();
             if (refreshed && refreshed.length > 0) {
               const mapped = refreshed.map(mapDbFacultyToFrontend);
-              const allowedIds = DEFAULT_FACULTY.map(f => f.id);
-              const filteredAndCleaned = mapped.filter(f => allowedIds.includes(f.id));
-              setFacultyProfiles(filteredAndCleaned);
+              const aligned = alignFacultyProfiles(mapped);
+              setFacultyProfiles(aligned);
               if (typeof window !== 'undefined') {
-                localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(filteredAndCleaned));
+                localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(aligned));
               }
             }
           }
@@ -796,16 +828,7 @@ export default function TeacherDashboard({
         }
       }
     }
-    // Always merge to ensure the 6 default teachers are present
-    const merged = [...initialList];
-    for (const def of DEFAULT_FACULTY) {
-      if (!merged.some(f => f.id === def.id)) {
-        merged.push(def);
-      }
-    }
-    const allowedIds = DEFAULT_FACULTY.map(f => f.id);
-    const filteredAndCleaned = merged.filter(f => allowedIds.includes(f.id));
-    return filteredAndCleaned.map(f => f.id === 'ezekiel' ? { ...f, isRestricted: false } : f);
+    return alignFacultyProfiles(initialList);
   });
 
   // Ensure Administrator is never restricted under any circumstances and clear any stale restriction
@@ -1094,6 +1117,14 @@ export default function TeacherDashboard({
         dbService.saveFacultyProfile(updatedProfile).catch(err => {
           console.error("Failed to sync faculty edit updates to Supabase:", err);
         });
+      }
+    }
+
+    // Update active user session if the logged-in staff member edited their own profile details
+    if (currentUser && currentUser.id === editingFaculty.id) {
+      setCurrentUser(updatedProfile);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('ezibeck_faculty_user', JSON.stringify(updatedProfile));
       }
     }
 
