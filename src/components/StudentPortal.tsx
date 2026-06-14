@@ -957,9 +957,9 @@ export default function StudentPortal({
                           const tot = calculateSubjectTotal(subj);
                           
                           // Formulate annual / session average data realistically matching the 20/20/60 formula of Notion
-                          const firstTerm = subj.firstTermSummary !== undefined ? subj.firstTermSummary : 0;
-                          const secondTerm = subj.secondTermSummary !== undefined ? subj.secondTermSummary : 0;
-                          const thirdTerm = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
+                          const firstTerm = subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0 ? subj.firstTermSummary : Math.round(tot * 0.2);
+                          const secondTerm = subj.secondTermSummary !== undefined && subj.secondTermSummary !== 0 ? subj.secondTermSummary : Math.round(tot * 0.2);
+                          const thirdTerm = subj.thirdTermSummary !== undefined && subj.thirdTermSummary !== 0 ? subj.thirdTermSummary : Math.round(tot * 0.6);
                           const sessionAvg = firstTerm + secondTerm + thirdTerm;
 
                           const { letter, remark, ratingClass } = getLetterAndRemark(
@@ -1018,21 +1018,33 @@ export default function StudentPortal({
                               <td className="py-2 px-3 text-center font-bold">
                                 Average: {(() => {
                                   const tCount = selectedStudent.subjects.length || 1;
-                                  const fSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
+                                  const fSum = selectedStudent.subjects.reduce((sum, s) => {
+                                    const tot = (s.testScore || 0) + (s.examScore || 0);
+                                    const val = s.firstTermSummary !== undefined && s.firstTermSummary !== 0 ? s.firstTermSummary : Math.round(tot * 0.2);
+                                    return sum + val;
+                                  }, 0);
                                   return (fSum / tCount).toFixed(1);
                                 })()}
                               </td>
                               <td className="py-2 px-3 text-center font-bold">
                                 Average: {(() => {
                                   const tCount = selectedStudent.subjects.length || 1;
-                                  const sSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
+                                  const sSum = selectedStudent.subjects.reduce((sum, s) => {
+                                    const tot = (s.testScore || 0) + (s.examScore || 0);
+                                    const val = s.secondTermSummary !== undefined && s.secondTermSummary !== 0 ? s.secondTermSummary : Math.round(tot * 0.2);
+                                    return sum + val;
+                                  }, 0);
                                   return (sSum / tCount).toFixed(1);
                                 })()}
                               </td>
                               <td className="py-2 px-3 text-center font-bold">
                                 Average: {(() => {
                                   const tCount = selectedStudent.subjects.length || 1;
-                                  const thSum = selectedStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
+                                  const thSum = selectedStudent.subjects.reduce((sum, s) => {
+                                    const tot = (s.testScore || 0) + (s.examScore || 0);
+                                    const val = s.thirdTermSummary !== undefined && s.thirdTermSummary !== 0 ? s.thirdTermSummary : Math.round(tot * 0.6);
+                                    return sum + val;
+                                  }, 0);
                                   return (thSum / tCount).toFixed(1);
                                 })()}
                               </td>
@@ -1040,9 +1052,10 @@ export default function StudentPortal({
                                 Average: {(() => {
                                   const tCount = selectedStudent.subjects.length || 1;
                                   const sessionSum = selectedStudent.subjects.reduce((sum, s) => {
-                                    const f = s.firstTermSummary !== undefined ? s.firstTermSummary : 0;
-                                    const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : 0;
-                                    const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0;
+                                    const tot = (s.testScore || 0) + (s.examScore || 0);
+                                    const f = s.firstTermSummary !== undefined && s.firstTermSummary !== 0 ? s.firstTermSummary : Math.round(tot * 0.2);
+                                    const sec = s.secondTermSummary !== undefined && s.secondTermSummary !== 0 ? s.secondTermSummary : Math.round(tot * 0.2);
+                                    const th = s.thirdTermSummary !== undefined && s.thirdTermSummary !== 0 ? s.thirdTermSummary : Math.round(tot * 0.6);
                                     return sum + (f + sec + th);
                                   }, 0);
                                   return (sessionSum / tCount).toFixed(1);

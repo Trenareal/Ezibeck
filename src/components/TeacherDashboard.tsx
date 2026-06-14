@@ -408,9 +408,9 @@ export default function TeacherDashboard({
       }
 
       const tot = (subj.testScore || 0) + (subj.examScore || 0);
-      const fTermVal = subj.firstTermSummary !== undefined ? subj.firstTermSummary : 0;
-      const sTermVal = subj.secondTermSummary !== undefined ? subj.secondTermSummary : 0;
-      const tTermVal = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
+      const fTermVal = subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0 ? subj.firstTermSummary : Math.round(tot * 0.2);
+      const sTermVal = subj.secondTermSummary !== undefined && subj.secondTermSummary !== 0 ? subj.secondTermSummary : Math.round(tot * 0.2);
+      const tTermVal = subj.thirdTermSummary !== undefined && subj.thirdTermSummary !== 0 ? subj.thirdTermSummary : Math.round(tot * 0.6);
       const annualSum = fTermVal + sTermVal + tTermVal;
 
       const { letter, remark } = getLetterAndRemark(isThirdTerm ? annualSum : tot);
@@ -1289,7 +1289,59 @@ export default function TeacherDashboard({
     setEditPassword(student.password || '123456');
     setEditAttendancePresent(student.attendancePresent);
     setEditAttendanceTotal(student.attendanceTotal);
-    setEditSubjects([...student.subjects]);
+    
+    let subjectsListToEdit = [...student.subjects];
+    if (activeTermTab === 'Third Term') {
+      const baseId = student.id.split('_')[0];
+      try {
+        const firstTermKey = 'ezibeck_students_first_term';
+        const secondTermKey = 'ezibeck_students_second_term';
+        const firstTermData = typeof window !== 'undefined' ? localStorage.getItem(firstTermKey) : null;
+        const secondTermData = typeof window !== 'undefined' ? localStorage.getItem(secondTermKey) : null;
+        
+        const firstTermStuds: Student[] = firstTermData ? JSON.parse(firstTermData) : [];
+        const secondTermStuds: Student[] = secondTermData ? JSON.parse(secondTermData) : [];
+        
+        const matchingFirstStudent = firstTermStuds.find(s => s.id.startsWith(baseId));
+        const matchingSecondStudent = secondTermStuds.find(s => s.id.startsWith(baseId));
+        
+        subjectsListToEdit = subjectsListToEdit.map(subj => {
+          let firstTermVal = subj.firstTermSummary !== undefined ? subj.firstTermSummary : 0;
+          let secondTermVal = subj.secondTermSummary !== undefined ? subj.secondTermSummary : 0;
+          let thirdTermVal = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
+          
+          if (firstTermVal === 0 && matchingFirstStudent) {
+            const fs = matchingFirstStudent.subjects.find(s => s.name.toLowerCase() === subj.name.toLowerCase());
+            if (fs) {
+              const fsTotal = (fs.testScore || 0) + (fs.examScore || 0);
+              firstTermVal = Math.round(fsTotal * 0.2); // 20%
+            }
+          }
+          if (secondTermVal === 0 && matchingSecondStudent) {
+            const ss = matchingSecondStudent.subjects.find(s => s.name.toLowerCase() === subj.name.toLowerCase());
+            if (ss) {
+              const ssTotal = (ss.testScore || 0) + (ss.examScore || 0);
+              secondTermVal = Math.round(ssTotal * 0.2); // 20%
+            }
+          }
+          if (thirdTermVal === 0) {
+            const currentTotal = (subj.testScore || 0) + (subj.examScore || 0);
+            thirdTermVal = Math.round(currentTotal * 0.6); // 60%
+          }
+          
+          return {
+            ...subj,
+            firstTermSummary: firstTermVal,
+            secondTermSummary: secondTermVal,
+            thirdTermSummary: thirdTermVal
+          };
+        });
+      } catch (e) {
+        console.error("Auto pre-populating summaries failed:", e);
+      }
+    }
+
+    setEditSubjects(subjectsListToEdit);
     setEditBehaviour([...student.behaviour]);
     setEditFormComment(student.formTeacherRemark);
     setEditPrincipalRemark((student as any).principalRemark || '');
@@ -1304,10 +1356,26 @@ export default function TeacherDashboard({
       if (s.id !== sid) return s;
       if (type === 'test') {
         const validated = Math.max(0, Math.min(30, val));
-        return { ...s, testScore: validated };
+        const newTotal = validated + s.examScore;
+        const autoThirdTerm = Math.round(newTotal * 0.6);
+        return { 
+          ...s, 
+          testScore: validated, 
+          thirdTermSummary: s.thirdTermSummary === 0 || s.thirdTermSummary === undefined || s.thirdTermSummary === Math.round(((s.testScore || 0) + (s.examScore || 0)) * 0.6) 
+            ? autoThirdTerm 
+            : s.thirdTermSummary 
+        };
       } else if (type === 'exam') {
         const validated = Math.max(0, Math.min(70, val));
-        return { ...s, examScore: validated };
+        const newTotal = s.testScore + validated;
+        const autoThirdTerm = Math.round(newTotal * 0.6);
+        return { 
+          ...s, 
+          examScore: validated, 
+          thirdTermSummary: s.thirdTermSummary === 0 || s.thirdTermSummary === undefined || s.thirdTermSummary === Math.round(((s.testScore || 0) + (s.examScore || 0)) * 0.6) 
+            ? autoThirdTerm 
+            : s.thirdTermSummary 
+        };
       } else if (type === 'firstTerm') {
         const validated = Math.max(0, Math.min(100, val));
         return { ...s, firstTermSummary: validated };
@@ -2066,9 +2134,9 @@ export default function TeacherDashboard({
                             const tot = calculateSubjectTotal(subj);
                             
                             // Formulate annual / session average data realistically matching the 20/20/60 formula of Notion
-                            const firstTerm = subj.firstTermSummary !== undefined ? subj.firstTermSummary : 0;
-                            const secondTerm = subj.secondTermSummary !== undefined ? subj.secondTermSummary : 0;
-                            const thirdTerm = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
+                            const firstTerm = subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0 ? subj.firstTermSummary : Math.round(tot * 0.2);
+                            const secondTerm = subj.secondTermSummary !== undefined && subj.secondTermSummary !== 0 ? subj.secondTermSummary : Math.round(tot * 0.2);
+                            const thirdTerm = subj.thirdTermSummary !== undefined && subj.thirdTermSummary !== 0 ? subj.thirdTermSummary : Math.round(tot * 0.6);
                             const sessionAvg = firstTerm + secondTerm + thirdTerm;
 
                             const { letter, remark, ratingClass } = getLetterAndRemark(
@@ -3030,9 +3098,9 @@ export default function TeacherDashboard({
                             {previewStudent.subjects.map(subj => {
                               const tot = calculateSubjectTotal(subj);
                               
-                              const firstTerm = subj.firstTermSummary !== undefined ? subj.firstTermSummary : 0;
-                              const secondTerm = subj.secondTermSummary !== undefined ? subj.secondTermSummary : 0;
-                              const thirdTerm = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
+                              const firstTerm = subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0 ? subj.firstTermSummary : Math.round(tot * 0.2);
+                              const secondTerm = subj.secondTermSummary !== undefined && subj.secondTermSummary !== 0 ? subj.secondTermSummary : Math.round(tot * 0.2);
+                              const thirdTerm = subj.thirdTermSummary !== undefined && subj.thirdTermSummary !== 0 ? subj.thirdTermSummary : Math.round(tot * 0.6);
                               const sessionAvg = firstTerm + secondTerm + thirdTerm;
 
                               const { letter, remark, ratingClass } = getLetterAndRemark(

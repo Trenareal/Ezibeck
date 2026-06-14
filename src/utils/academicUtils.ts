@@ -138,9 +138,10 @@ export function calculateStudentStatsForTerm(s: Student, term: string): StudentS
   const isThirdTerm = term === 'Third Term';
   const totalScore = s.subjects.reduce((sum, g) => {
     if (isThirdTerm) {
-      const first = g.firstTermSummary !== undefined ? g.firstTermSummary : 0;
-      const second = g.secondTermSummary !== undefined ? g.secondTermSummary : 0;
-      const third = g.thirdTermSummary !== undefined ? g.thirdTermSummary : 0;
+      const tot = (g.testScore || 0) + (g.examScore || 0);
+      const first = g.firstTermSummary !== undefined && g.firstTermSummary !== 0 ? g.firstTermSummary : Math.round(tot * 0.2);
+      const second = g.secondTermSummary !== undefined && g.secondTermSummary !== 0 ? g.secondTermSummary : Math.round(tot * 0.2);
+      const third = g.thirdTermSummary !== undefined && g.thirdTermSummary !== 0 ? g.thirdTermSummary : Math.round(tot * 0.6);
       return sum + (first + second + third);
     } else {
       return sum + ((g.testScore || 0) + (g.examScore || 0));
@@ -158,9 +159,10 @@ export function calculateStudentStatsForTerm(s: Student, term: string): StudentS
   s.subjects.forEach(g => {
     let tot = 0;
     if (isThirdTerm) {
-      const first = g.firstTermSummary !== undefined ? g.firstTermSummary : 0;
-      const second = g.secondTermSummary !== undefined ? g.secondTermSummary : 0;
-      const third = g.thirdTermSummary !== undefined ? g.thirdTermSummary : 0;
+      const subjTot = (g.testScore || 0) + (g.examScore || 0);
+      const first = g.firstTermSummary !== undefined && g.firstTermSummary !== 0 ? g.firstTermSummary : Math.round(subjTot * 0.2);
+      const second = g.secondTermSummary !== undefined && g.secondTermSummary !== 0 ? g.secondTermSummary : Math.round(subjTot * 0.2);
+      const third = g.thirdTermSummary !== undefined && g.thirdTermSummary !== 0 ? g.thirdTermSummary : Math.round(subjTot * 0.6);
       tot = first + second + third;
     } else {
       tot = (g.testScore || 0) + (g.examScore || 0);
@@ -178,9 +180,10 @@ export function calculateStudentStatsForTerm(s: Student, term: string): StudentS
   const totalGpaPoints = s.subjects.reduce((sum, g) => {
     let tot = 0;
     if (isThirdTerm) {
-      const first = g.firstTermSummary !== undefined ? g.firstTermSummary : 0;
-      const second = g.secondTermSummary !== undefined ? g.secondTermSummary : 0;
-      const third = g.thirdTermSummary !== undefined ? g.thirdTermSummary : 0;
+      const subjTot = (g.testScore || 0) + (g.examScore || 0);
+      const first = g.firstTermSummary !== undefined && g.firstTermSummary !== 0 ? g.firstTermSummary : Math.round(subjTot * 0.2);
+      const second = g.secondTermSummary !== undefined && g.secondTermSummary !== 0 ? g.secondTermSummary : Math.round(subjTot * 0.2);
+      const third = g.thirdTermSummary !== undefined && g.thirdTermSummary !== 0 ? g.thirdTermSummary : Math.round(subjTot * 0.6);
       tot = first + second + third;
     } else {
       tot = (g.testScore || 0) + (g.examScore || 0);
@@ -233,9 +236,10 @@ export function calculateClassPositions(students: Student[], className?: ClassNa
           let matchTotal = 0;
           if (matchSubj) {
             if (activeTerm === 'Third Term') {
-              const first = matchSubj.firstTermSummary !== undefined ? matchSubj.firstTermSummary : 0;
-              const second = matchSubj.secondTermSummary !== undefined ? matchSubj.secondTermSummary : 0;
-              const third = matchSubj.thirdTermSummary !== undefined ? matchSubj.thirdTermSummary : 0;
+              const subjTot = (matchSubj.testScore || 0) + (matchSubj.examScore || 0);
+              const first = matchSubj.firstTermSummary !== undefined && matchSubj.firstTermSummary !== 0 ? matchSubj.firstTermSummary : Math.round(subjTot * 0.2);
+              const second = matchSubj.secondTermSummary !== undefined && matchSubj.secondTermSummary !== 0 ? matchSubj.secondTermSummary : Math.round(subjTot * 0.2);
+              const third = matchSubj.thirdTermSummary !== undefined && matchSubj.thirdTermSummary !== 0 ? matchSubj.thirdTermSummary : Math.round(subjTot * 0.6);
               matchTotal = first + second + third;
             } else {
               matchTotal = (matchSubj.testScore || 0) + (matchSubj.examScore || 0);
