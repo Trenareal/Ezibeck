@@ -7,6 +7,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, EyeOff, Printer, UserCheck, LogOut, Database, Wifi, WifiOff, RefreshCw, CloudLightning, Lock, Search, Clock } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import JSZip from 'jszip';
 import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile, DbStatus, AuditLogEntry } from '../types';
 import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal, generateUnique6DigitPassword, getDeterministicPasscode, getStudentPasscodesFromOtherTerms } from '../utils/academicUtils';
 import { logPasscodeEvent, getAuditLogs, clearAuditLogs } from '../utils/auditLogger';
@@ -192,6 +193,487 @@ export default function TeacherDashboard({
       setIsGeneratingPdf(false);
     }
   };
+
+  const generateSingleStudentPdf = (student: Student, indexInClass: number, classSize: number, activeTerm: string, template: Workspace15Template): jsPDF => {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const stats = calculateStudentStatsForTerm(student, activeTerm);
+    const positionStr = indexInClass !== -1 ? formatOrdinal(indexInClass + 1) : 'N/A';
+
+    const primaryColor = [4, 120, 87];   // #047857 (Deep Emerald)
+    const darkTextColor = [15, 23, 42];   // #0f172a (Charcoal Slate)
+    const lightBgColor = [240, 253, 250];  // Light mint / teal bg
+    const slateBorder = [226, 232, 240];  // Slate 200 border
+    const mutedTextColor = [100, 116, 139]; // Slate 500 gray
+
+    // Background crest watermark
+    doc.setDrawColor(240, 253, 250);
+    doc.setLineWidth(0.5);
+    doc.circle(105, 148, 45, 'S');
+    doc.circle(105, 148, 43, 'S');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6);
+    doc.setTextColor(220, 235, 230);
+    doc.text("EZIBECK ACADEMY  *  KNOWLEDGE AND EXCELLENCE  *", 105, 120, { align: 'center' });
+
+    // Draw real crest at top left
+    doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.setLineWidth(0.5);
+    doc.circle(22, 25, 10, 'S');
+    doc.setDrawColor(217, 119, 6); // Amber index
+    doc.circle(22, 25, 8.5, 'S');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text('E', 22, 28.5, { align: 'center' });
+
+    // School Title Header
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(20);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text(template.schoolName.toUpperCase(), 35, 21);
+
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8.5);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text(`"${template.motto}"`, 35, 25.5);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(75, 85, 99);
+    doc.text(`${template.address}  |  Tel: ${template.phone}  |  Email: ${template.email}`, 35, 30);
+
+    // Double horizontal divider line
+    doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.setLineWidth(0.6);
+    doc.line(10, 34, 200, 34);
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.15);
+    doc.line(10, 35, 200, 35);
+
+    // Report Card Section Banner Title
+    doc.setFillColor(lightBgColor[0], lightBgColor[1], lightBgColor[2]);
+    doc.rect(10, 39, 190, 7.5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
+    doc.text(`OFFICIAL STUDENT REPORT SHEET  -  ${activeTerm.toUpperCase()} SESSION`, 105, 44, { align: 'center' });
+
+    // Student Information Grid
+    const infoY = 50;
+    doc.setDrawColor(slateBorder[0], slateBorder[1], slateBorder[2]);
+    doc.setLineWidth(0.3);
+    doc.rect(10, infoY, 190, 21, 'S');
+
+    doc.line(10, infoY + 10.5, 200, infoY + 10.5); // horizontal mid divider
+    doc.line(55, infoY, 55, infoY + 21); // vert 1
+    doc.line(102, infoY, 102, infoY + 21); // vert 2
+    doc.line(152, infoY, 152, infoY + 21); // vert 3
+
+    // Row 1 Column 1
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
+    doc.text("FULL STUDENT NAME:", 13, infoY + 4);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
+    const trimmedName = student.name.length > 22 ? student.name.substring(0, 20) + "..." : student.name;
+    doc.text(trimmedName, 13, infoY + 8);
+
+    // Row 1 Column 2
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
+    doc.text("STUDENT ACCESS ID:", 58, infoY + 4);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
+    doc.text(student.id, 58, infoY + 8);
+
+    // Row 1 Column 3
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
+    doc.text("GENDER / SEX:", 105, infoY + 4);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
+    doc.text(student.sex, 105, infoY + 8);
+
+    // Row 1 Column 4
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
+    doc.text("AGE PROFILE:", 155, infoY + 4);
+    doc.setFont('helvetica', 'bold');
+         doc.setFontSize(8.5);
+    doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
+    doc.text(`${student.age} Years`, 155, infoY + 8);
+
+    // Row 2 Column 1
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
+    doc.text("CLASS STANDARD:", 13, infoY + 14.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
+    doc.text(student.className, 13, infoY + 18.5);
+
+    // Row 2 Column 2
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
+    doc.text("ACADEMIC SESSION:", 58, infoY + 14.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
+    doc.text(template.session, 58, infoY + 18.5);
+
+    // Row 2 Column 3
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
+    doc.text("TERM CLOSING DATE:", 105, infoY + 14.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
+    doc.text(template.termDate, 105, infoY + 18.5);
+
+    // Row 2 Column 4
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
+    doc.text("RESUMPTION DATE:", 155, infoY + 14.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
+    doc.text(template.resumptionDate, 155, infoY + 18.5);
+
+    // 6. Subjects Grade Performance Grid Table
+    const tableY = 75;
+    const isThirdTerm = activeTerm === 'Third Term';
+
+    const w = isThirdTerm ? {
+      name: 50, test: 12, exam: 12, total: 12, t1: 11, t2: 11, t3: 11, avg: 13, grade: 11, rank: 11, remark: 36
+    } : {
+      name: 56, test: 18, exam: 18, total: 18, t1: 0, t2: 0, t3: 0, avg: 0, grade: 15, rank: 15, remark: 50
+    };
+
+    // Header Draw
+    doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.rect(10, tableY, 190, 7.5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(255, 255, 255);
+
+    let currentX = 10;
+    const drawTableHeaderText = (txt: string, colW: number, align: 'left' | 'center' = 'center') => {
+      const textX = align === 'center' ? currentX + colW / 2 : currentX + 3;
+      doc.text(txt, textX, tableY + 4.8, { align });
+      currentX += colW;
+    };
+
+    drawTableHeaderText("SUBJECT PERFORMANCE SHEET", w.name, 'left');
+    drawTableHeaderText("TEST", w.test);
+    drawTableHeaderText("EXAM", w.exam);
+    drawTableHeaderText("TOTAL", w.total);
+    if (isThirdTerm) {
+      drawTableHeaderText("1ST T", w.t1);
+      drawTableHeaderText("2ND T", w.t2);
+      drawTableHeaderText("3RD T", w.t3);
+      drawTableHeaderText("SESS AVG", w.avg);
+    }
+    drawTableHeaderText("GRADE", w.grade);
+    drawTableHeaderText("RANK", w.rank);
+    drawTableHeaderText("TEACHER REMARK", w.remark, 'left');
+
+    doc.setFontSize(7.5);
+    doc.setTextColor(31, 41, 55);
+    doc.setLineWidth(0.15);
+    doc.setDrawColor(218, 225, 233);
+
+    let rowY = tableY + 7.5;
+    const rowHeight = 5.8;
+
+    student.subjects.forEach((subj, idx) => {
+      if (idx % 2 === 1) {
+        doc.setFillColor(252, 253, 253);
+        doc.rect(10, rowY, 190, rowHeight, 'F');
+      }
+
+      const tot = (subj.testScore || 0) + (subj.examScore || 0);
+      const fTermVal = subj.firstTermSummary !== undefined ? subj.firstTermSummary : 0;
+      const sTermVal = subj.secondTermSummary !== undefined ? subj.secondTermSummary : 0;
+      const tTermVal = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
+      const annualSum = fTermVal + sTermVal + tTermVal;
+
+      const { letter, remark } = getLetterAndRemark(isThirdTerm ? annualSum : tot);
+
+      currentX = 10;
+      const writeCellText = (txt: string, colW: number, align: 'left' | 'center' = 'center', isBold = false) => {
+        doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+        const textX = align === 'center' ? currentX + colW / 2 : currentX + 3;
+        doc.text(txt, textX, rowY + 3.8, { align });
+        currentX += colW;
+      };
+
+      writeCellText(subj.name.toUpperCase(), w.name, 'left', true);
+      writeCellText(String(subj.testScore || 0), w.test);
+      writeCellText(String(subj.examScore || 0), w.exam);
+      writeCellText(String(tot), w.total, 'center', true);
+
+      if (isThirdTerm) {
+        writeCellText(String(fTermVal), w.t1);
+        writeCellText(String(sTermVal), w.t2);
+        writeCellText(String(tTermVal), w.t3);
+        writeCellText(String(annualSum), w.avg, 'center', true);
+      }
+
+      writeCellText(letter, w.grade, 'center', true);
+      writeCellText(formatOrdinal(subj.position), w.rank);
+      writeCellText(remark, w.remark, 'left');
+
+      doc.line(10, rowY + rowHeight, 200, rowY + rowHeight);
+      rowY += rowHeight;
+    });
+
+    doc.setLineWidth(0.3);
+    doc.setDrawColor(slateBorder[0], slateBorder[1], slateBorder[2]);
+    doc.line(10, tableY, 10, rowY);
+    doc.line(200, tableY, 200, rowY);
+
+    // 7. Performance metrics
+    const metricsY = rowY + 5;
+    doc.setFontSize(8);
+
+    const kpis = [
+      { label: "CUMULATIVE TOTAL", value: `${stats.totalScore} / ${stats.maxPossibleScore}` },
+      { label: "TERMLY AVERAGE", value: `${stats.avgScore.toFixed(1)}%` },
+      { label: "CLASS GPA RATIO", value: `${stats.gpa} / 5.00` },
+      { label: positionStr === 'N/A' ? "CLASS SIZE" : "POSITION IN CLASS", value: positionStr === 'N/A' ? `${classSize} Students` : `${positionStr} of ${classSize}` }
+    ];
+
+    const kpiWidth = 44.5;
+    const kpiGap = 4;
+    kpis.forEach((k, idx) => {
+      const kpiX = 10 + idx * (kpiWidth + kpiGap);
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.rect(kpiX, metricsY, kpiWidth, 12, 'FD');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(5.5);
+      doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
+      doc.text(k.label, kpiX + kpiWidth/2, metricsY + 4, { align: 'center' });
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.text(k.value, kpiX + kpiWidth/2, metricsY + 9.5, { align: 'center' });
+    });
+
+    // 8. Affective evaluations
+    const domainsY = metricsY + 16;
+    doc.setFillColor(lightBgColor[0], lightBgColor[1], lightBgColor[2]);
+    doc.rect(10, domainsY, 190, 5.5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
+    doc.text("PERSONALITY PROFILE & AFFECTIVE SKILLS EVALUATION (5-POINT SCALE)", 105, domainsY + 3.8, { align: 'center' });
+
+    const ratingsY = domainsY + 5.5;
+    doc.setLineWidth(0.15);
+    doc.setDrawColor(slateBorder[0], slateBorder[1], slateBorder[2]);
+
+    const midX = 105;
+    const colSize = Math.ceil((student.behaviour || []).length / 2) || 4;
+
+    const getRatingStars = (rating: number) => {
+      return "O".repeat(rating) + ".".repeat(Math.max(0, 5 - rating)) + `  (${rating}/5)`;
+    };
+
+    (student.behaviour || []).forEach((b, idx) => {
+      const isCol2 = idx >= colSize;
+      const itemIdx = isCol2 ? idx - colSize : idx;
+      const bX = isCol2 ? midX + 4 : 14;
+      const bY = ratingsY + 3.5 + itemIdx * 4.8;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7);
+      doc.setTextColor(75, 85, 99);
+      doc.text(`${b.name.toUpperCase()}:`, bX, bY);
+
+      doc.setFont('courier', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.text(getRatingStars(b.rating), bX + 38, bY - 0.2);
+    });
+
+    const behaviourHeight = colSize * 4.8 + 4;
+    const signatureY = ratingsY + behaviourHeight + 6;
+
+    doc.setDrawColor(slateBorder[0], slateBorder[1], slateBorder[2]);
+    doc.setLineWidth(0.35);
+    doc.line(10, signatureY - 2, 200, signatureY - 2);
+
+    // 9. Comments
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+
+    doc.text("FORM TEACHER'S EVALUATION REMARK:", 12, signatureY);
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(15, 23, 42);
+    const FTComment = student.formTeacherRemark || "An excellent, dedicated student. consistent performance throughout.";
+    doc.text(`"${FTComment}"`, 12, signatureY + 4, { maxWidth: 185 });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    doc.text("PRINCIPAL'S ASSESSMENT VERDICT:", 12, signatureY + 11);
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(15, 23, 42);
+    const PRComment = student.principalRemark || "Impressive terminal portfolio marks. Approved for publication.";
+    doc.text(`"${PRComment}"`, 12, signatureY + 15, { maxWidth: 185 });
+
+    // 10. Signatures and Official Stamp Circular Watermark
+    const sigY = signatureY + 28;
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.3);
+
+    doc.line(15, sigY, 60, sigY);
+    doc.line(82, sigY, 127, sigY);
+    doc.line(148, sigY, 193, sigY);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
+    doc.text("CLASS FORM TEACHER", 37.5, sigY + 3.2, { align: 'center' });
+    doc.text("HEAD PRINCIPAL (DR. EZEKIEL BECK)", 104.5, sigY + 3.2, { align: 'center' });
+    doc.text("PARENT / GUARDIAN SIGNATURE", 170.5, sigY + 3.2, { align: 'center' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
+
+    const formTeacherNameStr = student.formTeacherName || "Form Educator";
+    doc.text(formTeacherNameStr, 37.5, sigY - 1.5, { align: 'center' });
+    doc.text("Dr. Ezekiel Beck", 104.5, sigY - 1.5, { align: 'center' });
+
+    doc.setDrawColor(4, 120, 87);
+    doc.setLineWidth(0.15);
+    doc.circle(105, sigY - 9, 7.5, 'S');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(4.2);
+    doc.setTextColor(4, 120, 87);
+    doc.text("OFFICIAL STAMP", 105, sigY - 10, { align: 'center' });
+    doc.text("EZIBECK ACADEMY", 105, sigY - 7.5, { align: 'center' });
+
+    return doc;
+  };
+
+  const handleDownloadAllClassesZip = async () => {
+    if (isDownloadingAllZip) return;
+    setIsDownloadingAllZip(true);
+    setZipProgress("Scanning student registry database...");
+
+    try {
+      const zip = new JSZip();
+      const classes: ClassName[] = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
+      
+      // Global CSV report content
+      let schoolWideCsv = "Class,Rank,Student ID,Student Name,Gender,Cumulative Total,Average Score,GPA\n";
+      let totalPdfsGenerated = 0;
+
+      for (const cls of classes) {
+        setZipProgress(`Compiling reports for class ${cls}...`);
+        
+        // Calculate class ranks of standard for this term exactly
+        const sortedRoster = calculateClassPositions(students, cls, activeTermTab)
+          .filter(s => s.className === cls);
+
+        if (sortedRoster.length === 0) {
+          // Add a placeholder/empty indicator file to represent empty folder structure nicely
+          const classFolder = zip.folder(cls);
+          if (classFolder) {
+            classFolder.file("empty_class_notice.txt", `There are currently no registered students in class ${cls} inside the active ${activeTermTab} terminal registry.`);
+          }
+          continue;
+        }
+
+        const classFolder = zip.folder(cls);
+        if (!classFolder) continue;
+
+        // Populate CSV results data for this class
+        let classCsv = "Rank,Student ID,Student Name,Gender,Cumulative Total,Average Score,GPA\n";
+
+        // Generate student sheets sequentially
+        for (let i = 0; i < sortedRoster.length; i++) {
+          const stud = sortedRoster[i];
+          const position = i + 1;
+          const stats = calculateStudentStatsForTerm(stud, activeTermTab);
+
+          // Render programmatic fast PDF
+          const doc = generateSingleStudentPdf(stud, i, sortedRoster.length, activeTermTab, template);
+          const pdfBlob = doc.output('blob');
+
+          // Add to class folder
+          const filename = `${stud.id}_${stud.name.replace(/\s+/g, '_')}_Report.pdf`;
+          classFolder.file(filename, pdfBlob);
+
+          // Add to CSV reports
+          const rowText = `${cls},${position},${stud.id},"${stud.name}",${stud.sex},${stats.totalScore},${stats.avgScore.toFixed(2)}%,${stats.gpa}\n`;
+          schoolWideCsv += rowText;
+
+          const classRowText = `${position},${stud.id},"${stud.name}",${stud.sex},${stats.totalScore},${stats.avgScore.toFixed(2)}%,${stats.gpa}\n`;
+          classCsv += classRowText;
+
+          totalPdfsGenerated++;
+        }
+
+        // Add class roster index report CSV safely inside class folder
+        classFolder.file(`${cls}_Students_Roster_Rankings.csv`, classCsv);
+      }
+
+      if (totalPdfsGenerated === 0) {
+        setWarningMsg("No student slips are active in any class! Please register students to download compiled result ZIPs.");
+        setTimeout(() => setWarningMsg(''), 4000);
+        setIsDownloadingAllZip(false);
+        return;
+      }
+
+      setZipProgress("Finalizing ZIP folder archive structure...");
+      // Add general master school index CSV at the ZIP root envelope
+      zip.file(`School_Wide_Students_Rankings_Index_${activeTermTab.replace(/\s+/g, '_')}.csv`, schoolWideCsv);
+      
+      const content = await zip.generateAsync({ type: 'blob' });
+      
+      const sessionClean = template.session.replace(/\//g, '-');
+      const termClean = activeTermTab.replace(/\s+/g, '_');
+      const downloadFilename = `Ezibeck_Academy_All_Classes_Results_${termClean}_${sessionClean}.zip`;
+
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(content);
+      link.download = downloadFilename;
+      link.click();
+
+      triggerSuccess(`Successfully archived and downloaded result portfolio folder containing ${totalPdfsGenerated} student report cards!`);
+    } catch (err) {
+      console.error("Bulk ZIP compile failed:", err);
+      setWarningMsg("Failed to compile results into a ZIP folder archive. Please retry.");
+      setTimeout(() => setWarningMsg(''), 4000);
+    } finally {
+      setIsDownloadingAllZip(false);
+    }
+  };
   const [showDbSyncModal, setShowDbSyncModal] = useState(false);
   const [isSyncingDb, setIsSyncingDb] = useState(false);
   const [syncDbResult, setSyncDbResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -242,9 +724,20 @@ export default function TeacherDashboard({
           const dbProfiles = await dbService.getFacultyProfiles();
           if (dbProfiles && dbProfiles.length > 0) {
             const mapped = dbProfiles.map(mapDbFacultyToFrontend);
-            setFacultyProfiles(mapped);
+            // Merge with defaults to ensure none are missing
+            const merged = [...mapped];
+            for (const def of DEFAULT_FACULTY) {
+              if (!merged.some(f => f.id === def.id)) {
+                merged.push(def);
+                // Promptly seed missing defaults to database
+                await dbService.saveFacultyProfile(def).catch(err => {
+                  console.error("Failed to seed default faculty profile during merge:", def.name, err);
+                });
+              }
+            }
+            setFacultyProfiles(merged);
             if (typeof window !== 'undefined') {
-              localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(mapped));
+              localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(merged));
             }
           } else {
             // Seed defaults to Supabase so it's always populated initially
@@ -271,22 +764,30 @@ export default function TeacherDashboard({
     syncFacultyWithSupabase();
   }, [dbStatus?.connected]);
 
-  // Dynamic Faculty Management State - strictly limited to 7 members
+  // Dynamic Faculty Management State
   const [facultyProfiles, setFacultyProfiles] = useState<FacultyProfile[]>(() => {
+    let initialList = DEFAULT_FACULTY;
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('ezibeck_faculty_profiles');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length === 7) {
-            return parsed;
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            initialList = parsed;
           }
         } catch (e) {
           console.error('Error parsing stored faculty profiles', e);
         }
       }
     }
-    return DEFAULT_FACULTY;
+    // Always merge to ensure the 6 default teachers are present
+    const merged = [...initialList];
+    for (const def of DEFAULT_FACULTY) {
+      if (!merged.some(f => f.id === def.id)) {
+        merged.push(def);
+      }
+    }
+    return merged;
   });
 
   // Synchronize viewingReportStudent and editingStudent subviews with browser history pop events
@@ -345,6 +846,7 @@ export default function TeacherDashboard({
 
   // Faculty edit & class assignment states
   const [editingFaculty, setEditingFaculty] = useState<FacultyProfile | null>(null);
+  const [editingFacultyId, setEditingFacultyId] = useState('');
   const [editingFacultyName, setEditingFacultyName] = useState('');
   const [editingFacultyEmail, setEditingFacultyEmail] = useState('');
   const [editingFacultyPassword, setEditingFacultyPassword] = useState('');
@@ -373,6 +875,10 @@ export default function TeacherDashboard({
   const [showResetConfirmPass, setShowResetConfirmPass] = useState(false);
   const [teacherLoginError, setTeacherLoginError] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
+
+  // Admin folder/ZIP execution state variables
+  const [isDownloadingAllZip, setIsDownloadingAllZip] = useState(false);
+  const [zipProgress, setZipProgress] = useState('');
 
   // Faculty Registration States
   const [showRegisterForm, setShowRegisterForm] = useState(false);
@@ -517,8 +1023,10 @@ export default function TeacherDashboard({
     e.preventDefault();
     if (!editingFaculty) return;
 
+    const newId = editingFacultyId.trim().toLowerCase() || editingFaculty.id;
     const updatedProfile = {
       ...editingFaculty,
+      id: newId,
       name: editingFacultyName.trim(),
       email: editingFacultyEmail.trim(),
       password: editingFacultyPassword.trim(),
@@ -540,9 +1048,17 @@ export default function TeacherDashboard({
     }
 
     if (dbStatus && dbStatus.configured && dbStatus.connected) {
-      dbService.saveFacultyProfile(updatedProfile).catch(err => {
-        console.error("Failed to sync faculty edit updates to Supabase:", err);
-      });
+      if (editingFaculty.id !== newId) {
+        dbService.deleteFacultyProfile(editingFaculty.id)
+          .then(() => dbService.saveFacultyProfile(updatedProfile))
+          .catch(err => {
+            console.error("Failed to sync faculty ID rename update to Supabase:", err);
+          });
+      } else {
+        dbService.saveFacultyProfile(updatedProfile).catch(err => {
+          console.error("Failed to sync faculty edit updates to Supabase:", err);
+        });
+      }
     }
 
     setEditingFaculty(null);
@@ -3013,21 +3529,10 @@ export default function TeacherDashboard({
                   Admin Security Desk
                 </span>
                 <h2 className="text-sm font-extrabold text-slate-900 mt-3 flex items-center gap-1.5 uppercase tracking-tight">
-                  🔒 Educator Staff Accounts Access & Restrictions
-                </h2>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Toggle login and portal access privileges for non-administrator academic staffs. Restricted accounts are immediately blocked from opening student ledgers and report directories.
-                </p>
-              </div>
-              <div>
-                <span className="text-[10px] bg-rose-50 border border-rose-200 text-rose-750 font-extrabold tracking-widest uppercase px-2.5 py-1 rounded-md">
-                  Admin Security Desk
-                </span>
-                <h2 className="text-sm font-extrabold text-slate-900 mt-3 flex items-center gap-1.5 uppercase tracking-tight">
                   🔒 Educator Staff Class Assignments & Security Desk
                 </h2>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Configure class assignments for teachers. Form Teachers can strictly access and modify students in their assigned class. Use the edit button to assign classes, modify passcodes, or authorize/restrict access.
+                  Configure class assignments for teachers. Form Teachers can strictly access and modify students in their assigned class. Use the edit button to assign classes, modify usernames, change passcodes, or authorize/restrict access.
                 </p>
               </div>
             </div>
@@ -3041,7 +3546,7 @@ export default function TeacherDashboard({
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Updates take effect immediately</span>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 text-xs">
                   <div>
                     <label className="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Full Educator Name</label>
                     <input
@@ -3050,6 +3555,17 @@ export default function TeacherDashboard({
                       value={editingFacultyName}
                       onChange={(e) => setEditingFacultyName(e.target.value)}
                       className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 outline-none focus:border-emerald-600 transition-all font-semibold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Username ID (Login Name)</label>
+                    <input
+                      type="text"
+                      required
+                      value={editingFacultyId}
+                      onChange={(e) => setEditingFacultyId(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 outline-none focus:border-emerald-600 transition-all font-mono font-bold"
                     />
                   </div>
 
@@ -3130,14 +3646,22 @@ export default function TeacherDashboard({
             )}
 
             <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/55 shadow-xs">
-              {facultyProfiles.map(p => {
+              {facultyProfiles.filter(p => p.id !== 'ezekiel').map(p => {
                 const isSelf = p.id === currentUser?.id;
+                const isUrlAvatar = p.avatar && p.avatar.startsWith('http');
+                
                 return (
                   <div key={p.id} className="p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white hover:bg-slate-50/70 transition-colors">
-                    <div className="flex items-center gap-3.5">
-                      <span className="text-3xl bg-slate-100 p-2.5 rounded-2xl select-none">{p.avatar}</span>
+                    <div className="flex items-start sm:items-center gap-3.5">
+                      {isUrlAvatar ? (
+                        <div className="w-12 h-12 bg-slate-100 flex items-center justify-center rounded-2xl overflow-hidden shrink-0">
+                          <img src={p.avatar} alt={p.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <span className="text-3xl bg-slate-100 p-2 flex items-center justify-center rounded-2xl select-none shrink-0 w-12 h-12">{p.avatar || '👩‍🏫'}</span>
+                      )}
                       <div>
-                        <h4 className="font-extrabold text-slate-905 text-xs flex flex-wrap items-center gap-2">
+                        <h4 className="font-extrabold text-slate-900 text-xs flex flex-wrap items-center gap-2">
                           {p.name}
                           {isSelf && (
                             <span className="bg-emerald-100 text-emerald-750 text-[9px] font-black tracking-wider uppercase px-1.5 py-0.5 rounded-md">
@@ -3160,9 +3684,9 @@ export default function TeacherDashboard({
                           )}
                         </h4>
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{p.role}</p>
-                        <p className="text-[10px] text-slate-500 font-mono mt-1 flex flex-wrap gap-x-4">
-                          <span>Passcode ID: <strong className="font-bold text-slate-800 tracking-wider font-mono bg-slate-100/80 px-2 py-0.5 rounded">{p.password || 'admin'}</strong></span>
-                          {p.email && <span>Email: <strong className="font-mono text-emerald-700">{p.email}</strong></span>}
+                        <p className="text-[10px] text-slate-500 font-mono mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+                          <span>Username ID: <strong className="font-bold text-slate-800 tracking-wider bg-slate-100 px-1.5 py-0.5 rounded font-mono">{p.id}</strong></span>
+                          <span>Password Passcode: <strong className="font-bold text-slate-800 tracking-wider bg-slate-100 px-1.5 py-0.5 rounded font-mono">{p.password || 'teacher1'}</strong></span>
                         </p>
                       </div>
                     </div>
@@ -3172,6 +3696,7 @@ export default function TeacherDashboard({
                         type="button"
                         onClick={() => {
                           setEditingFaculty(p);
+                          setEditingFacultyId(p.id);
                           setEditingFacultyName(p.name);
                           setEditingFacultyEmail(p.email || `${p.id}@ezibeckacademy.edu.ng`);
                           setEditingFacultyPassword(p.password || 'teacher1');
@@ -3751,6 +4276,21 @@ export default function TeacherDashboard({
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {isAdmin && (
+                    <button
+                      onClick={handleDownloadAllClassesZip}
+                      disabled={isDownloadingAllZip}
+                      className={`font-black text-[11px] px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-md cursor-pointer border border-amber-650 bg-amber-500 hover:bg-amber-600 text-slate-950`}
+                      title="Download student results portfolio for ALL academic classes structured in folders as a ZIP file"
+                    >
+                      {isDownloadingAllZip ? (
+                        <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
+                      ) : (
+                        <FileSpreadsheet className="w-4 h-4 text-slate-950" />
+                      )}
+                      <span>ZIP BULK RESULTS</span>
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       if (isTermReadOnly) {
@@ -3996,6 +4536,29 @@ export default function TeacherDashboard({
                 Yes
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dynamic bulk ZIP download progress overlay screen */}
+      {isDownloadingAllZip && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 print:hidden animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-150 mx-4 space-y-4 text-slate-800">
+            <div className="flex items-center gap-3 text-emerald-600 mb-2">
+              <div className="p-2.5 bg-emerald-50 rounded-2xl">
+                <RefreshCw className="w-5 h-5 text-emerald-600 animate-spin" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900">Bundling All Report Sheets</h3>
+                <p className="text-[10px] text-emerald-600 font-extrabold uppercase tracking-widest">{zipProgress}</p>
+              </div>
+            </div>
+            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+              <div className="bg-emerald-600 h-full transition-all duration-300 animate-pulse w-[105px]"></div>
+            </div>
+            <p className="text-[11px] text-slate-400 font-medium leading-relaxed">
+              Please wait. EZIBECK'S dynamic compiler is calculating rankings, mapping behavioral domains, and compiling high-DPI vector PDFs for all grade-levels into an archive.
+            </p>
           </div>
         </div>
       )}
