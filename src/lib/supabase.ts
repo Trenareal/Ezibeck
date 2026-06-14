@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { Student, Workspace15Template, ClassName } from '../types';
+import { Student, Workspace15Template, ClassName, FacultyProfile } from '../types';
 import { compareSubjects } from '../utils/academicUtils';
 
 const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
@@ -102,6 +102,63 @@ export const mapTemplateToDbConfig = (tpl: Workspace15Template) => {
 /**
  * Service helpers for fetching and updating database tables with Supabase
  */
+export function mapFrontendIdToUuid(id: string): string {
+  if (!id) return id;
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    return id.toLowerCase();
+  }
+  const mappings: Record<string, string> = {
+    ezekiel: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df1",
+    gladys: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df2",
+    anthony: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df3",
+    sarah: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df4",
+    benson: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df5",
+    florence: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df6",
+    david: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df7"
+  };
+  if (mappings[id.toLowerCase()]) {
+    return mappings[id.toLowerCase()];
+  }
+  // Otherwise create a deterministic UUID out of the string
+  let hashStr = "";
+  for (let i = 0; i < id.length; i++) {
+    hashStr += id.charCodeAt(i).toString(16);
+  }
+  hashStr = (hashStr + "00000000000000000000000005081997").slice(0, 32);
+  return `${hashStr.substring(0, 8)}-${hashStr.substring(8, 12)}-${hashStr.substring(12, 16)}-${hashStr.substring(16, 20)}-${hashStr.substring(20, 32)}`;
+}
+
+export function mapUuidToFrontendId(uuid: string): string {
+  if (!uuid) return uuid;
+  const reverseMappings: Record<string, string> = {
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2df1": "ezekiel",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2df2": "gladys",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2df3": "anthony",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2df4": "sarah",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2df5": "benson",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2df6": "florence",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2df7": "david"
+  };
+  const lowered = uuid.toLowerCase();
+  if (reverseMappings[lowered]) {
+    return reverseMappings[lowered];
+  }
+  return lowered;
+}
+
+export const mapDbFacultyToFrontend = (dbFaculty: any): FacultyProfile => {
+  return {
+    id: mapUuidToFrontendId(dbFaculty.id),
+    name: dbFaculty.name,
+    role: dbFaculty.role,
+    avatar: dbFaculty.avatar,
+    password: dbFaculty.password,
+    isRestricted: dbFaculty.is_restricted,
+    email: dbFaculty.email || '',
+    assignedClass: dbFaculty.assigned_class as ClassName || undefined
+  };
+};
+
 export const dbService = {
   // --- School Config ---
   async getSchoolConfig() {
@@ -328,15 +385,18 @@ export const dbService = {
   },
 
   async saveFacultyProfile(profile: any) {
+    const tempId = mapFrontendIdToUuid(profile.id);
     const { data, error } = await supabase
       .from('faculty_profiles')
       .upsert({
-        id: profile.id || undefined,
+        id: tempId || undefined,
         name: profile.name,
         role: profile.role,
         avatar: profile.avatar,
         password: profile.password || '123456',
-        is_restricted: profile.isRestricted || false
+        is_restricted: profile.isRestricted || false,
+        email: profile.email || '',
+        assigned_class: profile.assignedClass || null
       })
       .select()
       .single();
@@ -345,10 +405,11 @@ export const dbService = {
   },
 
   async deleteFacultyProfile(profileId: string) {
+    const dbId = mapFrontendIdToUuid(profileId);
     const { error } = await supabase
       .from('faculty_profiles')
       .delete()
-      .eq('id', profileId);
+      .eq('id', dbId);
     if (error) throw error;
     return true;
   }

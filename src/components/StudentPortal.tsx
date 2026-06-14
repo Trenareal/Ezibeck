@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, GraduationCap, Search, BookOpen, Eye, Layers, Printer, Star, Wifi, WifiOff, CloudLightning, Clock } from 'lucide-react';
+import { ArrowLeft, GraduationCap, Search, BookOpen, Eye, EyeOff, Layers, Printer, Star, Wifi, WifiOff, CloudLightning, Clock } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Student, ClassName, Workspace15Template, DbStatus, AuditLogEntry } from '../types';
@@ -41,6 +41,7 @@ export default function StudentPortal({
   const [passwordInput, setPasswordInput] = useState('');
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [rollNotification, setRollNotification] = useState<string | null>(null);
 
   // Password reset via simulated OTP states
@@ -558,14 +559,23 @@ export default function StudentPortal({
               <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">
                 Student Password
               </label>
-              <input
-                type="password"
-                required
-                placeholder="Enter password..."
-                value={passwordInput}
-                onChange={(e) => setPasswordInput(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-3 px-4 text-xs font-bold outline-none transition-all shadow-3xs"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  placeholder="Enter password..."
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-3 pl-4 pr-10 text-xs font-bold outline-none transition-all shadow-3xs"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
               <p className="text-[10px] text-slate-400 mt-2.5 leading-relaxed text-center">
                 🔑 <strong>Forgot password?</strong> If you forget your password, please contact your class teacher to retrieve it.
               </p>
@@ -775,8 +785,13 @@ export default function StudentPortal({
                 {/* Overlapping Page Emoji Icon & School Identification */}
                 <div className="relative z-10 space-y-4">
                   <div className="flex items-start gap-4 -mt-10 sm:-mt-14 print:mt-0 select-none">
-                    <div className="w-14 h-14 sm:w-20 sm:h-20 bg-white rounded-2xl border border-slate-205 shadow-sm flex items-center justify-center text-2xl sm:text-4xl">
-                      📒
+                    <div className="w-14 h-14 sm:w-20 sm:h-20 bg-white rounded-2xl border border-slate-205 shadow-sm flex items-center justify-center overflow-hidden">
+                      <img 
+                        src="/src/assets/images/school_badge_1781423327113.jpg" 
+                        alt="Ezibeck Academy Emblem" 
+                        className="w-full h-full object-cover" 
+                        referrerPolicy="no-referrer"
+                      />
                     </div>
                   </div>
 

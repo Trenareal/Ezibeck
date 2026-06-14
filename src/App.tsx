@@ -244,6 +244,7 @@ export default function App() {
       'public:school_config',
       'public:subject_grades',
       'public:behavioural_ratings',
+      'public:faculty_profiles',
     ];
     
     const channelsMap: Record<string, any> = {};

@@ -4,12 +4,13 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, Printer, UserCheck, LogOut, Database, Wifi, WifiOff, RefreshCw, CloudLightning, Lock, Search, Clock } from 'lucide-react';
+import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, EyeOff, Printer, UserCheck, LogOut, Database, Wifi, WifiOff, RefreshCw, CloudLightning, Lock, Search, Clock } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile, DbStatus, AuditLogEntry } from '../types';
 import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal, generateUnique6DigitPassword, getDeterministicPasscode, getStudentPasscodesFromOtherTerms } from '../utils/academicUtils';
 import { logPasscodeEvent, getAuditLogs, clearAuditLogs } from '../utils/auditLogger';
+import { dbService, mapDbFacultyToFrontend } from '../lib/supabase';
 
 interface TeacherDashboardProps {
   students: Student[];
@@ -233,6 +234,43 @@ export default function TeacherDashboard({
     }
   }, [dbStatus]);
 
+  // Load faculty profiles from Supabase when database is connected/configured
+  useEffect(() => {
+    async function syncFacultyWithSupabase() {
+      if (dbStatus && dbStatus.configured && dbStatus.connected) {
+        try {
+          const dbProfiles = await dbService.getFacultyProfiles();
+          if (dbProfiles && dbProfiles.length > 0) {
+            const mapped = dbProfiles.map(mapDbFacultyToFrontend);
+            setFacultyProfiles(mapped);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(mapped));
+            }
+          } else {
+            // Seed defaults to Supabase so it's always populated initially
+            console.log("Supabase: Seeding default faculty profiles to database...");
+            for (const f of DEFAULT_FACULTY) {
+              await dbService.saveFacultyProfile(f).catch(err => {
+                console.error("Failed to seed default faculty profile:", f.name, err);
+              });
+            }
+            const refreshed = await dbService.getFacultyProfiles();
+            if (refreshed && refreshed.length > 0) {
+              const mapped = refreshed.map(mapDbFacultyToFrontend);
+              setFacultyProfiles(mapped);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(mapped));
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Failed to load/sync faculty profiles from database:", error);
+        }
+      }
+    }
+    syncFacultyWithSupabase();
+  }, [dbStatus?.connected]);
+
   // Dynamic Faculty Management State - strictly limited to 7 members
   const [facultyProfiles, setFacultyProfiles] = useState<FacultyProfile[]>(() => {
     if (typeof window !== 'undefined') {
@@ -330,6 +368,9 @@ export default function TeacherDashboard({
   const [pendingLoginUser, setPendingLoginUser] = useState<FacultyProfile | null>(null);
   const [usernameInput, setUsernameInput] = useState('');
   const [teacherPasswordInput, setTeacherPasswordInput] = useState('');
+  const [showTeacherPass, setShowTeacherPass] = useState(false);
+  const [showResetNewPass, setShowResetNewPass] = useState(false);
+  const [showResetConfirmPass, setShowResetConfirmPass] = useState(false);
   const [teacherLoginError, setTeacherLoginError] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
 
@@ -459,6 +500,12 @@ export default function TeacherDashboard({
       localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(updated));
     }
 
+    if (dbStatus && dbStatus.configured && dbStatus.connected) {
+      dbService.saveFacultyProfile(newFaculty).catch(err => {
+        console.error("Failed to sync registered staff to Supabase:", err);
+      });
+    }
+
     setRegName('');
     setRegPassword('');
     setShowRegisterForm(false);
@@ -470,17 +517,19 @@ export default function TeacherDashboard({
     e.preventDefault();
     if (!editingFaculty) return;
 
+    const updatedProfile = {
+      ...editingFaculty,
+      name: editingFacultyName.trim(),
+      email: editingFacultyEmail.trim(),
+      password: editingFacultyPassword.trim(),
+      assignedClass: editingFacultyClass,
+      avatar: editingFacultyAvatar,
+      role: editingFacultyClass ? `Form Teacher - ${editingFacultyClass}` : editingFaculty.role
+    };
+
     const updated = facultyProfiles.map(f => {
       if (f.id === editingFaculty.id) {
-        return {
-          ...f,
-          name: editingFacultyName.trim(),
-          email: editingFacultyEmail.trim(),
-          password: editingFacultyPassword.trim(),
-          assignedClass: editingFacultyClass,
-          avatar: editingFacultyAvatar,
-          role: editingFacultyClass ? `Form Teacher - ${editingFacultyClass}` : f.role
-        };
+        return updatedProfile;
       }
       return f;
     });
@@ -488,6 +537,12 @@ export default function TeacherDashboard({
     setFacultyProfiles(updated);
     if (typeof window !== 'undefined') {
       localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(updated));
+    }
+
+    if (dbStatus && dbStatus.configured && dbStatus.connected) {
+      dbService.saveFacultyProfile(updatedProfile).catch(err => {
+        console.error("Failed to sync faculty edit updates to Supabase:", err);
+      });
     }
 
     setEditingFaculty(null);
@@ -573,9 +628,10 @@ export default function TeacherDashboard({
       return;
     }
 
+    const updatedUser = { ...facultyResetUser, password: facultyNewPass };
     const updated = facultyProfiles.map(f => {
       if (f.id === facultyResetUser.id) {
-        return { ...f, password: facultyNewPass };
+        return updatedUser;
       }
       return f;
     });
@@ -583,6 +639,12 @@ export default function TeacherDashboard({
     setFacultyProfiles(updated);
     if (typeof window !== 'undefined') {
       localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(updated));
+    }
+
+    if (dbStatus && dbStatus.configured && dbStatus.connected) {
+      dbService.saveFacultyProfile(updatedUser).catch(err => {
+        console.error("Failed to sync OTP password update to Supabase:", err);
+      });
     }
 
     setFacultyResetSuccess('Security passcode updated successfully! Please login with your new key.');
@@ -942,31 +1004,49 @@ export default function TeacherDashboard({
                   <form onSubmit={handleFacultyConfirmNewPass} className="space-y-4">
                     <div>
                       <label className="block text-[9px] font-black uppercase tracking-widest text-slate-455 mb-1.5">New Access Passcode Key (Min 4 chars):</label>
-                      <input
-                        type="password"
-                        required
-                        placeholder="Enter new educator passcode..."
-                        value={facultyNewPass}
-                        onChange={(e) => {
-                          setFacultyNewPass(e.target.value);
-                          setFacultyResetError('');
-                        }}
-                        className="w-full bg-slate-50 border border-slate-205 focus:border-emerald-500 focus:bg-white rounded-xl p-3 text-xs text-slate-900 outline-none font-bold"
-                      />
+                      <div className="relative">
+                        <input
+                          type={showResetNewPass ? "text" : "password"}
+                          required
+                          placeholder="Enter new educator passcode..."
+                          value={facultyNewPass}
+                          onChange={(e) => {
+                            setFacultyNewPass(e.target.value);
+                            setFacultyResetError('');
+                          }}
+                          className="w-full bg-slate-50 border border-slate-205 focus:border-emerald-500 focus:bg-white rounded-xl py-3 pl-3 pr-10 text-xs text-slate-900 outline-none font-bold"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowResetNewPass(!showResetNewPass)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
+                        >
+                          {showResetNewPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
                     </div>
                     <div>
                       <label className="block text-[9px] font-black uppercase tracking-widest text-slate-455 mb-1.5">Confirm New Access Passcode Key:</label>
-                      <input
-                        type="password"
-                        required
-                        placeholder="Confirm new educator passcode..."
-                        value={facultyNewPassConfirm}
-                        onChange={(e) => {
-                          setFacultyNewPassConfirm(e.target.value);
-                          setFacultyResetError('');
-                        }}
-                        className="w-full bg-slate-50 border border-slate-205 focus:border-emerald-500 focus:bg-white rounded-xl p-3 text-xs text-slate-900 outline-none font-bold"
-                      />
+                      <div className="relative">
+                        <input
+                          type={showResetConfirmPass ? "text" : "password"}
+                          required
+                          placeholder="Confirm new educator passcode..."
+                          value={facultyNewPassConfirm}
+                          onChange={(e) => {
+                            setFacultyNewPassConfirm(e.target.value);
+                            setFacultyResetError('');
+                          }}
+                          className="w-full bg-slate-50 border border-slate-205 focus:border-emerald-500 focus:bg-white rounded-xl py-3 pl-3 pr-10 text-xs text-slate-900 outline-none font-bold"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowResetConfirmPass(!showResetConfirmPass)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
+                        >
+                          {showResetConfirmPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
                     </div>
                     <button
                       type="submit"
@@ -999,17 +1079,26 @@ export default function TeacherDashboard({
                   <label className="block text-[10px] font-black text-slate-450 uppercase tracking-widest mb-1.5">
                     Passcode Password Key
                   </label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="Profile security password"
-                    value={teacherPasswordInput}
-                    onChange={(e) => {
-                      setTeacherPasswordInput(e.target.value);
-                      setTeacherLoginError('');
-                    }}
-                    className="w-full bg-slate-50 border border-slate-205 focus:border-emerald-500 focus:bg-white rounded-xl p-3 text-xs text-slate-900 outline-none transition-all focus:ring-4 focus:ring-emerald-500/10 font-bold placeholder-slate-405"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showTeacherPass ? "text" : "password"}
+                      required
+                      placeholder="Profile security password"
+                      value={teacherPasswordInput}
+                      onChange={(e) => {
+                        setTeacherPasswordInput(e.target.value);
+                        setTeacherLoginError('');
+                      }}
+                      className="w-full bg-slate-50 border border-slate-205 focus:border-emerald-500 focus:bg-white rounded-xl py-3 pl-3 pr-10 text-xs text-slate-900 outline-none transition-all focus:ring-4 focus:ring-emerald-500/10 font-bold placeholder-slate-405"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowTeacherPass(!showTeacherPass)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
+                    >
+                      {showTeacherPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                   {teacherLoginError && (
                     <p className="text-[10px] text-red-650 font-semibold mt-2.5 bg-red-50 border border-red-100 rounded-lg p-2.5">{teacherLoginError}</p>
                   )}
@@ -3098,15 +3187,21 @@ export default function TeacherDashboard({
                         <button
                           type="button"
                           onClick={() => {
+                            const updatedProfile = { ...p, isRestricted: !p.isRestricted };
                             const updated = facultyProfiles.map(f => {
                               if (f.id === p.id) {
-                                return { ...f, isRestricted: !f.isRestricted };
+                                return updatedProfile;
                               }
                               return f;
                             });
                             setFacultyProfiles(updated);
                             if (typeof window !== 'undefined') {
                               localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(updated));
+                            }
+                            if (dbStatus && dbStatus.configured && dbStatus.connected) {
+                              dbService.saveFacultyProfile(updatedProfile).catch(err => {
+                                console.error("Failed to sync access restriction change dynamically to Supabase:", err);
+                              });
                             }
                             triggerSuccess(
                               p.isRestricted

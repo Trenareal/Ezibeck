@@ -326,8 +326,13 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
       <header className="bg-white border-b border-slate-100 sticky top-0 z-40 bg-opacity-95 backdrop-blur-sm shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex justify-between items-center">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-11 sm:h-11 bg-emerald-600 flex items-center justify-center rounded-xl shadow-sm">
-              <School className="text-white w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="w-8 h-8 sm:w-11 sm:h-11 bg-emerald-600 flex items-center justify-center rounded-xl overflow-hidden shadow-sm">
+              <img 
+                src="/src/assets/images/school_badge_1781423327113.jpg" 
+                alt="Ezibeck Academy Badge" 
+                className="w-full h-full object-cover" 
+                referrerPolicy="no-referrer"
+              />
             </div>
             <div>
               <div className="flex items-center gap-1.5 flex-wrap">

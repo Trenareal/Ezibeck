@@ -163,6 +163,10 @@ alter table public.subject_grades add column if not exists third_term_summary in
 alter table public.subject_grades add column if not exists position integer;
 alter table public.subject_grades add column if not exists is_position_manual boolean default false;
 
+-- Safe column additions for `public.faculty_profiles` table
+alter table public.faculty_profiles add column if not exists email text default '';
+alter table public.faculty_profiles add column if not exists assigned_class text;
+
 -- Force reload of Supabase schema cache to instantly recognize the newly added columns
 notify pgrst, 'reload schema';
 

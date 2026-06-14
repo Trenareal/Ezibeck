@@ -269,36 +269,20 @@ export function calculateClassPositions(students: Student[], className?: ClassNa
   return positioned;
 }
 
-// Generate realistic grades for a student - modified to seeded values if term is given
+// Generate zero-initialized grades for a student until edited
 export function generateRandomGrades(subjects: string[], term?: string, studentIdx?: number): SubjectGrade[] {
   const activeTerm = term || 'Third Term';
-  const isFirst = activeTerm === 'First Term';
-  const isSecond = activeTerm === 'Second Term';
-  const sIdx = studentIdx !== undefined ? studentIdx : Math.floor(Math.random() * 4);
+  const sIdx = studentIdx !== undefined ? studentIdx : 0;
 
   return subjects.map((sub, idx) => {
-    let testScore = 0;
-    let examScore = 0;
-    
-    if (isFirst) {
-      testScore = 15 + ((sIdx * 3 + idx * 7) % 11);
-      examScore = 35 + ((sIdx * 4 + idx * 11) % 25);
-    } else if (isSecond) {
-      testScore = 18 + ((sIdx * 2 + idx * 5) % 9);
-      examScore = 40 + ((sIdx * 5 + idx * 13) % 20);
-    } else { // Third Term
-      testScore = 20 + ((sIdx * 4 + idx * 3) % 8);
-      examScore = 45 + ((sIdx * 3 + idx * 17) % 21);
-    }
-
     return {
       id: `${idx}-${activeTerm.toLowerCase().replace(/\s+/g, '_')}-${sIdx}-${idx}`,
       name: sub,
-      testScore,
-      examScore,
-      firstTermSummary: isFirst ? (testScore + examScore) : 15 + ((sIdx + idx) % 5),
-      secondTermSummary: isSecond ? (testScore + examScore) : 16 + ((sIdx + idx * 2) % 4),
-      thirdTermSummary: !isFirst && !isSecond ? (testScore + examScore) : 50 + ((sIdx + idx * 3) % 10)
+      testScore: 0,
+      examScore: 0,
+      firstTermSummary: 0,
+      secondTermSummary: 0,
+      thirdTermSummary: 0
     };
   });
 }
