@@ -4290,6 +4290,7 @@ export default function TeacherDashboard({
                       id={`session-workspace-tab-${term.toLowerCase().replace(' ', '-')}`}
                       onClick={() => {
                         setActiveTermTab(term);
+                        onUpdateTemplate({ ...template, currentTerm: term });
                         triggerSuccess(`Workspace local terminal directory safely routed to ${term}!`);
                       }}
                       className={`flex-1 md:flex-none uppercase tracking-wider text-[10px] font-extrabold py-2.5 px-5 rounded-xl transition-all cursor-pointer ${

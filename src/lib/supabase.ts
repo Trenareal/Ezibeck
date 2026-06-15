@@ -165,10 +165,9 @@ export const dbService = {
     const { data, error } = await supabase
       .from('school_config')
       .select('*')
-      .limit(1)
-      .single();
+      .limit(1);
     if (error) throw error;
-    return data;
+    return data && data.length > 0 ? data[0] : null;
   },
 
   async updateSchoolConfig(id: string, updates: any) {

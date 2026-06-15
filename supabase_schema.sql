@@ -124,8 +124,8 @@ create policy "Global access subject_grades" on public.subject_grades for all us
 create policy "Global access behavioural_ratings" on public.behavioural_ratings for all using (true) with check (true);
 
 -- Insert Default Config
-insert into public.school_config (school_name, motto, address, phone, email) 
-values ('Notion Core International College', 'Knowledge, discipline and outstanding character excellence', '120, Broadway Lane, New York, NY 10025', '+1 (555) 489-0128', 'admissions@notioncollege.edu')
+insert into public.school_config (school_name, motto, address, phone, email, resumption_date, term_date, session, principal_name, form_teacher_junior, form_teacher_senior, current_term, next_term_fee, distinction_threshold, pass_threshold) 
+values ('EZIBECK’S ACADEMY', 'Knowledge is Power', 'No, 5 Ezibeck’s Crescent, Behind Udu Motor Park Ovwian, Delta State', '+234 803 123 4567', 'info@ezibeckacademy.edu.ng', '2026-09-14', '2026-07-24', '2025/2026', 'Dr. Ezekiel Beck', 'Mrs. Gladys Alabi', 'Mr. Anthony Okon', 'Third Term', '₦45,000', 90, 50)
 on conflict do nothing;
 
 -- Insert Default Admin Profiler

@@ -119,7 +119,11 @@ export default function App() {
       const saved = localStorage.getItem('ezibeck_workspace15');
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (parsed && (parsed.schoolName === "Notion Core International College" || parsed.schoolName === "Notion Core")) {
+            return DEFAULT_WORKSPACE_15;
+          }
+          return parsed;
         } catch (e) {
           console.error('Error parsing loaded Workspace 15 template', e);
         }
@@ -284,26 +288,36 @@ export default function App() {
         setDbStatus(prev => ({ ...prev, checking: true }));
         try {
           // 1. Try loading school config from Supabase
-          let cfg;
-          try {
-            cfg = await dbService.getSchoolConfig();
-          } catch (e: any) {
+          let cfg = await dbService.getSchoolConfig();
+          if (!cfg) {
             console.log("No school config found in Supabase, seeding default config row...");
-            const dbTpl = mapTemplateToDbConfig(template);
-            const { data, error } = await supabase.from('school_config').insert(dbTpl).select().single();
-            if (!error && data) {
-              cfg = data;
-            } else if (error) {
-              throw error;
+            const dbTpl = mapTemplateToDbConfig(DEFAULT_WORKSPACE_15);
+            const { data, error } = await supabase.from('school_config').insert(dbTpl).select();
+            if (!error && data && data.length > 0) {
+              cfg = data[0];
             }
           }
           if (cfg) {
             const mappedTpl = mapDbConfigToTemplate(cfg);
-            setTemplate((prev) => ({
-              ...prev,
-              ...mappedTpl,
-              currentTerm: prev.currentTerm, // maintain active tab selection from frontend state
-            }));
+            if (mappedTpl.schoolName === "Notion Core International College" || mappedTpl.schoolName === "Notion Core") {
+              console.log("Detected default Notion Core placeholder config. Restoring EZIBECK’S ACADEMY...");
+              const upgradedTpl = {
+                ...DEFAULT_WORKSPACE_15,
+                currentTerm: template.currentTerm || DEFAULT_WORKSPACE_15.currentTerm
+              };
+              const dbTpl = mapTemplateToDbConfig(upgradedTpl);
+              if (cfg.id) {
+                await dbService.updateSchoolConfig(cfg.id, dbTpl);
+              }
+              setTemplate(upgradedTpl);
+              localStorage.setItem('ezibeck_workspace15', JSON.stringify(upgradedTpl));
+            } else {
+              setTemplate((prev) => ({
+                ...prev,
+                ...mappedTpl,
+                currentTerm: prev.currentTerm, // maintain active tab selection from frontend state
+              }));
+            }
           }
 
           // 2. Load students from Supabase
@@ -388,7 +402,12 @@ export default function App() {
 
     if (isSupabaseConfigured) {
       try {
-        const cfg = await dbService.getSchoolConfig();
+        let cfg = null;
+        try {
+          cfg = await dbService.getSchoolConfig();
+        } catch (err) {
+          console.log("No config found, we will insert.");
+        }
         const dbTpl = mapTemplateToDbConfig(newTemplate);
         if (cfg && cfg.id) {
           await dbService.updateSchoolConfig(cfg.id, dbTpl);
