@@ -218,7 +218,7 @@ export default function TeacherDashboard({
         pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight, undefined, 'FAST');
       }
       
-      const filename = `Ezibeck_Report_Sheet_${viewingReportStudent.id}_${viewingReportStudent.name.replace(/\s+/g, '_')}.pdf`;
+      const filename = `${template.schoolName.replace(/\s+/g, '_')}_Report_Sheet_${viewingReportStudent.id}_${viewingReportStudent.name.replace(/\s+/g, '_')}.pdf`;
       pdf.save(filename);
     } catch (err) {
       console.error('Direct PDF Generation Error:', err);
@@ -257,7 +257,7 @@ export default function TeacherDashboard({
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(6);
     doc.setTextColor(220, 235, 230);
-    doc.text("EZIBECK ACADEMY  *  KNOWLEDGE AND EXCELLENCE  *", 105, 120, { align: 'center' });
+    doc.text(`${template.schoolName.toUpperCase()}  *  ${template.motto.toUpperCase()}  *`, 105, 120, { align: 'center' });
 
     // Draw real crest at top left
     doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
@@ -268,7 +268,7 @@ export default function TeacherDashboard({
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text('E', 22, 28.5, { align: 'center' });
+    doc.text(template.schoolName.charAt(0).toUpperCase() || 'S', 22, 28.5, { align: 'center' });
 
     // School Title Header
     doc.setFont('helvetica', 'bold');
@@ -605,7 +605,7 @@ export default function TeacherDashboard({
 
     const formTeacherNameStr = student.formTeacherName || "Form Educator";
     doc.text(formTeacherNameStr, 37.5, sigY - 1.5, { align: 'center' });
-    doc.text("Dr. Ezekiel Beck", 104.5, sigY - 1.5, { align: 'center' });
+    doc.text(template.principalName || "Dr. Christopher Vance, PhD", 104.5, sigY - 1.5, { align: 'center' });
 
     doc.setDrawColor(4, 120, 87);
     doc.setLineWidth(0.15);
@@ -614,7 +614,7 @@ export default function TeacherDashboard({
     doc.setFontSize(4.2);
     doc.setTextColor(4, 120, 87);
     doc.text("OFFICIAL STAMP", 105, sigY - 10, { align: 'center' });
-    doc.text("EZIBECK ACADEMY", 105, sigY - 7.5, { align: 'center' });
+    doc.text(template.schoolName.toUpperCase(), 105, sigY - 7.5, { align: 'center' });
 
     return doc;
   };
@@ -996,15 +996,35 @@ export default function TeacherDashboard({
     setTempPassThreshold(template.passThreshold);
   }, [template]);
 
-  // Enforce dynamic staff account restriction live
+  // Enforce dynamic staff account restriction live and dynamically propagate credential changes (username/password/name)
   React.useEffect(() => {
-    if (currentUser && currentUser.id !== 'ezekiel') {
-      const activeProfile = facultyProfiles.find(p => p.id === currentUser.id);
-      if (activeProfile && activeProfile.isRestricted) {
-        setCurrentUser(null);
-        setEditingStudent(null);
-        setViewingReportStudent(null);
-        setTeacherLoginError('Your current educator session was restricted by the administrator.');
+    if (currentUser) {
+      // Find matching live profile from facultyProfiles loaded from Supabase database
+      const activeProfile = facultyProfiles.find(p => 
+        p.id === currentUser.id || 
+        (currentUser.assignedClass && p.assignedClass === currentUser.assignedClass) ||
+        (!currentUser.assignedClass && p.id === 'ezekiel')
+      );
+
+      if (activeProfile) {
+        if (activeProfile.isRestricted && currentUser.id !== 'ezekiel') {
+          setCurrentUser(null);
+          setEditingStudent(null);
+          setViewingReportStudent(null);
+          setTeacherLoginError('Your current educator session was restricted by the administrator.');
+        } else if (
+          activeProfile.id !== currentUser.id ||
+          activeProfile.password !== currentUser.password ||
+          activeProfile.name !== currentUser.name ||
+          activeProfile.email !== currentUser.email ||
+          activeProfile.avatar !== currentUser.avatar
+        ) {
+          // Propagate dynamic updates (changed Username ID, password, or name) directly to the active session
+          setCurrentUser(activeProfile);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('ezibeck_faculty_user', JSON.stringify(activeProfile));
+          }
+        }
       }
     }
   }, [facultyProfiles, currentUser]);

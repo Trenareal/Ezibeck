@@ -329,7 +329,7 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
             <div className="w-8 h-8 sm:w-11 sm:h-11 bg-emerald-600 flex items-center justify-center rounded-xl overflow-hidden shadow-sm">
               <img 
                 src="/src/assets/images/school_badge_1781423327113.jpg" 
-                alt="Ezibeck Academy Badge" 
+                alt={`${template.schoolName} Badge`} 
                 className="w-full h-full object-cover" 
                 referrerPolicy="no-referrer"
               />

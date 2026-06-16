@@ -143,6 +143,29 @@ export function mapUuidToFrontendId(uuid: string): string {
   if (reverseMappings[lowered]) {
     return reverseMappings[lowered];
   }
+
+  // Check if it's a deterministic encoded custom UUID (from mapFrontendIdToUuid)
+  const clean = lowered.replace(/-/g, '');
+  if (clean.length === 32) {
+    let decoded = "";
+    let isValid = true;
+    for (let i = 0; i < 32; i += 2) {
+      const hexUnit = clean.substring(i, i + 2);
+      if (hexUnit === "00") {
+        break;
+      }
+      const code = parseInt(hexUnit, 16);
+      if (isNaN(code) || code < 32 || code > 126) {
+        isValid = false;
+        break;
+      }
+      decoded += String.fromCharCode(code);
+    }
+    if (isValid && decoded.length > 0) {
+      return decoded;
+    }
+  }
+
   return lowered;
 }
 

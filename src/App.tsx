@@ -19,20 +19,20 @@ import {
 } from './lib/supabase';
 
 const DEFAULT_WORKSPACE_15: Workspace15Template = {
-  schoolName: "EZIBECK’S ACADEMY",
-  motto: "Knowledge is Power",
-  address: "No, 5 Ezibeck’s Crescent, Behind Udu Motor Park Ovwian, Delta State",
-  phone: "+234 803 123 4567",
-  email: "info@ezibeckacademy.edu.ng",
-  resumptionDate: "2026-09-14",
-  termDate: "2026-07-24",
-  session: "2025/2026",
-  principalName: "Dr. Ezekiel Beck",
-  formTeacherJunior: "Mrs. Gladys Alabi",
-  formTeacherSenior: "Mr. Anthony Okon",
-  currentTerm: "Third Term",
-  nextTermFee: "₦45,000",
-  distinctionThreshold: 90,
+  schoolName: "Notion Core International College",
+  motto: "Knowledge, discipline and outstanding character excellence",
+  address: "120, Broadway Lane, New York, NY 10025",
+  phone: "+1 (555) 489-0128",
+  email: "admissions@notioncollege.edu",
+  resumptionDate: "September 14, 2026",
+  termDate: "June 18, 2026",
+  session: "2025/2026 Academic Year",
+  principalName: "Dr. Christopher Vance, PhD",
+  formTeacherJunior: "Mrs. Clara Vance",
+  formTeacherSenior: "Mr. Albert King",
+  currentTerm: "Third Term Summary",
+  nextTermFee: "$2,500.00",
+  distinctionThreshold: 85,
   passThreshold: 50,
 };
 
@@ -120,10 +120,7 @@ export default function App() {
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          if (parsed && (parsed.schoolName === "Notion Core International College" || parsed.schoolName === "Notion Core")) {
-            return DEFAULT_WORKSPACE_15;
-          }
-          return parsed;
+          return parsed || DEFAULT_WORKSPACE_15;
         } catch (e) {
           console.error('Error parsing loaded Workspace 15 template', e);
         }
@@ -299,25 +296,11 @@ export default function App() {
           }
           if (cfg) {
             const mappedTpl = mapDbConfigToTemplate(cfg);
-            if (mappedTpl.schoolName === "Notion Core International College" || mappedTpl.schoolName === "Notion Core") {
-              console.log("Detected default Notion Core placeholder config. Restoring EZIBECK’S ACADEMY...");
-              const upgradedTpl = {
-                ...DEFAULT_WORKSPACE_15,
-                currentTerm: template.currentTerm || DEFAULT_WORKSPACE_15.currentTerm
-              };
-              const dbTpl = mapTemplateToDbConfig(upgradedTpl);
-              if (cfg.id) {
-                await dbService.updateSchoolConfig(cfg.id, dbTpl);
-              }
-              setTemplate(upgradedTpl);
-              localStorage.setItem('ezibeck_workspace15', JSON.stringify(upgradedTpl));
-            } else {
-              setTemplate((prev) => ({
-                ...prev,
-                ...mappedTpl,
-                currentTerm: prev.currentTerm, // maintain active tab selection from frontend state
-              }));
-            }
+            setTemplate((prev) => ({
+              ...prev,
+              ...mappedTpl,
+              currentTerm: prev.currentTerm, // maintain active tab selection from frontend state
+            }));
           }
 
           // 2. Load students from Supabase

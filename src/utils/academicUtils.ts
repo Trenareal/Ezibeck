@@ -1,11 +1,11 @@
 import { Student, SubjectGrade, BehaviourRating, ClassName, SchoolInfo } from '../types';
 
 export const SCHOOL_INFO: SchoolInfo = {
-  name: "EZIBECK’S ACADEMY",
-  motto: "Knowledge is Power",
-  address: "No, 5 Ezibeck’s Crescent, Behind Udu Motor Park Ovwian, Delta State",
-  phone: "+234 803 123 4567",
-  email: "info@ezibeckacademy.edu.ng"
+  name: "Notion Core International College",
+  motto: "Knowledge, discipline and outstanding character excellence",
+  address: "120, Broadway Lane, New York, NY 10025",
+  phone: "+1 (555) 489-0128",
+  email: "admissions@notioncollege.edu"
 };
 
 export const JSS_SUBJECTS = [

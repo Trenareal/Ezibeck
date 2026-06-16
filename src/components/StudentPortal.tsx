@@ -166,7 +166,7 @@ export default function StudentPortal({
         pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight, undefined, 'FAST');
       }
       
-      const filename = `Ezibeck_Report_Sheet_${selectedStudent.id}_${selectedStudent.name.replace(/\s+/g, '_')}.pdf`;
+      const filename = `${template.schoolName.replace(/\s+/g, '_')}_Report_Sheet_${selectedStudent.id}_${selectedStudent.name.replace(/\s+/g, '_')}.pdf`;
       pdf.save(filename);
     } catch (err) {
       console.error('Direct PDF Generation Error:', err);
@@ -294,7 +294,8 @@ export default function StudentPortal({
     e.preventDefault();
     if (!selectedStudent) return;
     
-    const expectedEmail = selectedStudent.name.toLowerCase().replace(/\s+/g, '') + "@ezibeckacademy.edu.ng";
+    const hostDomain = template.email.includes('@') ? template.email.split('@')[1] : 'notioncollege.edu';
+    const expectedEmail = selectedStudent.name.toLowerCase().replace(/\s+/g, '') + "@" + hostDomain;
     if (resetEmailInput.trim().toLowerCase() !== expectedEmail) {
       setResetError(`Incorrect email address. For this student, please enter: ${expectedEmail}`);
       return;
@@ -788,7 +789,7 @@ export default function StudentPortal({
                     <div className="w-14 h-14 sm:w-20 sm:h-20 bg-white rounded-2xl border border-slate-205 shadow-sm flex items-center justify-center overflow-hidden">
                       <img 
                         src="/src/assets/images/school_badge_1781423327113.jpg" 
-                        alt="Ezibeck Academy Emblem" 
+                        alt={`${template.schoolName} Emblem`} 
                         className="w-full h-full object-cover" 
                         referrerPolicy="no-referrer"
                       />

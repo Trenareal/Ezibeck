@@ -125,7 +125,7 @@ create policy "Global access behavioural_ratings" on public.behavioural_ratings 
 
 -- Insert Default Config
 insert into public.school_config (school_name, motto, address, phone, email, resumption_date, term_date, session, principal_name, form_teacher_junior, form_teacher_senior, current_term, next_term_fee, distinction_threshold, pass_threshold) 
-values ('EZIBECK’S ACADEMY', 'Knowledge is Power', 'No, 5 Ezibeck’s Crescent, Behind Udu Motor Park Ovwian, Delta State', '+234 803 123 4567', 'info@ezibeckacademy.edu.ng', '2026-09-14', '2026-07-24', '2025/2026', 'Dr. Ezekiel Beck', 'Mrs. Gladys Alabi', 'Mr. Anthony Okon', 'Third Term', '₦45,000', 90, 50)
+values ('Notion Core International College', 'Knowledge, discipline and outstanding character excellence', '120, Broadway Lane, New York, NY 10025', '+1 (555) 489-0128', 'admissions@notioncollege.edu', 'September 14, 2026', 'June 18, 2026', '2025/2026 Academic Year', 'Dr. Christopher Vance, PhD', 'Mrs. Clara Vance', 'Mr. Albert King', 'Third Term Summary', '$2,500.00', 85, 50)
 on conflict do nothing;
 
 -- Insert Default Admin Profiler
@@ -152,6 +152,13 @@ alter table public.students add column if not exists password text not null defa
 alter table public.students add column if not exists principal_remark text default '';
 
 -- Safe column additions for `public.school_config` table
+alter table public.school_config add column if not exists resumption_date text not null default 'September 14, 2026';
+alter table public.school_config add column if not exists term_date text not null default 'June 18, 2026';
+alter table public.school_config add column if not exists session text not null default '2025/2026 Academic Year';
+alter table public.school_config add column if not exists principal_name text not null default 'Dr. Christopher Vance, PhD';
+alter table public.school_config add column if not exists form_teacher_junior text not null default 'Mrs. Clara Vance';
+alter table public.school_config add column if not exists form_teacher_senior text not null default 'Mr. Albert King';
+alter table public.school_config add column if not exists current_term text not null default 'Third Term Summary';
 alter table public.school_config add column if not exists next_term_fee text not null default '$2,500.00';
 alter table public.school_config add column if not exists distinction_threshold integer not null default 85;
 alter table public.school_config add column if not exists pass_threshold integer not null default 50;
