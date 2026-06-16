@@ -31,7 +31,7 @@ const DEFAULT_WORKSPACE_15: Workspace15Template = {
   formTeacherJunior: "Mrs. Clara Vance",
   formTeacherSenior: "Mr. Albert King",
   currentTerm: "Third Term Summary",
-  nextTermFee: "$2,500.00",
+  nextTermFee: "₦150,000.00",
   distinctionThreshold: 85,
   passThreshold: 50,
 };

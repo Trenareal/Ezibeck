@@ -65,6 +65,14 @@ function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
     }
   }
 
+  // Also preserve all extra/additional custom profiles so they never get deleted during database sync
+  for (const p of profiles) {
+    if (!assignedIds.has(p.id)) {
+      aligned.push(p);
+      assignedIds.add(p.id);
+    }
+  }
+
   return aligned.map(f => {
     if (f.id === 'ezekiel') {
       return { ...f, isRestricted: false };
