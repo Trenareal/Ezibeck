@@ -90,38 +90,44 @@ create index if not exists students_class_name_idx on public.students(class_name
 create index if not exists subject_grades_student_id_idx on public.subject_grades(student_id);
 create index if not exists behavioural_ratings_student_id_idx on public.behavioural_ratings(student_id);
 
--- Enable Row Level Security (RLS)
-alter table public.school_config enable row level security;
-alter table public.faculty_profiles enable row level security;
-alter table public.students enable row level security;
-alter table public.subject_grades enable row level security;
-alter table public.behavioural_ratings enable row level security;
+-- Robust RLS Clean Up: Drop ALL existing policies dynamically on these tables 
+-- to prevent ANY policy recursion or naming conflicts from old/wizard-generated rules.
+DO $$
+DECLARE
+    pol RECORD;
+BEGIN
+    FOR pol IN 
+        SELECT policyname, tablename 
+        FROM pg_policies 
+        WHERE schemaname = 'public' 
+          AND tablename IN ('school_config', 'faculty_profiles', 'students', 'subject_grades', 'behavioural_ratings')
+    LOOP
+        EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', pol.policyname, pol.tablename);
+    END LOOP;
+END $$;
 
--- Drop all old policies to avoid collisions
-drop policy if exists "Allow public read access to school config" on public.school_config;
-drop policy if exists "Allow authenticated write access to school config" on public.school_config;
-drop policy if exists "Allow select profiles" on public.faculty_profiles;
-drop policy if exists "Allow modifications to profiles" on public.faculty_profiles;
-drop policy if exists "Allow select students" on public.students;
-drop policy if exists "Allow modifications to students" on public.students;
-drop policy if exists "Allow select subject_grades" on public.subject_grades;
-drop policy if exists "Allow modifications to subject_grades" on public.subject_grades;
-drop policy if exists "Allow select behavioural_ratings" on public.behavioural_ratings;
-drop policy if exists "Allow modifications to behavioural_ratings" on public.behavioural_ratings;
+-- RECOMMENDED FIX TO RECURSION ERRORS: Disable Row Level Security (RLS) entirely.
+-- Since we are allowing global access for multi-teacher synchronization anyway, 
+-- turning off RLS is the most reliable, performance-friendly way, and guarantees 100% immunity 
+-- to infinite loops or rule collisions! Run these lines to turn off RLS:
+ALTER TABLE public.school_config DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.faculty_profiles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.students DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.subject_grades DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.behavioural_ratings DISABLE ROW LEVEL SECURITY;
 
--- Drop new format policies if they exist to prevent duplicates
-drop policy if exists "Global access school_config" on public.school_config;
-drop policy if exists "Global access faculty_profiles" on public.faculty_profiles;
-drop policy if exists "Global access students" on public.students;
-drop policy if exists "Global access subject_grades" on public.subject_grades;
-drop policy if exists "Global access behavioural_ratings" on public.behavioural_ratings;
+-- OPTIONAL FALLBACK: If your organization requires RLS to be strictly enabled:
+-- alter table public.school_config enable row level security;
+-- alter table public.faculty_profiles enable row level security;
+-- alter table public.students enable row level security;
+-- alter table public.subject_grades enable row level security;
+-- alter table public.behavioural_ratings enable row level security;
 
--- Create proper global access policies (Allows SELECT, INSERT, UPDATE, DELETE)
-create policy "Global access school_config" on public.school_config for all using (true) with check (true);
-create policy "Global access faculty_profiles" on public.faculty_profiles for all using (true) with check (true);
-create policy "Global access students" on public.students for all using (true) with check (true);
-create policy "Global access subject_grades" on public.subject_grades for all using (true) with check (true);
-create policy "Global access behavioural_ratings" on public.behavioural_ratings for all using (true) with check (true);
+-- create policy "Global access school_config" on public.school_config for all using (true) with check (true);
+-- create policy "Global access faculty_profiles" on public.faculty_profiles for all using (true) with check (true);
+-- create policy "Global access students" on public.students for all using (true) with check (true);
+-- create policy "Global access subject_grades" on public.subject_grades for all using (true) with check (true);
+-- create policy "Global access behavioural_ratings" on public.behavioural_ratings for all using (true) with check (true);
 
 -- Insert Default Config
 insert into public.school_config (school_name, motto, address, phone, email, resumption_date, term_date, session, principal_name, form_teacher_junior, form_teacher_senior, current_term, next_term_fee, distinction_threshold, pass_threshold) 
