@@ -19,7 +19,7 @@ create table if not exists public.school_config (
     form_teacher_junior text not null default 'Mrs. Clara Vance',
     form_teacher_senior text not null default 'Mr. Albert King',
     current_term text not null default 'Third Term Summary',
-    next_term_fee text not null default '$2,500.00',
+    next_term_fee text not null default '₦150,000.00',
     distinction_threshold integer not null default 85,
     pass_threshold integer not null default 50,
     updated_at timestamp with time zone default timezone('utc'::text, now()) not null
@@ -159,7 +159,7 @@ alter table public.school_config add column if not exists principal_name text no
 alter table public.school_config add column if not exists form_teacher_junior text not null default 'Mrs. Clara Vance';
 alter table public.school_config add column if not exists form_teacher_senior text not null default 'Mr. Albert King';
 alter table public.school_config add column if not exists current_term text not null default 'Third Term Summary';
-alter table public.school_config add column if not exists next_term_fee text not null default '$2,500.00';
+alter table public.school_config add column if not exists next_term_fee text not null default '₦150,000.00';
 alter table public.school_config add column if not exists distinction_threshold integer not null default 85;
 alter table public.school_config add column if not exists pass_threshold integer not null default 50;
 
