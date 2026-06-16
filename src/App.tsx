@@ -190,14 +190,57 @@ export default function App() {
 
   const handlePullFromSupabase = async (): Promise<{ success: boolean; message: string }> => {
     if (!isSupabaseConfigured) {
-      return { success: false, message: "Supabase is not configured." };
+      return { success: false, message: "Supabase environment variables are not configured in AI Studio Secrets." };
     }
     setDbStatus(prev => ({ ...prev, checking: true }));
     try {
-      setSyncTrigger(prev => prev + 1);
-      return { success: true, message: "Fresh data retrieved and synchronized from live Supabase!" };
+      // 1. Fetch school config from Supabase
+      const cfg = await dbService.getSchoolConfig();
+      if (cfg) {
+        const mappedTpl = mapDbConfigToTemplate(cfg);
+        const nextTpl = {
+          ...mappedTpl,
+          currentTerm: template.currentTerm, // preserve active client-side term tab selection
+        };
+        setTemplate(nextTpl);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('ezibeck_workspace15', JSON.stringify(nextTpl));
+        }
+      }
+
+      // 2. Fetch students from Supabase
+      const rawStudents = await dbService.getStudents();
+      const mapped = (rawStudents || []).map(mapDbStudentToFrontend);
+      const termFiltered = mapped.filter(s => isStudentInTerm(s.id, template.currentTerm));
+      
+      if (termFiltered.length > 0) {
+        setStudents(termFiltered);
+        saveStudents(termFiltered, template.currentTerm);
+      } else {
+        // If Supabase has no students, pull what we have locally or fallback to initial
+        const local = loadStoredStudents(template.currentTerm);
+        setStudents(local);
+      }
+
+      setDbStatus({
+        configured: true,
+        connected: true,
+        checking: false,
+        error: null,
+        supabaseUrl: (import.meta as any).env?.VITE_SUPABASE_URL
+      });
+
+      return { success: true, message: "All live records & configuration successfully retrieved and synchronized from your live Supabase database!" };
     } catch (e: any) {
-      return { success: false, message: `Failed to retrieve data: ${e?.message || String(e)}` };
+      console.error("Failed to pull from Supabase", e);
+      setDbStatus({
+        configured: true,
+        connected: false,
+        checking: false,
+        error: e?.message || String(e),
+        supabaseUrl: (import.meta as any).env?.VITE_SUPABASE_URL
+      });
+      return { success: false, message: `Failed to load live data: ${e?.message || String(e)}. Check your connection and schema cache.` };
     }
   };
 
@@ -311,8 +354,8 @@ export default function App() {
           if (termFiltered.length > 0) {
             setStudents(termFiltered);
           } else {
-            console.log(`Supabase: No students found for active term "${template.currentTerm}". Seeding defaults...`);
-            const initialForTerm = getInitialStudents(template.currentTerm);
+            console.log(`Supabase: No students found for active term "${template.currentTerm}". Seeding database with current cached dataset...`);
+            const initialForTerm = loadStoredStudents(template.currentTerm);
             setStudents(initialForTerm);
             await dbService.saveAllStudents(initialForTerm);
           }

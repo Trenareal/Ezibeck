@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, EyeOff, Printer, UserCheck, LogOut, Database, Wifi, WifiOff, RefreshCw, CloudLightning, Lock, Search, Clock } from 'lucide-react';
+import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircle, ShieldAlert, Users, TrendingUp, AlertCircle, FileSpreadsheet, Eye, EyeOff, Printer, UserCheck, LogOut, Database, Wifi, WifiOff, RefreshCw, CloudLightning, Lock, Search, Clock, Copy, Check, CloudUpload, CloudDownload } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
@@ -724,6 +724,7 @@ export default function TeacherDashboard({
   const [showDbSyncModal, setShowDbSyncModal] = useState(false);
   const [isSyncingDb, setIsSyncingDb] = useState(false);
   const [syncDbResult, setSyncDbResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [sqlCopied, setSqlCopied] = useState(false);
 
   const [deleteConfirmStudent, setDeleteConfirmStudent] = useState<{ id: string; name: string; className: ClassName; source: 'list' | 'view' | 'edit' } | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -1855,13 +1856,15 @@ export default function TeacherDashboard({
 
         {/* Supabase Connection Status Badge */}
         <div className="flex items-center gap-3">
-          <div
-            className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border text-xs font-bold transition-all shadow-xs ${
+          <button
+            onClick={() => setShowDbSyncModal(true)}
+            title="Click to manage database connection and synchronize data"
+            className={`flex items-center gap-2.5 px-4 py-2.5 rounded-2xl border text-xs font-bold transition-all shadow-xs hover:brightness-95 active:scale-95 text-left cursor-pointer select-none ${
               !dbStatus || !dbStatus.configured
-                ? 'bg-slate-50 border-slate-200 text-slate-505'
+                ? 'bg-slate-55 border-slate-200 text-slate-500 hover:bg-slate-100'
                 : dbStatus.connected
-                ? 'bg-emerald-50 border-emerald-250 text-emerald-805'
-                : 'bg-rose-50 border-rose-250 text-rose-850 animate-pulse'
+                ? 'bg-emerald-50 border-emerald-250 text-emerald-800 hover:bg-emerald-100'
+                : 'bg-rose-50 border-rose-250 text-rose-800 hover:bg-rose-100'
             }`}
           >
             {!dbStatus || !dbStatus.configured ? (
@@ -1869,7 +1872,7 @@ export default function TeacherDashboard({
                 <WifiOff className="w-4 h-4 text-slate-400" />
                 <div className="text-left font-sans">
                   <div className="leading-none text-[11px] font-extrabold text-slate-600">Database: Offline</div>
-                  <div className="text-[9px] text-slate-400 font-medium mt-1">Local Browser Mode</div>
+                  <div className="text-[9px] text-slate-400 font-semibold mt-1 flex items-center gap-1">Local Browser Mode <span className="text-[8px] bg-slate-200 text-slate-600 px-1 rounded">Click</span></div>
                 </div>
               </>
             ) : dbStatus.connected ? (
@@ -1877,7 +1880,7 @@ export default function TeacherDashboard({
                 <Wifi className="w-4 h-4 text-emerald-600 animate-pulse" />
                 <div className="text-left font-sans">
                   <div className="leading-none text-[11px] font-extrabold text-emerald-800">Database: Online</div>
-                  <div className="text-[9px] text-emerald-500 font-medium mt-1">Active sync enabled</div>
+                  <div className="text-[9px] text-emerald-600 font-semibold mt-1 flex items-center gap-1 font-sans">Active sync enabled <span className="text-[8px] bg-emerald-200 text-emerald-800 px-1 rounded font-mono">Sync</span></div>
                 </div>
               </>
             ) : (
@@ -1885,11 +1888,11 @@ export default function TeacherDashboard({
                 <CloudLightning className="w-4 h-4 text-rose-600 animate-bounce" />
                 <div className="text-left font-sans">
                   <div className="leading-none text-[11px] font-extrabold text-rose-800">Connection Error</div>
-                  <div className="text-[9px] text-rose-500 font-medium mt-1">Sync failed (Logged to console)</div>
+                  <div className="text-[9px] text-rose-600 font-semibold mt-1 flex items-center gap-1">Click to check details <span className="text-[8px] bg-rose-250 text-rose-800 px-1 rounded animate-pulse">Fix</span></div>
                 </div>
               </>
             )}
-          </div>
+          </button>
         </div>
       </div>
 
@@ -4764,6 +4767,321 @@ export default function TeacherDashboard({
                 Yes
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Supabase Database Cloud Sync Monitor Overlay Dialog */}
+      {showDbSyncModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 overflow-y-auto print:hidden animate-fade-in py-8 font-sans">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-150 mx-4 my-auto relative transform transition-all duration-300 scale-100 max-h-[90vh] overflow-y-auto text-slate-705">
+            
+            <button
+              onClick={() => {
+                setShowDbSyncModal(false);
+                setSyncDbResult(null);
+              }}
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 transition-colors bg-slate-150 hover:bg-slate-200 p-2.5 rounded-xl cursor-pointer font-bold border-none"
+            >
+              ✕
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center gap-3.5 text-emerald-600 mb-6 pb-4 border-b border-slate-100">
+              <div className="p-3 bg-emerald-50 rounded-2xl">
+                <Database className="w-6 h-6 text-emerald-600 animate-pulse" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-slate-900 font-sans tracking-tight">EZIBECK Database Control Center</h3>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Cloud Supabase Synchronization & Diagnostics</p>
+              </div>
+            </div>
+
+            {/* Connection Status Detail Card */}
+            <div className={`p-4 rounded-2xl border mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 font-sans ${
+              !dbStatus || !dbStatus.configured
+                ? 'bg-slate-50 border-slate-200 text-slate-600'
+                : dbStatus.connected
+                ? 'bg-emerald-50/50 border-emerald-150 text-emerald-900'
+                : 'bg-rose-50 border-rose-150 text-rose-900'
+            }`}>
+              <div className="space-y-1">
+                <span className="text-[9px] font-extrabold uppercase tracking-widest block text-slate-400">Current Integration Status</span>
+                <div className="flex items-center gap-2">
+                  <span className={`w-2.5 h-2.5 rounded-full ${(!dbStatus || !dbStatus.configured) ? 'bg-slate-400' : dbStatus.connected ? 'bg-emerald-5000' : 'bg-red-500 animate-pulse'}`}></span>
+                  <p className="text-xs font-black uppercase">
+                    {(!dbStatus || !dbStatus.configured) ? 'Local Database Fallback' : dbStatus.connected ? 'Connected Live to Supabase' : 'Connection Blocked'}
+                  </p>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-normal">
+                  {(!dbStatus || !dbStatus.configured)
+                    ? 'Your database is currently running entirely inside your local browser storage. Any additions, school configs, and grades will only exist on this PC.'
+                    : dbStatus.connected
+                    ? `Successfully connected to live cloud cluster. URL configured: ${dbStatus.supabaseUrl}`
+                    : `We found environment credentials in AI Studio, but connection is blocked. Message: "${dbStatus.error || 'Check schema cache or network connection'}"`}
+                </p>
+              </div>
+              
+              {dbStatus && dbStatus.configured && (
+                <button
+                  onClick={async () => {
+                    setIsSyncingDb(true);
+                    setSyncDbResult(null);
+                    const res = await onPullFromSupabase?.();
+                    setIsSyncingDb(false);
+                    if (res) {
+                      setSyncDbResult({ type: res.success ? 'success' : 'error', text: res.message });
+                    }
+                  }}
+                  disabled={isSyncingDb}
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all outline-none cursor-pointer border border-slate-200 shrink-0 self-start md:self-center disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isSyncingDb ? 'animate-spin' : ''}`} />
+                  Test Sync & Refresh
+                </button>
+              )}
+            </div>
+
+            {/* Sync db results alert banner */}
+            {syncDbResult && (
+              <div className={`p-4 rounded-xl text-xs font-bold leading-normal mb-6 flex items-start gap-2.5 ${syncDbResult.type === 'success' ? 'bg-emerald-100 text-emerald-900 border border-emerald-250 animate-bounce-subtle' : 'bg-rose-100 text-rose-950 border border-rose-250 animate-shake'}`}>
+                {syncDbResult.type === 'success' ? <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-600" /> : <ShieldAlert className="w-4 h-4 flex-shrink-0 mt-0.5 text-rose-600" />}
+                <div>{syncDbResult.text}</div>
+              </div>
+            )}
+
+            {/* Main Action Options */}
+            {dbStatus && dbStatus.configured ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                {/* Option Right: Download From Live database */}
+                <div className="bg-slate-50/70 hover:bg-slate-50 p-5 rounded-2xl border border-slate-150 transition-all space-y-3 flex flex-col justify-between">
+                  <div className="space-y-1.5">
+                    <div className="p-2 bg-slate-100 w-fit rounded-xl text-slate-600">
+                      <CloudDownload className="w-5 h-5 text-slate-800" />
+                    </div>
+                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-tight">Pull Fresh Supabase → Website</h4>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Download all saved report cards, school Standard descriptions, staff logins, and next term resumption details from your Cloud Supabase DB to reload this webpage state.
+                    </p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      setIsSyncingDb(true);
+                      setSyncDbResult(null);
+                      const res = await onPullFromSupabase?.();
+                      setIsSyncingDb(false);
+                      if (res) {
+                        setSyncDbResult({ type: res.success ? 'success' : 'error', text: res.message });
+                      }
+                    }}
+                    disabled={isSyncingDb}
+                    className="w-full mt-4 py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all hover:bg-slate-800 flex items-center justify-center gap-2 shadow-xs cursor-pointer select-none disabled:opacity-50 active:scale-[0.99] border-none"
+                  >
+                    {isSyncingDb ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 text-white animate-spin" /> Pulling Cloud records...
+                      </>
+                    ) : (
+                      <>
+                        <CloudDownload className="w-4 h-4 text-white" /> Download Database Data
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Option Left: Push Local to Live Database */}
+                <div className="bg-emerald-50/30 hover:bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100/60 transition-all space-y-3 flex flex-col justify-between">
+                  <div className="space-y-1.5">
+                    <div className="p-2 bg-emerald-50 w-fit rounded-xl text-emerald-600">
+                      <CloudUpload className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <h4 className="text-xs font-black text-emerald-950 uppercase tracking-tight">Push Website → Sync Supabase</h4>
+                    <p className="text-[11px] text-emerald-900/70 leading-relaxed">
+                      Erase old database records and upload your current browser local storage dataset directly into your active Supabase cloud cluster. Useful for initializing fresh databases.
+                    </p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const consent = window.confirm("Are you sure you want to push local data to Supabase? This will overwrite the database tables for this term.");
+                      if (!consent) return;
+                      setIsSyncingDb(true);
+                      setSyncDbResult(null);
+                      const res = await onPushLocalToSupabase?.();
+                      setIsSyncingDb(false);
+                      if (res) {
+                        setSyncDbResult({ type: res.success ? 'success' : 'error', text: res.message });
+                      }
+                    }}
+                    disabled={isSyncingDb}
+                    className="w-full mt-4 py-3 bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all hover:bg-emerald-700 flex items-center justify-center gap-2 shadow-sm shadow-emerald-500/10 cursor-pointer select-none disabled:opacity-50 active:scale-[0.99] border-none"
+                  >
+                    {isSyncingDb ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 text-white animate-spin" /> Uploading local roster...
+                      </>
+                    ) : (
+                      <>
+                        <CloudUpload className="w-4 h-4 text-white" /> Upload Local Data to Cloud
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-amber-50/60 rounded-2xl p-4 border border-amber-200 space-y-3 text-slate-800 text-xs leading-normal mb-8">
+                <span className="font-extrabold uppercase tracking-widest text-[9px] text-amber-800 bg-amber-100 px-2 py-0.5 rounded">Setup Notification</span>
+                <p className="font-medium text-[11px] text-slate-600 leading-normal">
+                  Your live connection is currently disabled because the environment secrets are not filled yet. To connect real data and sync between teachers:
+                </p>
+                <ol className="list-decimal pl-5 space-y-1 text-[11px] font-medium text-slate-600">
+                  <li>Go to <strong>Settings Menu (top right core controls)</strong> in AI Studio.</li>
+                  <li>Add <strong>VITE_SUPABASE_URL</strong> and <strong>VITE_SUPABASE_ANON_KEY</strong> to environment variables.</li>
+                  <li>Recompile applet and sign in to access dynamic web database!</li>
+                </ol>
+              </div>
+            )}
+
+            {/* Supabase SQL Migration block */}
+            <div className="border border-slate-200 rounded-2xl overflow-hidden font-sans">
+              <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-tight">Supabase Setup SQL Script Migration</h4>
+                  <p className="text-[9px] text-slate-400 mt-0.5">Run this SQL code in your Supabase project query runner</p>
+                </div>
+                
+                <button
+                  onClick={() => {
+                    const sqlCode = `-- Real SQL Schema for EZIBECK School Report Card System\n\nCREATE EXTENSION IF NOT EXISTS "uuid-ossp";\n\n-- 1. SCHOOL PROFILE CONFIGURATION TABLE\nCREATE TABLE IF NOT EXISTS public.school_config (\n    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),\n    school_name text NOT NULL DEFAULT 'Notion Core International College',\n    motto text NOT NULL DEFAULT 'Knowledge, discipline and outstanding character excellence',\n    address text NOT NULL DEFAULT 'Lagoon Road, Lagos, Nigeria',\n    phone text NOT NULL DEFAULT '+234 812 345 6789',\n    email text NOT NULL DEFAULT 'info@school.edu.ng',\n    resumption_date text NOT NULL DEFAULT 'September 14, 2026',\n    term_date text NOT NULL DEFAULT 'June 18, 2026',\n    session text NOT NULL DEFAULT '2025/2026 Academic Year',\n    principal_name text NOT NULL DEFAULT 'Dr. Christopher Vance, PhD',\n    form_teacher_junior text NOT NULL DEFAULT 'Mrs. Clara Vance',\n    form_teacher_senior text NOT NULL DEFAULT 'Mr. Albert King',\n    current_term text NOT NULL DEFAULT 'Third Term Summary',\n    next_term_fee text NOT NULL DEFAULT '₦150,000.00',\n    distinction_threshold integer NOT NULL DEFAULT 85,\n    pass_threshold integer NOT NULL DEFAULT 50,\n    updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL\n);\n\n-- 2. FACULTY / TEACHERS & ADMIN PROFILES TABLE\nCREATE TABLE IF NOT EXISTS public.faculty_profiles (\n    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),\n    name text NOT NULL,\n    role text NOT NULL DEFAULT 'Teacher',\n    avatar text NOT NULL DEFAULT '👩‍🏫',\n    password text NOT NULL DEFAULT '123456',\n    is_restricted boolean NOT NULL DEFAULT false,\n    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,\n    updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL\n);\n\n-- 3. STUDENTS TABLE\nCREATE TABLE IF NOT EXISTS public.students (\n    id text PRIMARY KEY,\n    name text NOT NULL,\n    age integer NOT NULL DEFAULT 15,\n    sex text NOT NULL CHECK (sex IN ('Male', 'Female')),\n    class_name text NOT NULL CHECK (class_name IN ('JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3')),\n    term_date text NOT NULL,\n    session text NOT NULL,\n    attendance_present integer NOT NULL DEFAULT 0,\n    attendance_total integer NOT NULL DEFAULT 110,\n    form_teacher_remark text DEFAULT '',\n    form_teacher_name text DEFAULT '',\n    principal_name text DEFAULT '',\n    resumption_date text NOT NULL,\n    password text NOT NULL DEFAULT '123456',\n    principal_remark text DEFAULT '',\n    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,\n    updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL\n);\n\n-- 4. SUBJECT GRADES TABLE\nCREATE TABLE IF NOT EXISTS public.subject_grades (\n    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),\n    student_id text REFERENCES public.students(id) ON DELETE CASCADE NOT NULL,\n    name text NOT NULL,\n    test_score integer NOT NULL DEFAULT 0 CHECK (test_score >= 0 AND test_score <= 30),\n    exam_score integer NOT NULL DEFAULT 0 CHECK (exam_score >= 0 AND exam_score <= 70),\n    first_term_summary integer DEFAULT 0 CHECK (first_term_summary >= 0 AND first_term_summary <= 100),\n    second_term_summary integer DEFAULT 0 CHECK (second_term_summary >= 0 AND second_term_summary <= 100),\n    third_term_summary integer DEFAULT 0 CHECK (third_term_summary >= 0 AND third_term_summary <= 100),\n    position integer,\n    is_position_manual boolean DEFAULT false,\n    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,\n    updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,\n    UNIQUE (student_id, name)\n);\n\n-- 5. BEHAVIOURAL RATINGS TABLE\nCREATE TABLE IF NOT EXISTS public.behavioural_ratings (\n    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),\n    student_id text REFERENCES public.students(id) ON DELETE CASCADE NOT NULL,\n    name text NOT NULL,\n    rating integer NOT NULL CHECK (rating >= 1 AND rating <= 5),\n    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,\n    UNIQUE (student_id, name)\n);\n\n-- Enable Row Level Security (RLS)\nALTER TABLE public.school_config ENABLE ROW LEVEL SECURITY;\nALTER TABLE public.faculty_profiles ENABLE ROW LEVEL SECURITY;\nALTER TABLE public.students ENABLE ROW LEVEL SECURITY;\nALTER TABLE public.subject_grades ENABLE ROW LEVEL SECURITY;\nALTER TABLE public.behavioural_ratings ENABLE ROW LEVEL SECURITY;\n\n-- Create proper global access policies\nDROP POLICY IF EXISTS "Global access school_config" ON public.school_config;\nDROP POLICY IF EXISTS "Global access faculty_profiles" ON public.faculty_profiles;\nDROP POLICY IF EXISTS "Global access students" ON public.students;\nDROP POLICY IF EXISTS "Global access subject_grades" ON public.subject_grades;\nDROP POLICY IF EXISTS "Global access behavioural_ratings" ON public.behavioural_ratings;\n\nCREATE POLICY "Global access school_config" ON public.school_config FOR ALL USING (true) WITH CHECK (true);\nCREATE POLICY "Global access faculty_profiles" ON public.faculty_profiles FOR ALL USING (true) WITH CHECK (true);\nCREATE POLICY "Global access students" ON public.students FOR ALL USING (true) WITH CHECK (true);\nCREATE POLICY "Global access subject_grades" ON public.subject_grades FOR ALL USING (true) WITH CHECK (true);\nCREATE POLICY "Global access behavioural_ratings" ON public.behavioural_ratings FOR ALL USING (true) WITH CHECK (true);\n\n-- Insert Standard Configuration Row\nINSERT INTO public.school_config (school_name, motto, address, phone, email, resumption_date, term_date, session, principal_name, form_teacher_junior, form_teacher_senior, current_term, next_term_fee, distinction_threshold, pass_threshold)\nVALUES ('EZIBECK Academy', 'Knowledge, discipline and character', 'Lagoon Road, Lagos, Nigeria', '+234 812 345 6789', 'info@school.edu.ng', 'September 14, 2026', 'June 18, 2026', '2025/2026 Academic Year', 'Dr. Ezekiel Beck', 'Mrs. Gladys Alabi', 'Mrs. Florence Musa', 'Third Term Summary', '₦150,000.00', 85, 50)\nON CONFLICT DO NOTHING;\n\nNOTIFY pgrst, 'reload schema';`;
+
+                    navigator.clipboard.writeText(sqlCode);
+                    setSqlCopied(true);
+                    setTimeout(() => setSqlCopied(false), 2000);
+                  }}
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-755 text-white font-bold text-[10px] rounded-xl flex items-center gap-1 cursor-pointer transition-all border-none select-none"
+                >
+                  {sqlCopied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-white" /> Copied Code!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-white" /> Copy Schema SQL
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="bg-slate-950 p-4 font-mono text-slate-300 h-40 overflow-y-auto leading-relaxed border-t border-slate-200">
+                <pre className="whitespace-pre text-[10px]">
+{`-- Real SQL Schema for EZIBECK School Report Card System
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 1. SCHOOL PROFILE CONFIGURATION TABLE
+CREATE TABLE IF NOT EXISTS public.school_config (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    school_name text NOT NULL DEFAULT 'EZIBECK Academy',
+    motto text NOT NULL DEFAULT 'Knowledge, discipline and character',
+    address text NOT NULL DEFAULT 'Lagoon Road, Lagos, Nigeria',
+    phone text NOT NULL DEFAULT '+234 812 345 6789',
+    email text NOT NULL DEFAULT 'info@school.edu.ng',
+    resumption_date text NOT NULL DEFAULT 'September 14, 2026',
+    term_date text NOT NULL DEFAULT 'June 18, 2026',
+    session text NOT NULL DEFAULT '2025/2026 Academic Year',
+    principal_name text NOT NULL DEFAULT 'Dr. Ezekiel Beck',
+    form_teacher_junior text NOT NULL DEFAULT 'Mrs. Gladys Alabi',
+    form_teacher_senior text NOT NULL DEFAULT 'Mrs. Florence Musa',
+    current_term text NOT NULL DEFAULT 'Third Term Summary',
+    next_term_fee text NOT NULL DEFAULT '₦150,000.00',
+    distinction_threshold integer NOT NULL DEFAULT 85,
+    pass_threshold integer NOT NULL DEFAULT 50,
+    updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 2. FACULTY PROFILES TABLE
+CREATE TABLE IF NOT EXISTS public.faculty_profiles (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name text NOT NULL,
+    role text NOT NULL DEFAULT 'Teacher',
+    avatar text NOT NULL DEFAULT '👩‍🏫',
+    password text NOT NULL DEFAULT '123456',
+    is_restricted boolean NOT NULL DEFAULT false,
+    created_at timestamp DEFAULT now(),
+    updated_at timestamp DEFAULT now()
+);
+
+-- 3. STUDENTS TABLE
+CREATE TABLE IF NOT EXISTS public.students (
+    id text PRIMARY KEY,
+    name text NOT NULL,
+    age integer NOT NULL DEFAULT 15,
+    sex text NOT NULL,
+    class_name text NOT NULL,
+    term_date text NOT NULL,
+    session text NOT NULL,
+    attendance_present integer NOT NULL DEFAULT 0,
+    attendance_total integer NOT NULL DEFAULT 110,
+    form_teacher_remark text DEFAULT '',
+    form_teacher_name text DEFAULT '',
+    principal_name text DEFAULT '',
+    resumption_date text NOT NULL,
+    password text NOT NULL DEFAULT '123456',
+    principal_remark text DEFAULT ''
+);
+
+-- 4. SUBJECT GRADES TABLE
+CREATE TABLE IF NOT EXISTS public.subject_grades (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id text REFERENCES public.students(id) ON DELETE CASCADE,
+    name text NOT NULL,
+    test_score integer NOT NULL DEFAULT 0,
+    exam_score integer NOT NULL DEFAULT 0,
+    first_term_summary integer DEFAULT 0,
+    second_term_summary integer DEFAULT 0,
+    third_term_summary integer DEFAULT 0,
+    position integer,
+    is_position_manual boolean default false,
+    UNIQUE(student_id, name)
+);
+
+-- 5. BEHAVIOURAL RATINGS TABLE
+CREATE TABLE IF NOT EXISTS public.behavioural_ratings (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    student_id text REFERENCES public.students(id) ON DELETE CASCADE,
+    name text NOT NULL,
+    rating integer NOT NULL,
+    UNIQUE(student_id, name)
+);
+
+-- Row Level Security (RLS) & Access Policies
+ALTER TABLE public.school_config ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.faculty_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.subject_grades ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.behavioural_ratings ENABLE ROW LEVEL SECURITY;
+
+-- Grants unrestricted read/write policies for multi-teacher synchronization
+CREATE POLICY "Global access school_config" ON public.school_config FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Global access faculty_profiles" ON public.faculty_profiles FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Global access students" ON public.students FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Global access subject_grades" ON public.subject_grades FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Global access behavioural_ratings" ON public.behavioural_ratings FOR ALL USING (true) WITH CHECK (true);`}
+                </pre>
+              </div>
+            </div>
+
+            {/* Footer buttons */}
+            <div className="flex items-center justify-end mt-6 gap-3 pt-3 border-t border-slate-100">
+              <button
+                onClick={() => {
+                  setShowDbSyncModal(false);
+                  setSyncDbResult(null);
+                }}
+                className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl tracking-wider uppercase transition-all shadow-xs cursor-pointer select-none border-none"
+              >
+                Close Controller
+              </button>
+            </div>
+
           </div>
         </div>
       )}
