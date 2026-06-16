@@ -1941,12 +1941,14 @@ export default function TeacherDashboard({
           >
             📋 Passcode Audit Log ({auditLogs.length})
           </button>
-          <button
-            onClick={() => setActiveSubTab('passcodes')}
-            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${activeSubTab === 'passcodes' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-650'}`}
-          >
-            🔑 Passcards Directory
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => setActiveSubTab('passcodes')}
+              className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${activeSubTab === 'passcodes' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-650'}`}
+            >
+              🔑 Passcards Directory
+            </button>
+          )}
         </div>
       )}
 
@@ -3915,7 +3917,7 @@ export default function TeacherDashboard({
               })}
             </div>
           </div>
-        ) : activeSubTab === 'passcodes' ? (
+        ) : (activeSubTab === 'passcodes' && isAdmin) ? (
           /* NEW VIEW 6: PRINTABLE STUDENT PASSCARDS DIRECTORY */
           <div className="space-y-6 text-slate-800">
             {/* Custom high-performance CSS injection for perfect, distraction-free browser prints */}
