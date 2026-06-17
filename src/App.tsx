@@ -30,7 +30,7 @@ const DEFAULT_WORKSPACE_15: Workspace15Template = {
   principalName: "Dr. Christopher Vance, PhD",
   formTeacherJunior: "Mrs. Clara Vance",
   formTeacherSenior: "Mr. Albert King",
-  currentTerm: "Third Term Summary",
+  currentTerm: "Third Term",
   nextTermFee: "₦150,000.00",
   distinctionThreshold: 85,
   passThreshold: 50,
@@ -196,11 +196,21 @@ export default function App() {
     try {
       // 1. Fetch school config from Supabase
       const cfg = await dbService.getSchoolConfig();
+      let targetTerm = template.currentTerm;
+      const validTerms = ['First Term', 'Second Term', 'Third Term'];
+
       if (cfg) {
         const mappedTpl = mapDbConfigToTemplate(cfg);
+        const dbTerm = mappedTpl.currentTerm;
+        if (dbTerm && validTerms.includes(dbTerm)) {
+          targetTerm = dbTerm;
+        } else if (!validTerms.includes(targetTerm)) {
+          targetTerm = 'Third Term';
+        }
+
         const nextTpl = {
           ...mappedTpl,
-          currentTerm: template.currentTerm, // preserve active client-side term tab selection
+          currentTerm: targetTerm,
         };
         setTemplate(nextTpl);
         if (typeof window !== 'undefined') {
@@ -211,14 +221,14 @@ export default function App() {
       // 2. Fetch students from Supabase
       const rawStudents = await dbService.getStudents();
       const mapped = (rawStudents || []).map(mapDbStudentToFrontend);
-      const termFiltered = mapped.filter(s => isStudentInTerm(s.id, template.currentTerm));
+      const termFiltered = mapped.filter(s => isStudentInTerm(s.id, targetTerm));
       
       if (termFiltered.length > 0) {
         setStudents(termFiltered);
-        saveStudents(termFiltered, template.currentTerm);
+        saveStudents(termFiltered, targetTerm);
       } else {
         // If Supabase has no students, pull what we have locally or fallback to initial
-        const local = loadStoredStudents(template.currentTerm);
+        const local = loadStoredStudents(targetTerm);
         setStudents(local);
       }
 
@@ -337,25 +347,36 @@ export default function App() {
               cfg = data[0];
             }
           }
+
+          let targetTerm = template.currentTerm;
+          const validTerms = ['First Term', 'Second Term', 'Third Term'];
+
           if (cfg) {
             const mappedTpl = mapDbConfigToTemplate(cfg);
+            const dbTerm = mappedTpl.currentTerm;
+            if (dbTerm && validTerms.includes(dbTerm)) {
+              targetTerm = dbTerm;
+            } else if (!validTerms.includes(targetTerm)) {
+              targetTerm = 'Third Term';
+            }
+
             setTemplate((prev) => ({
               ...prev,
               ...mappedTpl,
-              currentTerm: prev.currentTerm, // maintain active tab selection from frontend state
+              currentTerm: targetTerm,
             }));
           }
 
           // 2. Load students from Supabase
           const rawStudents = await dbService.getStudents();
           const mapped = (rawStudents || []).map(mapDbStudentToFrontend);
-          const termFiltered = mapped.filter(s => isStudentInTerm(s.id, template.currentTerm));
+          const termFiltered = mapped.filter(s => isStudentInTerm(s.id, targetTerm));
           
           if (termFiltered.length > 0) {
             setStudents(termFiltered);
           } else {
-            console.log(`Supabase: No students found for active term "${template.currentTerm}". Seeding database with current cached dataset...`);
-            const initialForTerm = loadStoredStudents(template.currentTerm);
+            console.log(`Supabase: No students found for active term "${targetTerm}". Seeding database with current cached dataset...`);
+            const initialForTerm = loadStoredStudents(targetTerm);
             setStudents(initialForTerm);
             await dbService.saveAllStudents(initialForTerm);
           }
