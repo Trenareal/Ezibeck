@@ -863,7 +863,7 @@ export default function StudentPortal({
             return (
               <div 
                 ref={printAreaRef}
-                className="report-card-printable bg-white border border-slate-200/80 rounded-3xl shadow-xl p-4 sm:p-12 space-y-6 sm:space-y-8 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in"
+                className={`report-card-printable bg-white border border-slate-200/80 rounded-3xl shadow-xl p-4 sm:p-12 space-y-6 sm:space-y-8 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in ${isGeneratingPdf ? 'pdf-force-light' : ''}`}
               >
                 {/* Diagonal tiled watermark background */}
                 <ReportCardWatermark />

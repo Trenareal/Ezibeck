@@ -56,3 +56,136 @@
     break-before: page !important;
   }
 }
+
+/* Dynamic device-based Dark Mode styles */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --color-slate-50: #020617;
+    --color-slate-100: #0f172a;
+    --color-slate-105: #111827;
+    --color-slate-150: #1e293b;
+    --color-slate-200: #334155;
+    --color-slate-250: #475569;
+    --color-slate-300: #64748b;
+    --color-slate-400: #94a3b8;
+    --color-slate-500: #cbd5e1;
+    --color-slate-600: #e2e8f0;
+    --color-slate-700: #f1f5f9;
+    --color-slate-800: #f8fafc;
+    --color-slate-900: #ffffff;
+    --color-slate-950: #ffffff;
+  }
+
+  /* Body background & base typography */
+  body, html {
+    background-color: #030712 !important;
+    color: #f3f4f6 !important;
+  }
+
+  /* General backgrounds / elements */
+  .bg-white {
+    background-color: #0f172a !important;
+  }
+  .bg-slate-50, .bg-slate-50\/50, .bg-slate-50\/40 {
+    background-color: #030712 !important;
+  }
+  .bg-slate-100, .bg-slate-100\/40 {
+    background-color: #1e293b !important;
+  }
+
+  /* Target custom arbitrarily-coded light hexes if they are on screen */
+  [class*="bg-[#FCFCFC]"], [class*="bg-[#FBFBFB]"], [class*="bg-[#fcfcfc]"], [class*="bg-[#fbfbfb]"] {
+    background-color: rgba(30, 41, 59, 0.75) !important;
+  }
+
+  /* Specific color-coded status elements in dark mode */
+  .bg-emerald-50, .bg-emerald-50\/40, .bg-emerald-50\/50 {
+    background-color: rgba(6, 78, 59, 0.25) !important;
+    color: #34d399 !important;
+    border-color: rgba(16, 185, 129, 0.25) !important;
+  }
+  .text-emerald-800, .text-emerald-990, .text-emerald-950 {
+    color: #10b981 !important;
+  }
+
+  .bg-sky-50, .bg-sky-50\/40, .bg-sky-50\/50 {
+    background-color: rgba(30, 58, 138, 0.25) !important;
+    color: #38bdf8 !important;
+    border-color: rgba(14, 165, 233, 0.25) !important;
+  }
+  .text-sky-850, .text-sky-900 {
+    color: #0ea5e9 !important;
+  }
+
+  .bg-red-50, .bg-red-50\/40, .bg-red-50\/50 {
+    background-color: rgba(127, 29, 29, 0.25) !important;
+    color: #f87171 !important;
+    border-color: rgba(239, 68, 68, 0.25) !important;
+  }
+  .text-red-800, .text-red-990 {
+    color: #f87171 !important;
+  }
+
+  .bg-amber-50, .bg-amber-50\/40, .bg-amber-50\/50 {
+    background-color: rgba(120, 53, 4, 0.25) !important;
+    color: #fbbf24 !important;
+    border-color: rgba(245, 158, 11, 0.25) !important;
+  }
+  .text-amber-800, .text-amber-900, .text-amber-950 {
+    color: #fbbf24 !important;
+  }
+
+  /* Text color overrides */
+  .text-slate-900, .text-slate-805, .text-slate-800, .text-slate-705, .text-slate-700 {
+    color: #f3f4f6 !important;
+  }
+  .text-slate-600, .text-slate-500 {
+    color: #94a3b8 !important;
+  }
+  .text-slate-400 {
+    color: #64748b !important;
+  }
+
+  /* Custom input element styling */
+  input, select, textarea {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+    border-color: #334155 !important;
+  }
+  input::placeholder, textarea::placeholder {
+    color: #64748b !important;
+  }
+
+  /* Border styles transition */
+  .border, .border-slate-100, .border-slate-105, .border-slate-150, .border-slate-155, .border-slate-200, .border-slate-205, .border-slate-250, .border-slate-200\/80 {
+    border-color: #1e293b !important;
+  }
+
+  /* Interactive items hover overrides */
+  .hover\:bg-slate-50:hover, .hover\:bg-slate-100:hover, .hover\:bg-slate-200:hover {
+    background-color: #1e293b !important;
+  }
+
+  /* Report card print preview should preserve perfect light theme during rendering to prevent dark backgrounds in downloaded PDFs */
+  .pdf-force-light, .pdf-force-light * {
+    background-color: white !important;
+    color: #0f172a !important;
+    border-color: #e2e8f0 !important;
+  }
+  .pdf-force-light .bg-[#FCFCFC]/60, .pdf-force-light [class*="bg-[#FCFCFC]"], .pdf-force-light .bg-slate-50, .pdf-force-light [class*="bg-slate-50"] {
+    background-color: #fcfcfc !important;
+  }
+  .pdf-force-light .text-slate-400 {
+    color: #94a3b8 !important;
+  }
+  .pdf-force-light .text-emerald-800 {
+    color: #065f46 !important;
+  }
+  .pdf-force-light .text-sky-850 {
+    color: #0369a1 !important;
+  }
+  .pdf-force-light .text-red-800 {
+    color: #991b1b !important;
+  }
+}

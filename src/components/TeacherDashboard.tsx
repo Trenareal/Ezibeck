@@ -2084,7 +2084,7 @@ export default function TeacherDashboard({
               return (
                 <div 
                   ref={teacherPrintAreaRef}
-                  className="report-card-printable bg-white border border-slate-205 rounded-3xl shadow-xl p-6 sm:p-12 space-y-8 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in text-slate-800"
+                  className={`report-card-printable bg-white border border-slate-205 rounded-3xl shadow-xl p-6 sm:p-12 space-y-8 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in text-slate-800 ${isGeneratingPdf ? 'pdf-force-light' : ''}`}
                 >
                   {/* Diagonal tiled watermark background */}
                   <ReportCardWatermark />
