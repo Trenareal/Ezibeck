@@ -234,10 +234,42 @@ export default function TeacherDashboard({
       const imgWidth = 190; 
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
+      const partBElement = element.querySelector('#pdf-partB-character-traits');
+      const rectEl = element.getBoundingClientRect();
+      const rectPartB = partBElement ? partBElement.getBoundingClientRect() : null;
+      const partBTop = rectPartB ? (rectPartB.top - rectEl.top) : 0;
+      const ratio = partBTop > 0 ? partBTop / rectEl.height : 0.61;
+
       let pdf;
 
-      if (imgHeight <= 277) {
-        // Option 1: Fits comfortably within normal A4 printable height. Let's center it vertically.
+      if (imgHeight > 260 && partBTop > 0) {
+        // Option 1: Multi-page elegant separation. Fits exactly onto 2 full-sized A4 sheets divided nicely at Part B.
+        pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+
+        const totalPdfHeight = imgHeight;
+        const ySplitPoint = totalPdfHeight * ratio;
+
+        // --- PAGE 1: Terminal Scores & Statistics (Part A) ---
+        pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, totalPdfHeight, undefined, 'FAST');
+        
+        // Solid white cover mask to cleanly hide anything that bleeds past the first page layout break
+        pdf.setFillColor(255, 255, 255);
+        pdf.rect(0, 10 + ySplitPoint, 210, 297 - (10 + ySplitPoint), 'F');
+
+        // --- PAGE 2: Behavior character, Grades index, and remarks (Part B) ---
+        pdf.addPage();
+        const yOffset2 = 10 - ySplitPoint;
+        pdf.addImage(imgData, 'JPEG', 10, yOffset2, imgWidth, totalPdfHeight, undefined, 'FAST');
+
+        // Clean white header mask on Page 2
+        pdf.setFillColor(255, 255, 255);
+        pdf.rect(0, 0, 210, 10, 'F');
+      } else if (imgHeight <= 277) {
+        // Option 2: Fits comfortably within normal A4 printable height. Let's center it vertically.
         pdf = new jsPDF({
           orientation: 'portrait',
           unit: 'mm',
@@ -246,7 +278,7 @@ export default function TeacherDashboard({
         const yMargin = (297 - imgHeight) / 2;
         pdf.addImage(imgData, 'JPEG', 10, yMargin, imgWidth, imgHeight, undefined, 'FAST');
       } else if (imgHeight <= 340) {
-        // Option 2: Slightly taller. Scale down gracefully so the entire report fits beautifully on a single A4 page.
+        // Option 3: Slightly taller. Scale down gracefully so the entire report fits beautifully on a single A4 page.
         const scaleFactor = 277 / imgHeight;
         const adjustedWidth = imgWidth * scaleFactor;
         const adjustedHeight = 277;
@@ -259,7 +291,7 @@ export default function TeacherDashboard({
         });
         pdf.addImage(imgData, 'JPEG', xMargin, 10, adjustedWidth, adjustedHeight, undefined, 'FAST');
       } else {
-        // Option 3: Extremely long template. Print as an elegant single-page PDF with custom height.
+        // Option 4: Extremely long template. Print as an elegant single-page PDF with custom height.
         pdf = new jsPDF({
           orientation: 'portrait',
           unit: 'mm',
@@ -2402,16 +2434,22 @@ export default function TeacherDashboard({
                     </div>
                   </div>
 
-                  {/* Academic Accomplishments: Credit Passed & Fails count strip */}
-                  <div className="relative z-10 flex gap-3 sm:gap-4 select-none leading-none">
+                  {/* Academic Accomplishments: Credits, Fails & Subject count strip */}
+                  <div className="relative z-10 flex flex-col xs:flex-row gap-3 sm:gap-4 select-none leading-none">
+                    <div className="flex-1 bg-sky-50/40 border border-sky-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-sky-900 font-medium shadow-3xs">
+                      <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
+                        <span className="text-sky-550 font-black">📚</span> Number of Subjects:
+                      </span>
+                      <span className="font-black text-sky-850 text-xs">{viewingReportStudent.subjects.length} Total</span>
+                    </div>
                     <div className="flex-1 bg-emerald-50/40 border border-emerald-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-emerald-990 font-medium shadow-3xs">
-                      <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500">
+                      <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
                         <span className="text-emerald-500 font-black">✔</span> Number of Credits:
                       </span>
                       <span className="font-black text-emerald-800 text-xs">{stats.creditsAndAbove + stats.passes} Passed</span>
                     </div>
                     <div className="flex-1 bg-red-50/40 border border-red-155 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-red-990 font-medium shadow-3xs">
-                      <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500">
+                      <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
                         <span className="text-red-500 font-black">✘</span> Number of Fails:
                       </span>
                       <span className="font-black text-red-800 text-xs">{stats.failures} Failed</span>
@@ -2419,7 +2457,7 @@ export default function TeacherDashboard({
                   </div>
 
                   {/* Part B: Character Assessment */}
-                  <div id="pdf-partB-character-traits" className="grid grid-cols-1 md:grid-cols-10 print:grid-cols-10 gap-6 relative z-10 print-card-break">
+                  <div id="pdf-partB-character-traits" className="grid grid-cols-1 md:grid-cols-10 print:grid-cols-10 gap-6 relative z-10 print-page-break">
                     {/* Left Parameter Column: Conduct Evaluation - Width reduced to 40% (md:col-span-4) */}
                     <div className="md:col-span-4 print:col-span-4 bg-[#FCFCFC]/60 border border-slate-150 p-5 rounded-2xl space-y-3.5 shadow-3xs">
                       <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-emerald-600 pl-2 select-none">
@@ -3399,16 +3437,22 @@ export default function TeacherDashboard({
                       </div>
                     </div>
 
-                    {/* Academic Accomplishments: Credit Passed & Fails count strip */}
-                    <div className="relative z-10 flex gap-3 sm:gap-4 select-none leading-none">
+                    {/* Academic Accomplishments: Credits, Fails & Subject count strip */}
+                    <div className="relative z-10 flex flex-col xs:flex-row gap-3 sm:gap-4 select-none leading-none">
+                      <div className="flex-1 bg-sky-50/40 border border-sky-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-sky-900 font-medium shadow-3xs">
+                        <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
+                          <span className="text-sky-550 font-black">📚</span> Number of Subjects:
+                        </span>
+                        <span className="font-black text-sky-850 text-xs">{previewStudent.subjects.length} Total</span>
+                      </div>
                       <div className="flex-1 bg-emerald-50/40 border border-emerald-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-emerald-990 font-medium shadow-3xs">
-                        <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500">
+                        <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
                           <span className="text-emerald-500 font-black">✔</span> Number of Credits:
                         </span>
                         <span className="font-black text-emerald-800 text-xs">{stats.creditsAndAbove + stats.passes} Passed</span>
                       </div>
                       <div className="flex-1 bg-red-50/40 border border-red-155 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-red-990 font-medium shadow-3xs">
-                        <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500">
+                        <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
                           <span className="text-red-500 font-black">✘</span> Number of Fails:
                         </span>
                         <span className="font-black text-red-800 text-xs">{stats.failures} Failed</span>
@@ -3416,7 +3460,7 @@ export default function TeacherDashboard({
                     </div>
 
                     {/* Behavioral & Conduct assessment Part B */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10 print-page-break">
                       <div className="lg:col-span-12 bg-[#FCFCFC]/60 border border-slate-150 p-5 rounded-2xl space-y-3.5 shadow-3xs">
                         <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-emerald-600 pl-2">
                           Part B: Character & Behavioral Conduct Ratings

@@ -5,7 +5,6 @@ export function ReportCardWatermark() {
   return (
     <div 
       className="absolute inset-0 pointer-events-none select-none overflow-hidden z-0 flex flex-col justify-between py-10 px-4 gap-y-20"
-      style={{ mixBlendMode: 'multiply' }}
     >
       {Array.from({ length: 14 }).map((_, rowIndex) => (
         <div 
@@ -18,8 +17,12 @@ export function ReportCardWatermark() {
           {Array.from({ length: 4 }).map((_, colIndex) => (
             <span 
               key={colIndex} 
-              className="text-emerald-600/[0.05] dark:text-emerald-500/[0.04] font-sans font-black tracking-widest text-xs sm:text-sm uppercase select-none whitespace-nowrap"
-              style={{ transform: 'rotate(-28deg)', display: 'inline-block' }}
+              className="font-sans font-black tracking-widest text-xs sm:text-sm uppercase select-none whitespace-nowrap"
+              style={{ 
+                transform: 'rotate(-28deg)', 
+                display: 'inline-block',
+                color: 'rgba(16, 185, 129, 0.08)' // Clean emerald-green watermark color fully compatible with html2canvas/print
+              }}
             >
               Ezibeck Academy
             </span>
@@ -35,7 +38,6 @@ export function ScratchCardWatermark() {
   return (
     <div 
       className="absolute inset-0 pointer-events-none select-none overflow-hidden z-0 flex flex-col justify-between py-3 px-1 gap-y-6"
-      style={{ mixBlendMode: 'multiply' }}
     >
       {Array.from({ length: 6 }).map((_, rowIndex) => (
         <div 
@@ -48,8 +50,12 @@ export function ScratchCardWatermark() {
           {Array.from({ length: 3 }).map((_, colIndex) => (
             <span 
               key={colIndex} 
-              className="text-emerald-600/[0.04] dark:text-emerald-500/[0.03] font-sans font-black tracking-widest text-[8px] sm:text-[9px] uppercase select-none whitespace-nowrap"
-              style={{ transform: 'rotate(-18deg)', display: 'inline-block' }}
+              className="font-sans font-black tracking-widest text-[8px] sm:text-[9px] uppercase select-none whitespace-nowrap"
+              style={{ 
+                transform: 'rotate(-18deg)', 
+                display: 'inline-block',
+                color: 'rgba(16, 185, 129, 0.06)' // Clean emerald-green watermark color fully compatible with html2canvas/print
+              }}
             >
               Ezibeck Academy
             </span>
@@ -59,4 +65,3 @@ export function ScratchCardWatermark() {
     </div>
   );
 }
-
