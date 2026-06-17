@@ -1969,21 +1969,6 @@ export default function TeacherDashboard({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
-                    setDeleteConfirmStudent({
-                      id: viewingReportStudent.id,
-                      name: viewingReportStudent.name,
-                      className: viewingReportStudent.className,
-                      source: 'view'
-                    });
-                  }}
-                  className="border border-red-200 bg-red-50 hover:bg-red-100 hover:border-red-400 text-red-650 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer"
-                  title="Delete student and their report card"
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> Delete Report Card
-                </button>
-
-                <button
-                  onClick={() => {
                     startEditStudent(viewingReportStudent);
                     setViewingReportStudent(null);
                   }}
@@ -2366,8 +2351,9 @@ export default function TeacherDashboard({
                   </div>
 
                   {/* Part B: Character Assessment */}
-                  <div id="pdf-partB-character-traits" className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-6 relative z-10 print-card-break">
-                    <div className="bg-[#FCFCFC]/60 border border-slate-150 p-5 rounded-2xl space-y-3.5 shadow-3xs">
+                  <div id="pdf-partB-character-traits" className="grid grid-cols-1 md:grid-cols-10 print:grid-cols-10 gap-6 relative z-10 print-card-break">
+                    {/* Left Parameter Column: Conduct Evaluation - Width reduced to 40% (md:col-span-4) */}
+                    <div className="md:col-span-4 print:col-span-4 bg-[#FCFCFC]/60 border border-slate-150 p-5 rounded-2xl space-y-3.5 shadow-3xs">
                       <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-emerald-600 pl-2 select-none">
                         Part B: Character & Behavioral Conduct
                       </h4>
@@ -2375,7 +2361,7 @@ export default function TeacherDashboard({
                       <div className="grid grid-cols-1 xs:grid-cols-2 gap-x-5 gap-y-2 text-xs text-slate-800">
                         {viewingReportStudent.behaviour.map(b => (
                           <div key={b.name} className="flex items-center justify-between py-1 border-b border-dashed border-slate-150">
-                            <span className="font-semibold text-slate-600">{b.name}</span>
+                            <span className="font-semibold text-slate-600 text-[10.5px]">{b.name}</span>
                             <span className="font-mono font-black text-[10px] text-emerald-750 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
                               {b.rating} / 5
                             </span>
@@ -2384,77 +2370,76 @@ export default function TeacherDashboard({
                       </div>
                     </div>
 
-                    {/* Right Column Index Guides (In one row 2 column relative to behavioral ratings) */}
-                    <div className="grid grid-cols-1 xs:grid-cols-2 gap-4">
-                      <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5 text-slate-800">
-                        <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 select-none">
-                          Grades Index
-                        </h4>
-                        <div className="border border-slate-150 rounded-xl overflow-hidden shadow-3xs">
-                          <table className="w-full text-[9px] text-left border-collapse text-slate-600">
-                            <thead>
-                              <tr className="bg-[#FAF9F9] border-b border-slate-150 font-bold select-none text-slate-500">
-                                <th className="py-1 px-1.5 border-r border-slate-150 w-8">Grade</th>
-                                <th className="py-1 px-1.5">Details</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 font-semibold">
-                              <tr className="hover:bg-slate-50/50">
-                                <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-emerald-700 bg-emerald-50 text-[9px]">A+</td>
-                                <td className="py-0.5 px-1.5">90 - 100</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50">
-                                <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-green-700 bg-green-50 text-[9px]">A</td>
-                                <td className="py-0.5 px-1.5">80 - 89</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50">
-                                <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-sky-700 bg-sky-50 text-[9px]">B</td>
-                                <td className="py-0.5 px-1.5">70 - 79</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50">
-                                <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-amber-500 bg-amber-50 text-[9px]">C</td>
-                                <td className="py-0.5 px-1.5">60 - 69</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50">
-                                <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-orange-600 bg-orange-50 text-[9px]">D</td>
-                                <td className="py-0.5 px-1.5">50 - 59</td>
-                              </tr>
-                              <tr className="hover:bg-slate-50/50">
-                                <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-red-500 bg-red-50 text-[9px]">F</td>
-                                <td className="py-0.5 px-1.5">Below 50</td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
+                    {/* Grades Index - Immediately to the right of the ratings */}
+                    <div className="md:col-span-4 print:col-span-4 bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5 text-slate-800">
+                      <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 select-none">
+                        Grades Index
+                      </h4>
+                      <div className="border border-slate-150 rounded-xl overflow-hidden shadow-3xs">
+                        <table className="w-full text-[9px] text-left border-collapse text-slate-600">
+                          <thead>
+                            <tr className="bg-[#FAF9F9] border-b border-slate-150 font-bold select-none text-slate-500">
+                              <th className="py-1 px-1.5 border-r border-slate-150 w-8">Grade</th>
+                              <th className="py-1 px-1.5">Details</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 font-semibold">
+                            <tr className="hover:bg-slate-50/50">
+                              <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-emerald-700 bg-emerald-50 text-[9px]">A+</td>
+                              <td className="py-0.5 px-1.5">90 - 100</td>
+                            </tr>
+                            <tr className="hover:bg-slate-50/50">
+                              <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-green-700 bg-green-50 text-[9px]">A</td>
+                              <td className="py-0.5 px-1.5">80 - 89</td>
+                            </tr>
+                            <tr className="hover:bg-slate-50/50">
+                              <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-sky-700 bg-sky-50 text-[9px]">B</td>
+                              <td className="py-0.5 px-1.5">70 - 79</td>
+                            </tr>
+                            <tr className="hover:bg-slate-50/50">
+                              <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-amber-500 bg-amber-50 text-[9px]">C</td>
+                              <td className="py-0.5 px-1.5">60 - 69</td>
+                            </tr>
+                            <tr className="hover:bg-slate-50/50">
+                              <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-orange-600 bg-orange-50 text-[9px]">D</td>
+                              <td className="py-0.5 px-1.5">50 - 59</td>
+                            </tr>
+                            <tr className="hover:bg-slate-50/50">
+                              <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-red-500 bg-red-50 text-[9px]">F</td>
+                              <td className="py-0.5 px-1.5">Below 50</td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
+                    </div>
 
-                      <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-2 text-slate-850">
-                        <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 select-none">
-                          Conduct Scale
-                        </h4>
-                        <ul className="text-[10px] text-slate-500 space-y-1 font-bold pt-1">
-                          <li className="flex items-center gap-1.5">
-                            <span className="w-4 h-4 rounded-md bg-emerald-50 text-emerald-700 text-[9px] flex items-center justify-center font-mono font-black">5</span>
-                            <span>Excellent</span>
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <span className="w-4 h-4 rounded-md bg-green-50 text-green-700 text-[9px] flex items-center justify-center font-mono font-black">4</span>
-                            <span>Very Good</span>
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <span className="w-4 h-4 rounded-md bg-sky-50 text-sky-700 text-[9px] flex items-center justify-center font-mono font-black">3</span>
-                            <span>Good</span>
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <span className="w-4 h-4 rounded-md bg-amber-50 text-amber-600 text-[9px] flex items-center justify-center font-mono font-black">2</span>
-                            <span>Fair</span>
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <span className="w-4 h-4 rounded-md bg-red-50 text-red-700 text-[9px] flex items-center justify-center font-mono font-black">1</span>
-                            <span>Needs Work</span>
-                          </li>
-                        </ul>
-                      </div>
+                    {/* Conduct Scale - Rightmost scale */}
+                    <div className="md:col-span-2 print:col-span-2 bg-white border border-slate-200 rounded-2xl p-4 space-y-2 text-slate-850 animate-fade-in">
+                      <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 select-none">
+                        Conduct Scale
+                      </h4>
+                      <ul className="text-[10px] text-slate-500 space-y-1 font-bold pt-1">
+                        <li className="flex items-center gap-1.5">
+                          <span className="w-4 h-4 rounded-md bg-emerald-50 text-emerald-700 text-[9px] flex items-center justify-center font-mono font-black">5</span>
+                          <span>Excellent</span>
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="w-4 h-4 rounded-md bg-green-50 text-green-700 text-[9px] flex items-center justify-center font-mono font-black">4</span>
+                          <span>Very Good</span>
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="w-4 h-4 rounded-md bg-sky-50 text-sky-700 text-[9px] flex items-center justify-center font-mono font-black">3</span>
+                          <span>Good</span>
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="w-4 h-4 rounded-md bg-amber-50 text-amber-600 text-[9px] flex items-center justify-center font-mono font-black">2</span>
+                          <span>Fair</span>
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="w-4 h-4 rounded-md bg-red-50 text-red-700 text-[9px] flex items-center justify-center font-mono font-black">1</span>
+                          <span>Needs Work</span>
+                        </li>
+                      </ul>
                     </div>
                   </div>
 
@@ -2539,6 +2524,24 @@ export default function TeacherDashboard({
                 </div>
               );
             })()}
+
+            {/* Bottom Right Escape Valve: Delete Report Card safety relocation */}
+            <div className="flex justify-end pt-4 print:hidden select-none">
+              <button
+                onClick={() => {
+                  setDeleteConfirmStudent({
+                    id: viewingReportStudent.id,
+                    name: viewingReportStudent.name,
+                    className: viewingReportStudent.className,
+                    source: 'view'
+                  });
+                }}
+                className="border border-red-200 bg-red-50 hover:bg-red-100 hover:border-red-400 text-red-650 font-black text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all cursor-pointer shadow-3xs"
+                title="Delete student and their report card"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-red-600" /> Delete Report Card
+              </button>
+            </div>
           </div>
         ) : editingStudent ? (
           <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-md">

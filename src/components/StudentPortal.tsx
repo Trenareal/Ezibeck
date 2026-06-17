@@ -1204,17 +1204,17 @@ export default function StudentPortal({
                 </div>
 
                 {/* Part B: Character Assessment, Grades Scale, and Behaviour Guide Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 relative z-10">
-                  {/* Left Parameter Column: Conduct Evaluation */}
-                  <div className="lg:col-span-6 bg-[#FCFCFC]/60 border border-slate-155 p-4 sm:p-5 rounded-2xl space-y-3.5 shadow-3xs">
+                <div className="grid grid-cols-1 lg:grid-cols-10 print:grid-cols-10 gap-6 lg:gap-8 relative z-10">
+                  {/* Left Parameter Column: Conduct Evaluation - Width reduced to 40% (lg:col-span-4) */}
+                  <div className="lg:col-span-4 print:col-span-4 bg-[#FCFCFC]/60 border border-slate-155 p-4 sm:p-5 rounded-2xl space-y-3.5 shadow-3xs">
                     <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-emerald-600 pl-2 select-none flex justify-between items-center">
-                      <span>Part B: Character & Behavioral Conduct</span>
+                      <span>Part B: Character & Conduct</span>
                     </h4>
 
                     <div className="grid grid-cols-1 xs:grid-cols-2 gap-x-5 gap-y-2 text-xs text-slate-800">
                       {selectedStudent.behaviour.map(b => (
                         <div key={b.name} className="flex items-center justify-between py-1 border-b border-dashed border-slate-150">
-                          <span className="font-semibold text-slate-600">{b.name}</span>
+                          <span className="font-semibold text-slate-600 text-[10.5px]">{b.name}</span>
                           <span className="font-mono font-black text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
                             {b.rating} / 5
                           </span>
@@ -1223,79 +1223,76 @@ export default function StudentPortal({
                     </div>
                   </div>
 
-                  {/* Right Column: Grades Index Table & Rating Guide */}
-                  <div className="lg:col-span-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {/* Grades Scale Box */}
-                    <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5">
-                      <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-slate-900 pl-2 select-none">
-                        Grades Index Card
-                      </h4>
-                      <div className="border border-slate-150 rounded-xl overflow-hidden shadow-3xs">
-                        <table className="w-full text-[10px] text-left border-collapse text-slate-600">
-                          <thead>
-                            <tr className="bg-[#FAF9F9] border-b border-slate-150 font-bold select-none text-slate-500">
-                              <th className="py-1.5 px-2.5 border-r border-slate-150 w-16">Grade</th>
-                              <th className="py-1.5 px-2.5">Details</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100 font-medium">
-                            <tr className="hover:bg-slate-50/50">
-                              <td className="py-1.5 px-2.5 border-r border-slate-150 font-bold text-slate-800 bg-emerald-50 text-[10px] text-emerald-700">A+</td>
-                              <td className="py-1.5 px-2.5 text-slate-500">Distinction 90 - 100</td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/50">
-                              <td className="py-1.5 px-2.5 border-r border-slate-150 font-bold text-slate-800 bg-emerald-55 text-[10px] text-emerald-700">A</td>
-                              <td className="py-1.5 px-2.5 text-slate-500">Excellent 80 - 89</td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/50">
-                              <td className="py-1.5 px-2.5 border-r border-slate-150 font-bold text-slate-800 bg-emerald-50 text-[10px] text-emerald-700">B</td>
-                              <td className="py-1.5 px-2.5 text-slate-500">Very Good 70 - 79</td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/50">
-                              <td className="py-1.5 px-2.5 border-r border-slate-150 font-bold text-slate-800 bg-[#FCF8E3] text-[10px] text-amber-700">C</td>
-                              <td className="py-1.5 px-2.5 text-slate-500">Good 60 - 69</td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/50">
-                              <td className="py-1.5 px-2.5 border-r border-slate-150 font-bold text-slate-800 bg-orange-50 text-[10px] text-orange-700">D</td>
-                              <td className="py-1.5 px-2.5 text-slate-500">Fair 50 - 59</td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/50">
-                              <td className="py-1.5 px-2.5 border-r border-slate-150 font-bold text-slate-800 bg-red-50 text-[10px] text-red-500">F</td>
-                              <td className="py-1.5 px-2.5 text-slate-500">Fail Below 50</td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
+                  {/* Grades Scale Box - Placed immediately to the right of behavioural ratings */}
+                  <div className="lg:col-span-4 print:col-span-4 bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                    <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-slate-900 pl-2 select-none">
+                      Grades Index Card
+                    </h4>
+                    <div className="border border-slate-150 rounded-xl overflow-hidden shadow-3xs">
+                      <table className="w-full text-[10px] text-left border-collapse text-slate-600">
+                        <thead>
+                          <tr className="bg-[#FAF9F9] border-b border-slate-150 font-bold select-none text-slate-500">
+                            <th className="py-1 px-2 border-r border-slate-150 w-12">Grade</th>
+                            <th className="py-1 px-2">Details</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-medium">
+                          <tr className="hover:bg-slate-50/50">
+                            <td className="py-1 px-2 border-r border-slate-150 font-bold text-slate-800 bg-emerald-50 text-[10px] text-emerald-700">A+</td>
+                            <td className="py-1 px-2 text-slate-500">Distinction 90 - 100</td>
+                          </tr>
+                          <tr className="hover:bg-slate-50/50">
+                            <td className="py-1 px-2 border-r border-slate-150 font-bold text-slate-800 bg-emerald-55 text-[10px] text-emerald-700">A</td>
+                            <td className="py-1 px-2 text-slate-500">Excellent 80 - 89</td>
+                          </tr>
+                          <tr className="hover:bg-slate-50/50">
+                            <td className="py-1 px-2 border-r border-slate-150 font-bold text-slate-800 bg-emerald-50 text-[10px] text-emerald-700">B</td>
+                            <td className="py-1 px-2 text-slate-500">Very Good 70 - 79</td>
+                          </tr>
+                          <tr className="hover:bg-slate-50/50">
+                            <td className="py-1 px-2 border-r border-slate-150 font-bold text-slate-800 bg-[#FCF8E3] text-[10px] text-amber-700">C</td>
+                            <td className="py-1 px-2 text-slate-500">Good 60 - 69</td>
+                          </tr>
+                          <tr className="hover:bg-slate-50/50">
+                            <td className="py-1 px-2 border-r border-slate-150 font-bold text-slate-800 bg-orange-50 text-[10px] text-orange-700">D</td>
+                            <td className="py-1 px-2 text-slate-500">Fair 50 - 59</td>
+                          </tr>
+                          <tr className="hover:bg-slate-50/50">
+                            <td className="py-1 px-2 border-r border-slate-150 font-bold text-slate-800 bg-red-50 text-[10px] text-red-500">F</td>
+                            <td className="py-1 px-2 text-slate-500">Fail Below 50</td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
+                  </div>
 
-                    {/* Behavior Evaluation Guideline */}
-                    <div className="bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5">
-                      <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-slate-900 pl-2 select-none">
-                        Conduct Rating Scale
-                      </h4>
-                      <ul className="text-xs text-slate-500 space-y-1.5 font-bold pt-1.5">
-                        <li className="flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-md bg-emerald-50 text-emerald-705 text-[10px] flex items-center justify-center font-mono">5</span>
-                          <span>Excellent Standards</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-md bg-emerald-50 text-emerald-600 text-[10px] flex items-center justify-center font-mono">4</span>
-                          <span>Very Good Behavior</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] flex items-center justify-center font-mono">3</span>
-                          <span>Satisfactory Conduct</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-md bg-amber-50 text-amber-500 text-[10px] flex items-center justify-center font-mono">2</span>
-                          <span>Fair / Passable</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-md bg-red-50 text-red-700 text-[10px] flex items-center justify-center font-mono">1</span>
-                          <span>Needs Record Fix</span>
-                        </li>
-                      </ul>
-                    </div>
+                  {/* Behavior Evaluation Guideline - Placed on the far right */}
+                  <div className="lg:col-span-2 print:col-span-2 bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                    <h4 className="font-extrabold text-slate-900 text-[11px] uppercase tracking-widest border-l-4 border-slate-900 pl-2 select-none">
+                      Conduct scale
+                    </h4>
+                    <ul className="text-[10px] text-slate-500 space-y-1 font-bold pt-1.5">
+                      <li className="flex items-center gap-1.5">
+                        <span className="w-4 h-4 rounded bg-emerald-50 text-emerald-705 text-[9px] flex items-center justify-center font-mono font-black">5</span>
+                        <span>Excellent</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <span className="w-4 h-4 rounded bg-emerald-50 text-emerald-600 text-[9px] flex items-center justify-center font-mono font-black">4</span>
+                        <span>Very Good</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <span className="w-4 h-4 rounded bg-emerald-50 text-emerald-705 text-[9px] flex items-center justify-center font-mono font-black">3</span>
+                        <span>Good</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <span className="w-4 h-4 rounded bg-amber-50 text-amber-500 text-[9px] flex items-center justify-center font-mono font-black">2</span>
+                        <span>Fair</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <span className="w-4 h-4 rounded bg-red-50 text-red-700 text-[9px] flex items-center justify-center font-mono font-black">1</span>
+                        <span>Needs Work</span>
+                      </li>
+                    </ul>
                   </div>
                 </div>
 
