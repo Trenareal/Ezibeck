@@ -2283,71 +2283,87 @@ export default function TeacherDashboard({
                     </div>
                   </div>
 
-                  {/* Sub-Score KPI Dashboard metrics */}
-                  <div className={`grid grid-cols-2 ${activeTermTab === 'Third Term' ? 'md:grid-cols-4 lg:grid-cols-7' : 'md:grid-cols-4'} gap-4 relative z-10 select-none text-slate-800`}>
-                    <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Cumulative Total</span>
-                      <p className="font-extrabold text-slate-900 text-base leading-none">
-                        {stats.totalScore} <span className="text-xs text-slate-400 font-normal">/ {stats.maxPossibleScore}</span>
+                  {/* Sub-Score KPI Dashboard metrics - optimized to single row with reduced size */}
+                  <div className="flex flex-wrap sm:flex-nowrap print:flex-nowrap gap-1.5 sm:gap-2 relative z-10 w-full select-none text-slate-800">
+                    <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                      <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">Cumulative</span>
+                      <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
+                        {stats.totalScore}<span className="text-[9px] text-slate-400 font-normal">/{stats.maxPossibleScore}</span>
                       </p>
                     </div>
 
-                    <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Termly Average</span>
-                      <p className="font-extrabold text-slate-900 text-base leading-none">
+                    <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                      <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">Termly Avg</span>
+                      <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                         {stats.avgScore.toFixed(1)}%
                       </p>
                     </div>
 
                     {activeTermTab === 'Third Term' && (
                       <>
-                        <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">1st Term Avg</span>
-                          <p className="font-extrabold text-slate-900 text-base leading-none">
+                        <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term</span>
+                          <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                             {(() => {
                               const tCount = viewingReportStudent.subjects.length || 1;
                               const fSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
                               return (fSum / tCount).toFixed(1);
-                            })()} <span className="text-[10px] text-slate-400 font-normal">/ 20</span>
+                            })()}<span className="text-[8px] text-slate-400 font-normal">/20</span>
                           </p>
                         </div>
 
-                        <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">2nd Term Avg</span>
-                          <p className="font-extrabold text-slate-900 text-base leading-none">
+                        <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">2nd Term</span>
+                          <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                             {(() => {
                               const tCount = viewingReportStudent.subjects.length || 1;
                               const sSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
                               return (sSum / tCount).toFixed(1);
-                            })()} <span className="text-[10px] text-slate-400 font-normal">/ 20</span>
+                            })()}<span className="text-[8px] text-slate-400 font-normal">/20</span>
                           </p>
                         </div>
 
-                        <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">3rd Term Avg</span>
-                          <p className="font-extrabold text-slate-900 text-base leading-none">
+                        <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">3rd Term</span>
+                          <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                             {(() => {
                               const tCount = viewingReportStudent.subjects.length || 1;
                               const thSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
                               return (thSum / tCount).toFixed(1);
-                            })()} <span className="text-[10px] text-slate-400 font-normal">/ 60</span>
+                            })()}<span className="text-[8px] text-slate-400 font-normal">/60</span>
                           </p>
                         </div>
                       </>
                     )}
 
-                    <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Calculated GPA</span>
-                      <p className="font-extrabold text-emerald-700 text-base leading-none">
-                        {stats.gpa} <span className="text-[10px] text-slate-400 font-normal">/ 5.0</span>
+                    <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                      <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">GPA</span>
+                      <p className="font-extrabold text-emerald-750 text-[10.5px] sm:text-xs leading-none">
+                        {stats.gpa}<span className="text-[8px] text-slate-400 font-normal">/5.0</span>
                       </p>
                     </div>
 
-                    <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Attendance Record</span>
-                      <p className="font-extrabold text-emerald-600 text-base leading-none">
-                        {Math.round(viewingReportStudent.attendancePresent / viewingReportStudent.attendanceTotal * 100)}% <span className="text-[10px] text-slate-400 font-semibold flex-none">Present</span>
+                    <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                      <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">Attendance</span>
+                      <p className="font-extrabold text-emerald-600 text-[10.5px] sm:text-xs leading-none">
+                        {Math.round(viewingReportStudent.attendancePresent / viewingReportStudent.attendanceTotal * 100)}%
                       </p>
+                    </div>
+                  </div>
+
+                  {/* Academic Accomplishments: Credit Passed & Fails count strip */}
+                  <div className="relative z-10 flex gap-3 sm:gap-4 select-none leading-none">
+                    <div className="flex-1 bg-emerald-50/40 border border-emerald-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-emerald-990 font-medium shadow-3xs">
+                      <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500">
+                        <span className="text-emerald-500 font-black">✔</span> Number of Credits:
+                      </span>
+                      <span className="font-black text-emerald-800 text-xs">{stats.creditsAndAbove + stats.passes} Passed</span>
+                    </div>
+                    <div className="flex-1 bg-red-50/40 border border-red-155 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-red-990 font-medium shadow-3xs">
+                      <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500">
+                        <span className="text-red-500 font-black">✘</span> Number of Fails:
+                      </span>
+                      <span className="font-black text-red-800 text-xs">{stats.failures} Failed</span>
                     </div>
                   </div>
 
@@ -3264,71 +3280,87 @@ export default function TeacherDashboard({
                       </div>
                     </div>
 
-                    {/* KPI Widget Row */}
-                    <div className={`grid grid-cols-2 ${activeTermTab === 'Third Term' ? 'md:grid-cols-4 lg:grid-cols-7' : 'md:grid-cols-4'} gap-4 relative z-10 text-slate-800`}>
-                      <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Cumulative Total</span>
-                        <p className="font-extrabold text-slate-900 text-base leading-none flex items-center justify-center gap-1">
-                          {stats.totalScore} <span className="text-xs text-slate-400 font-normal">/ {stats.maxPossibleScore}</span>
+                    {/* KPI Widget Row - optimized to single row with reduced size */}
+                    <div className="flex flex-wrap sm:flex-nowrap print:flex-nowrap gap-1.5 sm:gap-2 relative z-10 w-full select-none text-slate-800">
+                      <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">Cumulative</span>
+                        <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
+                          {stats.totalScore}<span className="text-[9px] text-slate-400 font-normal">/{stats.maxPossibleScore}</span>
                         </p>
                       </div>
 
-                      <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Termly Average</span>
-                        <p className="font-extrabold text-slate-900 text-base leading-none">
+                      <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">Termly Avg</span>
+                        <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                           {stats.avgScore.toFixed(1)}%
                         </p>
                       </div>
 
                       {activeTermTab === 'Third Term' && (
                         <>
-                          <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">1st Term Avg</span>
-                            <p className="font-extrabold text-slate-900 text-base leading-none">
+                          <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                            <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term</span>
+                            <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                               {(() => {
                                 const tCount = previewStudent.subjects.length || 1;
                                 const fSum = previewStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
                                 return (fSum / tCount).toFixed(1);
-                              })()} <span className="text-[10px] text-slate-400 font-normal">/ 20</span>
+                              })()}<span className="text-[8px] text-slate-400 font-normal">/20</span>
                             </p>
                           </div>
 
-                          <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">2nd Term Avg</span>
-                            <p className="font-extrabold text-slate-900 text-base leading-none">
+                          <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                            <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">2nd Term</span>
+                            <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                               {(() => {
                                 const tCount = previewStudent.subjects.length || 1;
                                 const sSum = previewStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
                                 return (sSum / tCount).toFixed(1);
-                              })()} <span className="text-[10px] text-slate-400 font-normal">/ 20</span>
+                              })()}<span className="text-[8px] text-slate-400 font-normal">/20</span>
                             </p>
                           </div>
 
-                          <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">3rd Term Avg</span>
-                            <p className="font-extrabold text-slate-900 text-base leading-none">
+                          <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                            <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">3rd Term</span>
+                            <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                               {(() => {
                                 const tCount = previewStudent.subjects.length || 1;
                                 const thSum = previewStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
                                 return (thSum / tCount).toFixed(1);
-                              })()} <span className="text-[10px] text-slate-400 font-normal">/ 60</span>
+                              })()}<span className="text-[8px] text-slate-400 font-normal">/60</span>
                             </p>
                           </div>
                         </>
                       )}
 
-                      <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Calculated GPA</span>
-                        <p className="font-extrabold text-emerald-700 text-base leading-none">
-                          {stats.gpa} <span className="text-[10px] text-slate-400 font-normal">/ 5.0</span>
+                      <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">GPA</span>
+                        <p className="font-extrabold text-emerald-750 text-[10.5px] sm:text-xs leading-none">
+                          {stats.gpa}<span className="text-[8px] text-slate-400 font-normal">/5.0</span>
                         </p>
                       </div>
 
-                      <div className="bg-[#FAF9F9] border border-slate-150 p-4 rounded-xl text-center space-y-1">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Attendance Record</span>
-                        <p className="font-extrabold text-emerald-600 text-base leading-none">
-                          {Math.round(previewStudent.attendancePresent / previewStudent.attendanceTotal * 100) || 0}% <span className="text-[10px] text-slate-400 font-semibold flex-none">Present</span>
+                      <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">Attendance</span>
+                        <p className="font-extrabold text-emerald-600 text-[10.5px] sm:text-xs leading-none">
+                          {Math.round(previewStudent.attendancePresent / previewStudent.attendanceTotal * 100) || 0}%
                         </p>
+                      </div>
+                    </div>
+
+                    {/* Academic Accomplishments: Credit Passed & Fails count strip */}
+                    <div className="relative z-10 flex gap-3 sm:gap-4 select-none leading-none">
+                      <div className="flex-1 bg-emerald-50/40 border border-emerald-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-emerald-990 font-medium shadow-3xs">
+                        <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500">
+                          <span className="text-emerald-500 font-black">✔</span> Number of Credits:
+                        </span>
+                        <span className="font-black text-emerald-800 text-xs">{stats.creditsAndAbove + stats.passes} Passed</span>
+                      </div>
+                      <div className="flex-1 bg-red-50/40 border border-red-155 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-red-990 font-medium shadow-3xs">
+                        <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500">
+                          <span className="text-red-500 font-black">✘</span> Number of Fails:
+                        </span>
+                        <span className="font-black text-red-800 text-xs">{stats.failures} Failed</span>
                       </div>
                     </div>
 

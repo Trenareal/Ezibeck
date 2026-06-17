@@ -548,12 +548,6 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
                   >
                     Admin & Faculty Desk
                   </a>
-                  <button
-                    onClick={() => handleTabChange('about')}
-                    className="w-full sm:w-auto px-5 py-3.5 bg-white/10 hover:bg-white/15 border border-white/15 text-white hover:text-emerald-100 font-black rounded-2xl text-[11px] sm:text-xs transition-all shadow-xs flex items-center justify-center gap-1 cursor-pointer text-center active:scale-95 duration-200"
-                  >
-                    About Academy &rarr;
-                  </button>
                 </div>
 
                 {/* Always Open Portals Notice */}
