@@ -13,6 +13,7 @@ import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, cal
 import { logPasscodeEvent, getAuditLogs, clearAuditLogs } from '../utils/auditLogger';
 import { dbService, mapDbFacultyToFrontend } from '../lib/supabase';
 import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
+import { ReportCardWatermark, ScratchCardWatermark } from './ReportCardWatermark';
 
 interface TeacherDashboardProps {
   students: Student[];
@@ -25,17 +26,36 @@ interface TeacherDashboardProps {
   onPullFromSupabase?: () => Promise<{ success: boolean; message: string }>;
 }
 
+export function isPasswordStandardCompliant(password: string): boolean {
+  if (password.length < 8) return false;
+  const hasUpperCase = /[A-Z]/.test(password);
+  const hasLowerCase = /[a-z]/.test(password);
+  const hasNumbers = /[0-9]/.test(password);
+  const hasSymbol = /[^A-Za-z0-9]/.test(password);
+  return hasUpperCase && hasLowerCase && hasNumbers && hasSymbol;
+}
+
 const DEFAULT_FACULTY: FacultyProfile[] = [
-  { id: "ezekiel", name: "Dr. Ezekiel Beck", role: "Administrator (Head Principal)", avatar: "👨‍🏫", password: "admin", email: "ezekiel@ezibeckacademy.edu.ng" },
-  { id: "gladys", name: "Mrs. Gladys Alabi", role: "Form Teacher - JSS1", avatar: "👩‍🏫", password: "teacher1", email: "gladys@ezibeckacademy.edu.ng", assignedClass: "JSS1" },
-  { id: "anthony", name: "Mr. Anthony Okon", role: "Form Teacher - JSS2", avatar: "👨‍💻", password: "teacher2", email: "anthony@ezibeckacademy.edu.ng", assignedClass: "JSS2" },
-  { id: "sarah", name: "Mrs. Sarah John", role: "Form Teacher - JSS3", avatar: "👩‍🏫", password: "teacher3", email: "sarah@ezibeckacademy.edu.ng", assignedClass: "JSS3" },
-  { id: "benson", name: "Mr. Benson Chidi", role: "Form Teacher - SS1", avatar: "👨‍🏫", password: "teacher4", email: "benson@ezibeckacademy.edu.ng", assignedClass: "SS1" },
-  { id: "florence", name: "Mrs. Florence Musa", role: "Form Teacher - SS2", avatar: "👩‍🏫", password: "teacher5", email: "florence@ezibeckacademy.edu.ng", assignedClass: "SS2" },
-  { id: "david", name: "Mr. David Ibrahim", role: "Form Teacher - SS3", avatar: "👨‍💻", password: "teacher6", email: "david@ezibeckacademy.edu.ng", assignedClass: "SS3" }
+  { id: "ezekiel", name: "Dr. Ezekiel Beck", role: "Administrator (Head Principal)", avatar: "👨‍🏫", password: "Ezekiel@2026", email: "ezekiel@ezibeckacademy.edu.ng" },
+  { id: "gladys", name: "Mrs. Gladys Alabi", role: "Form Teacher - JSS1", avatar: "👩‍🏫", password: "Gladys@Jss1", email: "gladys@ezibeckacademy.edu.ng", assignedClass: "JSS1" },
+  { id: "anthony", name: "Mr. Anthony Okon", role: "Form Teacher - JSS2", avatar: "👨‍💻", password: "Anthony@Jss2", email: "anthony@ezibeckacademy.edu.ng", assignedClass: "JSS2" },
+  { id: "sarah", name: "Mrs. Sarah John", role: "Form Teacher - JSS3", avatar: "👩‍🏫", password: "Sarah@Jss3", email: "sarah@ezibeckacademy.edu.ng", assignedClass: "JSS3" },
+  { id: "benson", name: "Mr. Benson Chidi", role: "Form Teacher - SS1", avatar: "👨‍🏫", password: "Benson@Ss1", email: "benson@ezibeckacademy.edu.ng", assignedClass: "SS1" },
+  { id: "florence", name: "Mrs. Florence Musa", role: "Form Teacher - SS2", avatar: "👩‍🏫", password: "Florence@Ss2", email: "florence@ezibeckacademy.edu.ng", assignedClass: "SS2" },
+  { id: "david", name: "Mr. David Ibrahim", role: "Form Teacher - SS3", avatar: "👨‍💻", password: "David@Ss3", email: "david@ezibeckacademy.edu.ng", assignedClass: "SS3" }
 ];
 
 function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
+  const oldToNewPassMap: Record<string, string> = {
+    "admin": "Ezekiel@2026",
+    "teacher1": "Gladys@Jss1",
+    "teacher2": "Anthony@Jss2",
+    "teacher3": "Sarah@Jss3",
+    "teacher4": "Benson@Ss1",
+    "teacher5": "Florence@Ss2",
+    "teacher6": "David@Ss3"
+  };
+
   const slots = [
     { key: 'Admin', check: (f: FacultyProfile) => !f.assignedClass, def: DEFAULT_FACULTY[0] },
     { key: 'JSS1', check: (f: FacultyProfile) => f.assignedClass === 'JSS1', def: DEFAULT_FACULTY[1] },
@@ -75,10 +95,17 @@ function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
   }
 
   return aligned.map(f => {
-    if (f.id === 'ezekiel') {
-      return { ...f, isRestricted: false };
+    let updatedPass = f.password;
+    if (f.password && oldToNewPassMap[f.password]) {
+      updatedPass = oldToNewPassMap[f.password];
+    } else if (f.id === 'ezekiel' && f.password === 'admin') {
+      updatedPass = 'Ezekiel@2026';
     }
-    return f;
+    const up = { ...f, password: updatedPass };
+    if (up.id === 'ezekiel') {
+      return { ...up, isRestricted: false };
+    }
+    return up;
   });
 }
 
@@ -97,7 +124,21 @@ export default function TeacherDashboard({
       const savedUser = localStorage.getItem('ezibeck_faculty_user');
       if (savedUser) {
         try {
-          return JSON.parse(savedUser);
+          const parsed = JSON.parse(savedUser);
+          const oldToNewPassMap: Record<string, string> = {
+            "admin": "Ezekiel@2026",
+            "teacher1": "Gladys@Jss1",
+            "teacher2": "Anthony@Jss2",
+            "teacher3": "Sarah@Jss3",
+            "teacher4": "Benson@Ss1",
+            "teacher5": "Florence@Ss2",
+            "teacher6": "David@Ss3"
+          };
+          if (parsed && parsed.password && oldToNewPassMap[parsed.password]) {
+            parsed.password = oldToNewPassMap[parsed.password];
+            localStorage.setItem('ezibeck_faculty_user', JSON.stringify(parsed));
+          }
+          return parsed;
         } catch (e) {
           console.error('Error loading saved faculty user session', e);
         }
@@ -921,6 +962,7 @@ export default function TeacherDashboard({
   const [editingFacultyPassword, setEditingFacultyPassword] = useState('');
   const [editingFacultyClass, setEditingFacultyClass] = useState<ClassName>('JSS1');
   const [editingFacultyAvatar, setEditingFacultyAvatar] = useState('👩‍🏫');
+  const [facultyPasswordError, setFacultyPasswordError] = useState('');
 
   // Faculty Password Reset via Simulated Email OTP states
   const [showFacultyReset, setShowFacultyReset] = useState(false);
@@ -1112,6 +1154,12 @@ export default function TeacherDashboard({
     e.preventDefault();
     if (!editingFaculty) return;
 
+    const trimmedPassword = editingFacultyPassword.trim();
+    if (!isPasswordStandardCompliant(trimmedPassword)) {
+      setFacultyPasswordError("Requires: 8+ chars, 1 uppercase, 1 lowercase, 1 number, & 1 symbol.");
+      return;
+    }
+
     const newId = editingFacultyId.trim().toLowerCase() || editingFaculty.id;
     const updatedProfile = {
       ...editingFaculty,
@@ -1183,7 +1231,7 @@ export default function TeacherDashboard({
       return;
     }
 
-    const correctPassword = matchedUser.password || 'admin';
+    const correctPassword = matchedUser.password || 'Ezekiel@2026';
     if (teacherPasswordInput === correctPassword) {
       setCurrentUser(matchedUser);
       if (typeof window !== 'undefined') {
@@ -1232,8 +1280,8 @@ export default function TeacherDashboard({
   const handleFacultyConfirmNewPass = (e: React.FormEvent) => {
     e.preventDefault();
     if (!facultyResetUser) return;
-    if (facultyNewPass.length < 4) {
-      setFacultyResetError('Passcode must be at least 4 characters long.');
+    if (!isPasswordStandardCompliant(facultyNewPass)) {
+      setFacultyResetError('Password must be at least 8 characters long, and contain at least one uppercase letter, one lowercase letter, one number, and one symbol or special character.');
       return;
     }
     if (facultyNewPass !== facultyNewPassConfirm) {
@@ -2006,6 +2054,9 @@ export default function TeacherDashboard({
                   ref={teacherPrintAreaRef}
                   className="report-card-printable bg-white border border-slate-205 rounded-3xl shadow-xl p-6 sm:p-12 space-y-8 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in text-slate-800"
                 >
+                  {/* Diagonal tiled watermark background */}
+                  <ReportCardWatermark />
+
                   {/* Print layout decorator line */}
                   <div className="absolute inset-3 border border-slate-100 rounded-2xl pointer-events-none print:hidden"></div>
 
@@ -3806,9 +3857,22 @@ export default function TeacherDashboard({
                       type="text"
                       required
                       value={editingFacultyPassword}
-                      onChange={(e) => setEditingFacultyPassword(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 outline-none font-mono font-bold focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setEditingFacultyPassword(val);
+                        if (val && !isPasswordStandardCompliant(val)) {
+                          setFacultyPasswordError("Requires: 8+ chars, 1 uppercase, 1 lowercase, 1 number, & 1 symbol.");
+                        } else {
+                          setFacultyPasswordError("");
+                        }
+                      }}
+                      className={`w-full bg-white border rounded-lg p-2.5 text-xs text-slate-800 outline-none font-mono font-bold focus:ring-1 ${facultyPasswordError ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500' : 'border-slate-200 focus:border-emerald-600 focus:ring-emerald-600'}`}
                     />
+                    {facultyPasswordError ? (
+                      <p className="text-[10px] text-rose-600 font-bold mt-1 leading-tight">{facultyPasswordError}</p>
+                    ) : (
+                      <p className="text-[9px] text-slate-400 mt-1 leading-tight">Minimum 8 characters with at least one uppercase, lowercase, number & symbol.</p>
+                    )}
                   </div>
                 </div>
 
@@ -3889,7 +3953,7 @@ export default function TeacherDashboard({
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{p.role}</p>
                         <p className="text-[10px] text-slate-500 font-mono mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
                           <span>Username ID: <strong className="font-bold text-slate-800 tracking-wider bg-slate-100 px-1.5 py-0.5 rounded font-mono">{p.id}</strong></span>
-                          <span>Password Passcode: <strong className="font-bold text-slate-800 tracking-wider bg-slate-100 px-1.5 py-0.5 rounded font-mono">{p.password || 'teacher1'}</strong></span>
+                          <span>Password Passcode: <strong className="font-bold text-slate-800 tracking-wider bg-slate-100 px-1.5 py-0.5 rounded font-mono">{p.password || (p.id === 'ezekiel' ? 'Ezekiel@2026' : 'Gladys@Jss1')}</strong></span>
                         </p>
                       </div>
                     </div>
@@ -3902,9 +3966,10 @@ export default function TeacherDashboard({
                           setEditingFacultyId(p.id);
                           setEditingFacultyName(p.name);
                           setEditingFacultyEmail(p.email || `${p.id}@ezibeckacademy.edu.ng`);
-                          setEditingFacultyPassword(p.password || 'teacher1');
+                          setEditingFacultyPassword(p.password || (p.id === 'ezekiel' ? 'Ezekiel@2026' : 'Gladys@Jss1'));
                           setEditingFacultyClass(p.assignedClass || 'JSS1');
                           setEditingFacultyAvatar(p.avatar || '👩‍🏫');
+                          setFacultyPasswordError('');
                         }}
                         className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 px-3.5 py-2 text-[10px] font-bold tracking-wider uppercase rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
                       >
@@ -4105,10 +4170,13 @@ export default function TeacherDashboard({
                                   return (
                                     <div 
                                       key={student.id} 
-                                      className="border-2 border-dashed border-slate-250 p-4 rounded-2xl flex flex-col justify-between bg-slate-50/20 hover:bg-slate-50/50 transition-all h-[145px] relative font-sans text-slate-800"
+                                      className="border-2 border-dashed border-slate-250 p-4 rounded-2xl flex flex-col justify-between bg-white hover:bg-slate-50/50 transition-all h-[145px] relative overflow-hidden font-sans text-slate-800"
                                     >
+                                      {/* Security Watermark Background */}
+                                      <ScratchCardWatermark />
+
                                       {/* Security card border frame */}
-                                      <div className="flex justify-between items-start">
+                                      <div className="flex justify-between items-start relative z-10">
                                         <div className="space-y-1">
                                           <p className="text-[9px] font-black text-slate-400 tracking-wider uppercase leading-none">
                                             {template.schoolName || "EZIBECK ACADEMY"}
@@ -4122,22 +4190,22 @@ export default function TeacherDashboard({
                                         </span>
                                       </div>
 
-                                      <div className="grid grid-cols-2 items-end pt-2">
+                                      <div className="grid grid-cols-2 items-end pt-2 relative z-10">
                                         <div className="space-y-1">
                                           <span className="text-[8px] font-black uppercase text-slate-400 block tracking-widest leading-none">REGISTRATION ID</span>
-                                          <code className="text-[10.5px] font-mono font-bold text-slate-650 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                                          <code className="text-[10.5px] font-mono font-bold text-slate-650 bg-white/70 backdrop-blur-3xs px-1.5 py-0.5 rounded border border-slate-200">
                                             {student.id}
                                           </code>
                                         </div>
                                         <div className="space-y-1 text-right">
                                           <span className="text-[8px] font-black uppercase text-slate-400 block tracking-widest leading-none">PORTAL KEY</span>
-                                          <code className="text-xs font-mono font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 uppercase tracking-widest">
+                                          <code className="text-xs font-mono font-black text-emerald-700 bg-white/70 backdrop-blur-3xs px-2 py-0.5 rounded border border-emerald-150 uppercase tracking-widest">
                                             {student.password || "123456"}
                                           </code>
                                         </div>
                                       </div>
 
-                                      <div className="border-t border-slate-200/60 pt-2 flex justify-between items-center text-[7.5px] text-slate-400 font-extrabold uppercase tracking-wide">
+                                      <div className="border-t border-slate-200/60 pt-2 flex justify-between items-center text-[7.5px] text-slate-400 font-extrabold uppercase tracking-wide relative z-10">
                                         <span>🔑 Official Portal Passcard</span>
                                         <span className="text-slate-350 tracking-wider">Do Not Share</span>
                                       </div>

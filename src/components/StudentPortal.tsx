@@ -12,6 +12,7 @@ import { SCHOOL_INFO, calculateStudentStats, getLetterAndRemark, calculateSubjec
 import { logPasscodeEvent } from '../utils/auditLogger';
 import { isSupabaseConfigured, dbService, mapDbStudentToFrontend } from '../lib/supabase';
 import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
+import { ReportCardWatermark } from './ReportCardWatermark';
 
 interface StudentPortalProps {
   students: Student[];
@@ -832,6 +833,9 @@ export default function StudentPortal({
                 ref={printAreaRef}
                 className="report-card-printable bg-white border border-slate-200/80 rounded-3xl shadow-xl p-4 sm:p-12 space-y-6 sm:space-y-8 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in"
               >
+                {/* Diagonal tiled watermark background */}
+                <ReportCardWatermark />
+
                 {/* Print layout decorator line */}
                 <div className="absolute inset-1.5 xs:inset-3 border border-slate-100 rounded-2xl pointer-events-none print:hidden"></div>
 
