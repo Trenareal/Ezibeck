@@ -8,8 +8,9 @@ import { ArrowLeft, GraduationCap, Search, BookOpen, Eye, EyeOff, Layers, Printe
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Student, ClassName, Workspace15Template, DbStatus, AuditLogEntry } from '../types';
-import { SCHOOL_INFO, calculateStudentStats, getLetterAndRemark, calculateSubjectTotal, BEHAVIOUR_TRAITS, generateUnique6DigitPassword, getStudentPasscodesFromOtherTerms } from '../utils/academicUtils';
+import { SCHOOL_INFO, calculateStudentStats, getLetterAndRemark, calculateSubjectTotal, BEHAVIOUR_TRAITS, generateUnique6DigitPassword, getStudentPasscodesFromOtherTerms, loadStoredStudents, saveStudents, isStudentInTerm } from '../utils/academicUtils';
 import { logPasscodeEvent } from '../utils/auditLogger';
+import { isSupabaseConfigured, dbService, mapDbStudentToFrontend } from '../lib/supabase';
 
 interface StudentPortalProps {
   students: Student[];
@@ -56,10 +57,84 @@ export default function StudentPortal({
   const [newPass, setNewPass] = useState('');
   const [newPassConfirm, setNewPassConfirm] = useState('');
 
+  const [viewingTerm, setViewingTerm] = useState<'First Term' | 'Second Term' | 'Third Term'>(() => {
+    if (template.currentTerm === 'First Term' || template.currentTerm === 'Second Term' || template.currentTerm === 'Third Term') {
+      return template.currentTerm as 'First Term' | 'Second Term' | 'Third Term';
+    }
+    return 'First Term';
+  });
+
+  const [termStudents, setTermStudents] = useState<Student[]>(students);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    async function fetchTermData() {
+      if (viewingTerm === template.currentTerm) {
+        setTermStudents(students);
+        return;
+      }
+      setLoadingStudents(true);
+      try {
+        if (isSupabaseConfigured) {
+          const rawStudents = await dbService.getStudents();
+          if (active) {
+            const mapped = (rawStudents || []).map(mapDbStudentToFrontend);
+            const termFiltered = mapped.filter(s => isStudentInTerm(s.id, viewingTerm));
+            if (termFiltered.length > 0) {
+              setTermStudents(termFiltered);
+            } else {
+              setTermStudents(loadStoredStudents(viewingTerm));
+            }
+          }
+        } else {
+          if (active) {
+            setTermStudents(loadStoredStudents(viewingTerm));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load students for term:", viewingTerm, err);
+        if (active) {
+          setTermStudents(loadStoredStudents(viewingTerm));
+        }
+      } finally {
+        if (active) {
+          setLoadingStudents(false);
+        }
+      }
+    }
+
+    fetchTermData();
+    return () => {
+      active = false;
+    };
+  }, [viewingTerm, students, template.currentTerm]);
+
+  useEffect(() => {
+    if (template.currentTerm === 'First Term' || template.currentTerm === 'Second Term' || template.currentTerm === 'Third Term') {
+      setViewingTerm(template.currentTerm as 'First Term' | 'Second Term' | 'Third Term');
+    }
+  }, [template.currentTerm]);
+
+  const updateLocalAndCloudStudents = async (updatedList: Student[]) => {
+    setTermStudents(updatedList);
+    saveStudents(updatedList, viewingTerm);
+    if (viewingTerm === template.currentTerm && onUpdateStudents) {
+      onUpdateStudents(updatedList);
+    }
+    if (isSupabaseConfigured && dbStatus?.connected) {
+      try {
+        await dbService.saveAllStudents(updatedList);
+      } catch (err) {
+        console.error("Failed to sync student updates to Supabase from Student Portal:", err);
+      }
+    }
+  };
+
   const printAreaRef = useRef<HTMLDivElement>(null);
 
   // Filter students by class and search query
-  const filteredStudents = students.filter(s => {
+  const filteredStudents = termStudents.filter(s => {
     const matchClass = s.className === selectedClass;
     const matchQuery = s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                        s.id.toLowerCase().includes(searchQuery.toLowerCase());
@@ -189,7 +264,7 @@ export default function StudentPortal({
       if (event.state && event.state.view === 'student') {
         const studentId = event.state.studentId;
         if (studentId) {
-          const found = students.find(s => s.id === studentId);
+          const found = termStudents.find(s => s.id === studentId);
           if (found) {
             setSelectedStudent(found);
             setIsUnlocked(false);
@@ -209,7 +284,7 @@ export default function StudentPortal({
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, [students]);
+  }, [termStudents]);
 
   const handleSelectStudent = (stud: Student) => {
     if (typeof window !== 'undefined') {
@@ -272,10 +347,8 @@ export default function StudentPortal({
         });
       }
       
-      if (onUpdateStudents) {
-        const updatedList = students.map(s => s.id === selectedStudent.id ? updatedStudent : s);
-        onUpdateStudents(updatedList);
-      }
+      const updatedList = termStudents.map(s => s.id === selectedStudent.id ? updatedStudent : s);
+      updateLocalAndCloudStudents(updatedList);
       
       setSelectedStudent(updatedStudent);
       setIsUnlocked(true);
@@ -339,30 +412,27 @@ export default function StudentPortal({
       return;
     }
 
-    // Update password in the database / main state
-    if (onUpdateStudents) {
-      const oldPass = selectedStudent.password || '123455';
-      const updatedList = students.map(s => {
-        if (s.id === selectedStudent.id) {
-          return { ...s, password: newPass };
-        }
-        return s;
-      });
-      onUpdateStudents(updatedList);
-      // Also update selectedStudent state to keep it synchronized!
-      setSelectedStudent({ ...selectedStudent, password: newPass });
+    const oldPass = selectedStudent.password || '123455';
+    const updatedList = termStudents.map(s => {
+      if (s.id === selectedStudent.id) {
+        return { ...s, password: newPass };
+      }
+      return s;
+    });
+    updateLocalAndCloudStudents(updatedList);
+    // Also update selectedStudent state to keep it synchronized!
+    setSelectedStudent({ ...selectedStudent, password: newPass });
 
-      // Log event
-      logPasscodeEvent({
-        studentId: selectedStudent.id,
-        studentName: selectedStudent.name,
-        studentClass: selectedStudent.className,
-        action: 'Self Reset',
-        performedBy: 'Student Portal Self-Reset',
-        oldPasscode: oldPass,
-        newPasscode: newPass
-      });
-    }
+    // Log event
+    logPasscodeEvent({
+      studentId: selectedStudent.id,
+      studentName: selectedStudent.name,
+      studentClass: selectedStudent.className,
+      action: 'Self Reset',
+      performedBy: 'Student Portal Self-Reset',
+      oldPasscode: oldPass,
+      newPasscode: newPass
+    });
 
     setResetSuccess('Password updated successfully! You can now log in using your new password.');
     setNewPass('');
@@ -384,7 +454,7 @@ export default function StudentPortal({
           <ArrowLeft className="w-4 h-4" /> Back to School Homepage
         </button>
 
-        {/* Terminal Sessions Directory inside Student Portal */}
+         {/* Terminal Sessions Directory inside Student Portal */}
         <div className="bg-slate-900 border border-slate-800 text-white rounded-3xl p-6 mb-6 shadow-md overflow-hidden relative select-none">
           <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-emerald-800 rounded-full blur-3xl opacity-20 pointer-events-none"></div>
           <div className="absolute -left-10 -top-10 w-24 h-24 bg-amber-500 rounded-full blur-3xl opacity-10 pointer-events-none"></div>
@@ -400,7 +470,7 @@ export default function StudentPortal({
               </div>
               <h3 className="text-sm font-black tracking-tight flex items-center gap-1.5">
                 <Clock className="w-4 h-4 text-amber-300" />
-                Active Scorecard Folder: <span className="text-amber-300 underline decoration-amber-300/40 decoration-2 underline-offset-4">{template.currentTerm}</span>
+                Active Scorecard Folder: <span className="text-amber-300 underline decoration-amber-300/40 decoration-2 underline-offset-4">{viewingTerm}</span>
               </h3>
               <p className="text-[11px] text-slate-400 font-medium max-w-lg leading-relaxed">
                 Choose an academic term slot to view the recorded candidate report profile, total grade logs and term averages.
@@ -413,17 +483,15 @@ export default function StudentPortal({
                 <button
                   key={term}
                   onClick={() => {
-                    if (onUpdateTemplate) {
-                      onUpdateTemplate({ ...template, currentTerm: term });
-                    }
+                    setViewingTerm(term);
                     setSelectedStudent(null);
                     setIsUnlocked(false);
                     setPasswordInput('');
                     setLoginError('');
                   }}
                   className={`flex-1 md:flex-none uppercase tracking-wider text-[9px] font-extrabold py-2.5 px-4 rounded-xl transition-all cursor-pointer ${
-                    template.currentTerm === term
-                      ? 'bg-amber-300 text-slate-900 shadow-md font-black scale-[1.01]'
+                    viewingTerm === term
+                      ? 'bg-amber-305 text-slate-900 shadow-md font-black scale-[1.01]'
                       : 'text-slate-350 hover:bg-slate-800 hover:text-white'
                   }`}
                 >
@@ -777,16 +845,11 @@ export default function StudentPortal({
                   <span className="text-slate-700 font-semibold">📄 {selectedStudent.name}</span>
                 </div>
 
-                {/* Notion Top Cover Band */}
-                <div className="relative h-20 sm:h-28 w-full bg-slate-150 rounded-2xl overflow-hidden mb-6 border border-slate-150 print:hidden select-none">
-                  <div className="absolute inset-0 bg-gradient-to-r from-slate-200/50 via-emerald-50/10 to-slate-100"></div>
-                  <div className="absolute top-2 right-3 text-[9px] sm:text-[10px] bg-white/70 backdrop-blur-xs px-2 py-0.5 rounded text-slate-400 font-bold tracking-wider uppercase">Cover Slate</div>
-                </div>
-
-                {/* Overlapping Page Emoji Icon & School Identification */}
-                <div className="relative z-10 space-y-4">
-                  <div className="flex items-start gap-4 -mt-10 sm:-mt-14 print:mt-0 select-none">
-                    <div className="w-14 h-14 sm:w-20 sm:h-20 bg-white rounded-2xl border border-slate-205 shadow-sm flex items-center justify-center overflow-hidden">
+                {/* School Header Section with centered text and badge on the left */}
+                <div className="relative flex flex-col sm:flex-row items-center sm:justify-center border-b border-slate-200/60 pb-6 mb-6 mt-4 select-none">
+                  {/* School Badge on the left side */}
+                  <div className="sm:absolute sm:left-0 flex-shrink-0 mb-4 sm:mb-0">
+                    <div className="w-16 h-16 sm:w-24 sm:h-24 bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden">
                       <img 
                         src="/src/assets/images/school_badge_1781423327113.jpg" 
                         alt={`${template.schoolName} Emblem`} 
@@ -796,11 +859,12 @@ export default function StudentPortal({
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <h1 className="text-xl sm:text-3.5xl font-black text-slate-900 tracking-tight leading-tight uppercase">
+                  {/* Centered header details */}
+                  <div className="text-center space-y-2 max-w-2xl">
+                    <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-none uppercase">
                       {template.schoolName}
                     </h1>
-                    <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-emerald-700 font-bold flex items-center gap-1.5 select-none">
+                    <p className="text-[10px] sm:text-[11.5px] uppercase tracking-wider text-emerald-700 font-extrabold flex items-center justify-center gap-1.5 select-none">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
                       Motto: {template.motto}
                     </p>
@@ -808,16 +872,14 @@ export default function StudentPortal({
                       <strong>Registered Address:</strong> {template.address} | <strong>Email:</strong> {template.email} | <strong>Phone:</strong> {template.phone}
                     </p>
                   </div>
+                </div>
 
-                  <hr className="border-slate-100" />
-
-                  {/* Dynamic Official Page Heading */}
-                  <div className="py-2">
-                    <h2 className="text-xs sm:text-base font-extrabold text-slate-900 tracking-tight leading-tight uppercase flex flex-col xs:flex-row xs:items-center gap-2">
-                      <span className="inline-block px-2.5 py-1 bg-slate-900 text-slate-100 text-[9px] sm:text-[10px] font-black rounded-md tracking-wider w-max">OFFICIAL STATUS</span>
-                      STUDENT’S TERMLY REPORT SHEET FOR {selectedStudent.className.startsWith('JSS') ? 'JUNIOR' : 'SENIOR'} SECONDARY SCHOOL
-                    </h2>
-                  </div>
+                {/* Dynamic Official Page Heading */}
+                <div className="relative z-10 py-2">
+                  <h2 className="text-xs sm:text-base font-extrabold text-slate-900 tracking-tight leading-tight uppercase flex flex-col xs:flex-row xs:items-center gap-2">
+                    <span className="inline-block px-2.5 py-1 bg-slate-900 text-slate-100 text-[9px] sm:text-[10px] font-black rounded-md tracking-wider w-max">OFFICIAL STATUS</span>
+                    STUDENT’S TERMLY REPORT SHEET FOR {selectedStudent.className.startsWith('JSS') ? 'JUNIOR' : 'SENIOR'} SECONDARY SCHOOL
+                  </h2>
                 </div>
 
                 {/* Database Properties Box: Student Info */}
@@ -926,7 +988,7 @@ export default function StudentPortal({
                           <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/30 w-24">
                             <span className="flex items-center justify-center gap-1 text-emerald-750">Σ TERM (100)</span>
                           </th>
-                          {template.currentTerm === 'Third Term' && (
+                          {viewingTerm === 'Third Term' && (
                             <>
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20">
                                 <span className="flex items-center justify-center gap-1"># 1ST TERM (20)</span>
@@ -964,7 +1026,7 @@ export default function StudentPortal({
                           const sessionAvg = firstTerm + secondTerm + thirdTerm;
 
                           const { letter, remark, ratingClass } = getLetterAndRemark(
-                            template.currentTerm === 'Third Term' ? sessionAvg : tot
+                            viewingTerm === 'Third Term' ? sessionAvg : tot
                           );
 
                           return (
@@ -973,7 +1035,7 @@ export default function StudentPortal({
                               <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-500">{subj.testScore}</td>
                               <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-500">{subj.examScore}</td>
                               <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-700 bg-emerald-50/20">{tot}</td>
-                              {template.currentTerm === 'Third Term' && (
+                              {viewingTerm === 'Third Term' && (
                                 <>
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{firstTerm}</td>
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-455">{secondTerm}</td>
@@ -1014,7 +1076,7 @@ export default function StudentPortal({
                           <td className="py-2 px-3 text-center font-black text-emerald-705 bg-emerald-50/20">
                             Average: {stats.avgScore.toFixed(1)}%
                           </td>
-                          {template.currentTerm === 'Third Term' && (
+                          {viewingTerm === 'Third Term' && (
                             <>
                               <td className="py-2 px-3 text-center font-bold">
                                 Average: {(() => {
@@ -1074,7 +1136,7 @@ export default function StudentPortal({
                 </div>
 
                 {/* Sub-Score KPI Dashboard metrics */}
-                <div className={`grid grid-cols-2 ${template.currentTerm === 'Third Term' ? 'md:grid-cols-4 lg:grid-cols-7' : 'md:grid-cols-4'} gap-2.5 sm:gap-4 relative z-10 select-none`}>
+                <div className={`grid grid-cols-2 ${viewingTerm === 'Third Term' ? 'md:grid-cols-4 lg:grid-cols-7' : 'md:grid-cols-4'} gap-2.5 sm:gap-4 relative z-10 select-none`}>
                   <div className="bg-[#FAF9F9] border border-slate-150 p-3 sm:p-4 rounded-xl text-center space-y-1">
                     <span className="text-[8px] xs:text-[9px] font-black text-slate-400 uppercase tracking-widest block">Cumulative Total</span>
                     <p className="font-extrabold text-slate-900 text-sm sm:text-base leading-none">
@@ -1089,7 +1151,7 @@ export default function StudentPortal({
                     </p>
                   </div>
 
-                  {template.currentTerm === 'Third Term' && (
+                  {viewingTerm === 'Third Term' && (
                     <>
                       <div className="bg-[#FAF9F9] border border-slate-150 p-3 sm:p-4 rounded-xl text-center space-y-1">
                         <span className="text-[8px] xs:text-[9px] font-black text-slate-400 uppercase tracking-widest block">1st Term Avg</span>

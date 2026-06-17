@@ -2034,25 +2034,26 @@ export default function TeacherDashboard({
                     <span className="text-slate-700 font-semibold">📄 {viewingReportStudent.name}</span>
                   </div>
 
-                  {/* Notion Top Cover Band */}
-                  <div className="relative h-28 w-full bg-slate-100 rounded-2xl overflow-hidden mb-6 border border-slate-100 print:hidden select-none">
-                    <div className="absolute inset-0 bg-gradient-to-r from-slate-200/50 via-indigo-50/10 to-slate-100"></div>
-                    <div className="absolute top-2 right-3 text-[10px] bg-white/70 backdrop-blur-xs px-2 py-0.5 rounded text-slate-400 font-bold tracking-wider uppercase">Cover Slate</div>
-                  </div>
-
-                  {/* Overlapping Page Emoji Icon & School Identification */}
-                  <div className="relative z-10 space-y-4">
-                    <div className="flex items-start gap-4 -mt-12 sm:-mt-14 print:mt-0 select-none">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center text-3xl sm:text-4xl">
-                        📒
+                  {/* School Header Section with centered text and badge on the left */}
+                  <div className="relative flex flex-col sm:flex-row items-center sm:justify-center border-b border-slate-200/60 pb-6 mb-6 mt-4 select-none">
+                    {/* School Badge on the left side */}
+                    <div className="sm:absolute sm:left-0 flex-shrink-0 mb-4 sm:mb-0">
+                      <div className="w-16 h-16 sm:w-24 sm:h-24 bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden">
+                        <img 
+                          src="/src/assets/images/school_badge_1781423327113.jpg" 
+                          alt={`${template.schoolName} Emblem`} 
+                          className="w-full h-full object-cover" 
+                          referrerPolicy="no-referrer"
+                        />
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <h1 className="text-2xl sm:text-3.5xl font-black text-slate-900 tracking-tight leading-none uppercase">
+                    {/* Centered header details */}
+                    <div className="text-center space-y-2 max-w-2xl">
+                      <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-none uppercase">
                         {template.schoolName}
                       </h1>
-                      <p className="text-[11px] uppercase tracking-wider text-emerald-700 font-bold flex items-center gap-1.5 select-none">
+                      <p className="text-[10px] sm:text-[11.5px] uppercase tracking-wider text-emerald-700 font-extrabold flex items-center justify-center gap-1.5 select-none">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
                         Motto: {template.motto}
                       </p>
@@ -2060,16 +2061,14 @@ export default function TeacherDashboard({
                         <strong>Registered Address:</strong> {template.address} | <strong>Phone:</strong> {template.phone} | <strong>Email:</strong> {template.email}
                       </p>
                     </div>
+                  </div>
 
-                    <hr className="border-slate-100" />
-
-                    {/* Dynamic Official Page Heading */}
-                    <div className="py-2.5">
-                      <h2 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight leading-none uppercase flex items-center gap-2">
-                        <span className="inline-block px-2.5 py-1 bg-slate-900 text-slate-100 text-[10px] font-black rounded-md tracking-wider">OFFICIAL STATUS</span>
-                        STUDENT’S TERMLY REPORT SHEET FOR {viewingReportStudent.className.startsWith('JSS') ? 'JUNIOR' : 'SENIOR'} SECONDARY SCHOOL
-                      </h2>
-                    </div>
+                  {/* Dynamic Official Page Heading */}
+                  <div className="relative z-10 py-2.5">
+                    <h2 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight leading-none uppercase flex items-center gap-2">
+                      <span className="inline-block px-2.5 py-1 bg-slate-900 text-slate-100 text-[10px] font-black rounded-md tracking-wider">OFFICIAL STATUS</span>
+                      STUDENT’S TERMLY REPORT SHEET FOR {viewingReportStudent.className.startsWith('JSS') ? 'JUNIOR' : 'SENIOR'} SECONDARY SCHOOL
+                    </h2>
                   </div>
 
                   {/* Database Properties Box: Student Info */}
@@ -3025,41 +3024,41 @@ export default function TeacherDashboard({
                       <span className="text-slate-700 font-semibold">📄 {previewStudent.name}</span>
                     </div>
 
-                    {/* Notion Top Cover Band */}
-                    <div className="relative h-24 w-full bg-slate-55 rounded-2xl overflow-hidden mb-6 border border-slate-100">
-                      <div className="absolute inset-0 bg-gradient-to-r from-slate-200/40 via-indigo-50/10 to-slate-100"></div>
-                    </div>
-
-                    {/* Overlapping Page Emoji Icon & School Identification */}
-                    <div className="relative z-10 space-y-4">
-                      <div className="flex items-start gap-4 -mt-10 sm:-mt-12">
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white rounded-xl border border-slate-200 shadow-3xs flex items-center justify-center text-2xl sm:text-3xl">
-                          📒
+                    {/* School Header Section with centered text and badge on the left */}
+                    <div className="relative flex flex-col sm:flex-row items-center sm:justify-center border-b border-slate-200/60 pb-6 mb-6 mt-4 select-none">
+                      {/* School Badge on the left side */}
+                      <div className="sm:absolute sm:left-0 flex-shrink-0 mb-4 sm:mb-0">
+                        <div className="w-14 h-14 sm:w-20 sm:h-20 bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden">
+                          <img 
+                            src="/src/assets/images/school_badge_1781423327113.jpg" 
+                            alt={`${template.schoolName} Emblem`} 
+                            className="w-full h-full object-cover" 
+                            referrerPolicy="no-referrer"
+                          />
                         </div>
                       </div>
 
-                      <div className="space-y-1.5 text-left">
-                        <h1 className="text-xl sm:text-2.5xl font-black text-slate-900 tracking-tight leading-none uppercase">
+                      {/* Centered header details */}
+                      <div className="text-center space-y-2 max-w-2xl">
+                        <h1 className="text-xl sm:text-3.5xl font-black text-slate-900 tracking-tight leading-none uppercase">
                           {template.schoolName}
                         </h1>
-                        <p className="text-[10px] uppercase tracking-wider text-emerald-700 font-bold flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-650"></span>
+                        <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-emerald-700 font-bold flex items-center justify-center gap-1.5 select-none font-sans">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
                           Motto: {template.motto}
                         </p>
                         <p className="text-slate-500 text-[10px] leading-relaxed">
                           <strong>Registered Address:</strong> {template.address}
                         </p>
                       </div>
+                    </div>
 
-                      <hr className="border-slate-100" />
-
-                      {/* Official status banner title */}
-                      <div className="py-1">
-                        <h2 className="text-xs sm:text-sm font-extrabold text-slate-805 tracking-tight uppercase flex items-center gap-2">
-                          <span className="inline-block px-2 py-0.5 bg-emerald-800 text-white text-[9px] font-black rounded tracking-wider">WORKING DRAFT</span>
-                          STUDENT’S TERMLY REPORT SHEET FOR {previewStudent.className.startsWith('JSS') ? 'JUNIOR' : 'SENIOR'} SECONDARY SCHOOL
-                        </h2>
-                      </div>
+                    {/* Official status banner title */}
+                    <div className="py-1">
+                      <h2 className="text-xs sm:text-sm font-extrabold text-slate-805 tracking-tight uppercase flex items-center gap-2">
+                        <span className="inline-block px-2 py-0.5 bg-emerald-800 text-white text-[9px] font-black rounded tracking-wider">WORKING DRAFT</span>
+                        STUDENT’S TERMLY REPORT SHEET FOR {previewStudent.className.startsWith('JSS') ? 'JUNIOR' : 'SENIOR'} SECONDARY SCHOOL
+                      </h2>
                     </div>
 
                     {/* Student Properties Grid */}
@@ -4323,7 +4322,6 @@ export default function TeacherDashboard({
                       id={`session-workspace-tab-${term.toLowerCase().replace(' ', '-')}`}
                       onClick={() => {
                         setActiveTermTab(term);
-                        onUpdateTemplate({ ...template, currentTerm: term });
                         triggerSuccess(`Workspace local terminal directory safely routed to ${term}!`);
                       }}
                       className={`flex-1 md:flex-none uppercase tracking-wider text-[10px] font-extrabold py-2.5 px-5 rounded-xl transition-all cursor-pointer ${
