@@ -2435,20 +2435,20 @@ export default function TeacherDashboard({
                   </div>
 
                   {/* Academic Accomplishments: Credits, Fails & Subject count strip */}
-                  <div className="relative z-10 flex flex-col xs:flex-row gap-3 sm:gap-4 select-none leading-none">
-                    <div className="flex-1 bg-sky-50/40 border border-sky-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-sky-900 font-medium shadow-3xs">
+                  <div className="relative z-10 grid grid-cols-3 gap-2 sm:gap-4 select-none leading-none w-full">
+                    <div className="bg-sky-50/40 border border-sky-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-sky-900 font-medium shadow-3xs">
                       <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
                         <span className="text-sky-550 font-black">📚</span> Number of Subjects:
                       </span>
                       <span className="font-black text-sky-850 text-xs">{viewingReportStudent.subjects.length} Total</span>
                     </div>
-                    <div className="flex-1 bg-emerald-50/40 border border-emerald-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-emerald-990 font-medium shadow-3xs">
+                    <div className="bg-emerald-50/40 border border-emerald-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-emerald-990 font-medium shadow-3xs">
                       <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
                         <span className="text-emerald-500 font-black">✔</span> Number of Credits:
                       </span>
                       <span className="font-black text-emerald-800 text-xs">{stats.creditsAndAbove + stats.passes} Passed</span>
                     </div>
-                    <div className="flex-1 bg-red-50/40 border border-red-155 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-red-990 font-medium shadow-3xs">
+                    <div className="bg-red-50/40 border border-red-155 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-red-990 font-medium shadow-3xs">
                       <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
                         <span className="text-red-500 font-black">✘</span> Number of Fails:
                       </span>
@@ -3438,20 +3438,20 @@ export default function TeacherDashboard({
                     </div>
 
                     {/* Academic Accomplishments: Credits, Fails & Subject count strip */}
-                    <div className="relative z-10 flex flex-col xs:flex-row gap-3 sm:gap-4 select-none leading-none">
-                      <div className="flex-1 bg-sky-50/40 border border-sky-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-sky-900 font-medium shadow-3xs">
+                    <div className="relative z-10 grid grid-cols-3 gap-2 sm:gap-4 select-none leading-none w-full">
+                      <div className="bg-sky-50/40 border border-sky-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-sky-900 font-medium shadow-3xs">
                         <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
                           <span className="text-sky-550 font-black">📚</span> Number of Subjects:
                         </span>
                         <span className="font-black text-sky-850 text-xs">{previewStudent.subjects.length} Total</span>
                       </div>
-                      <div className="flex-1 bg-emerald-50/40 border border-emerald-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-emerald-990 font-medium shadow-3xs">
+                      <div className="bg-emerald-50/40 border border-emerald-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-emerald-990 font-medium shadow-3xs">
                         <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
                           <span className="text-emerald-500 font-black">✔</span> Number of Credits:
                         </span>
                         <span className="font-black text-emerald-800 text-xs">{stats.creditsAndAbove + stats.passes} Passed</span>
                       </div>
-                      <div className="flex-1 bg-red-50/40 border border-red-155 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-red-990 font-medium shadow-3xs">
+                      <div className="bg-red-50/40 border border-red-155 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-red-990 font-medium shadow-3xs">
                         <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
                           <span className="text-red-500 font-black">✘</span> Number of Fails:
                         </span>
