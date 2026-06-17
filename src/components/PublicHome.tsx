@@ -10,6 +10,7 @@ import {
   Info, Search, Image as ImageIcon, Eye, X, CheckSquare, Square, RefreshCw, Sparkles
 } from 'lucide-react';
 import { Workspace15Template } from '../types';
+import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
 
 interface PublicHomeProps {
   onEnterPortal: (role: 'student' | 'teacher') => void;
@@ -157,6 +158,11 @@ const EVENT_DEFINITIONS: CalendarEvent[] = [
 
 export default function PublicHome({ onEnterPortal, template }: PublicHomeProps) {
   const [activeTab, setActiveTab] = useState<'welcome' | 'about'>('welcome');
+
+  const handleTabChange = (tab: 'welcome' | 'about') => {
+    setActiveTab(tab);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const scrollToCalendar = () => {
     setActiveTab('welcome');
@@ -325,10 +331,14 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
       {/* Main Navigation Bar */}
       <header className="bg-white border-b border-slate-100 sticky top-0 z-40 bg-opacity-95 backdrop-blur-sm shadow-2xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex justify-between items-center">
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div 
+            onClick={() => handleTabChange('welcome')}
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none hover:opacity-90 transition-opacity"
+            title="Return to Home"
+          >
             <div className="w-8 h-8 sm:w-11 sm:h-11 bg-emerald-600 flex items-center justify-center rounded-xl overflow-hidden shadow-sm">
               <img 
-                src="/src/assets/images/school_badge_1781423327113.jpg" 
+                src={schoolBadge} 
                 alt={`${template.schoolName} Badge`} 
                 className="w-full h-full object-cover" 
                 referrerPolicy="no-referrer"
@@ -351,13 +361,13 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
           
           <nav className="hidden md:flex items-center gap-8">
             <button 
-              onClick={() => setActiveTab('welcome')} 
+              onClick={() => handleTabChange('welcome')} 
               className={`text-sm font-bold transition-all py-1.5 border-b-2 ${activeTab === 'welcome' ? 'text-emerald-700 border-emerald-700' : 'text-slate-500 hover:text-emerald-600 border-transparent'}`}
             >
               Academic Home
             </button>
             <button 
-              onClick={() => setActiveTab('about')} 
+              onClick={() => handleTabChange('about')} 
               className={`text-sm font-bold transition-all py-1.5 border-b-2 ${activeTab === 'about' ? 'text-emerald-700 border-emerald-700' : 'text-slate-500 hover:text-emerald-600 border-transparent'}`}
             >
               About Academy
@@ -419,13 +429,13 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
       <div className="md:hidden sticky top-[64px] sm:top-[80px] z-30 bg-slate-50 border-b border-slate-200/60 p-2">
         <div className="flex bg-slate-200/75 p-1 rounded-2xl max-w-sm mx-auto shadow-3xs">
           <button
-            onClick={() => setActiveTab('welcome')}
+            onClick={() => handleTabChange('welcome')}
             className={`flex-1 text-center py-2 text-[11px] font-black uppercase tracking-wider rounded-xl transition-all ${activeTab === 'welcome' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
           >
             Home
           </button>
           <button
-            onClick={() => setActiveTab('about')}
+            onClick={() => handleTabChange('about')}
             className={`flex-1 text-center py-2 text-[11px] font-black uppercase tracking-wider rounded-xl transition-all ${activeTab === 'about' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
           >
             About
@@ -511,7 +521,7 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
                   At <strong className="text-white font-extrabold">{template.schoolName}</strong>, we provide a holistic, secure workspace for world-class learning. Directed by our motto <span className="text-amber-300 italic font-medium">"{template.motto}"</span>, we prepare pupils to scale global performance thresholds.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-3 pt-2 justify-center lg:justify-start items-center">
+                <div className="flex flex-col sm:flex-row flex-wrap gap-3 pt-2 justify-center lg:justify-start items-center">
                   <a
                     href={`/?view=student`}
                     target={openInNewTab ? "_blank" : "_self"}
@@ -521,9 +531,9 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
                         onEnterPortal('student');
                       }
                     }}
-                    className="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-black rounded-2xl text-xs shadow-md shadow-emerald-900/30 transition-all flex items-center justify-center gap-2 cursor-pointer text-center"
+                    className="w-full sm:w-auto px-5 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-black rounded-2xl text-[11px] sm:text-xs shadow-md shadow-emerald-900/30 transition-all flex items-center justify-center gap-1.5 cursor-pointer text-center"
                   >
-                    Parent & Student Report Portal <ChevronRight className="w-4 h-4 text-emerald-200" />
+                    Parent & Student Report Portal <ChevronRight className="w-3.5 h-3.5 text-emerald-200" />
                   </a>
                   <a
                     href={`/?view=teacher`}
@@ -534,10 +544,16 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
                         onEnterPortal('teacher');
                       }
                     }}
-                    className="w-full sm:w-auto px-6 py-3.5 bg-slate-950 border border-slate-850 hover:bg-slate-805 text-amber-400 font-bold rounded-2xl text-xs transition-all shadow-md flex items-center justify-center cursor-pointer text-center"
+                    className="w-full sm:w-auto px-5 py-3.5 bg-slate-950 border border-slate-850 hover:bg-slate-805 text-amber-400 font-bold rounded-2xl text-[11px] sm:text-xs transition-all shadow-md flex items-center justify-center cursor-pointer text-center"
                   >
                     Admin & Faculty Desk
                   </a>
+                  <button
+                    onClick={() => handleTabChange('about')}
+                    className="w-full sm:w-auto px-5 py-3.5 bg-white/10 hover:bg-white/15 border border-white/15 text-white hover:text-emerald-100 font-black rounded-2xl text-[11px] sm:text-xs transition-all shadow-xs flex items-center justify-center gap-1 cursor-pointer text-center active:scale-95 duration-200"
+                  >
+                    About Academy &rarr;
+                  </button>
                 </div>
 
                 {/* Always Open Portals Notice */}
@@ -923,6 +939,16 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Return Home CTA button */}
+              <div className="flex justify-center pt-10 mt-6 border-t border-slate-100/60 select-none">
+                <button
+                  onClick={() => handleTabChange('welcome')}
+                  className="px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl text-xs shadow-md shadow-emerald-100 hover:shadow-lg transition-all cursor-pointer flex items-center gap-2 select-none active:scale-95 duration-200"
+                >
+                  &larr; Return to Academic Home
+                </button>
               </div>
 
             </div>

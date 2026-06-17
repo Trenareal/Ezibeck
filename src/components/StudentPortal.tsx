@@ -11,6 +11,7 @@ import { Student, ClassName, Workspace15Template, DbStatus, AuditLogEntry } from
 import { SCHOOL_INFO, calculateStudentStats, getLetterAndRemark, calculateSubjectTotal, BEHAVIOUR_TRAITS, generateUnique6DigitPassword, getStudentPasscodesFromOtherTerms, loadStoredStudents, saveStudents, isStudentInTerm } from '../utils/academicUtils';
 import { logPasscodeEvent } from '../utils/auditLogger';
 import { isSupabaseConfigured, dbService, mapDbStudentToFrontend } from '../lib/supabase';
+import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
 
 interface StudentPortalProps {
   students: Student[];
@@ -851,7 +852,7 @@ export default function StudentPortal({
                   <div className="sm:absolute sm:left-0 flex-shrink-0 mb-4 sm:mb-0">
                     <div className="w-16 h-16 sm:w-24 sm:h-24 bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden">
                       <img 
-                        src="/src/assets/images/school_badge_1781423327113.jpg" 
+                        src={schoolBadge} 
                         alt={`${template.schoolName} Emblem`} 
                         className="w-full h-full object-cover" 
                         referrerPolicy="no-referrer"
