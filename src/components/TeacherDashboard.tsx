@@ -1152,7 +1152,7 @@ export default function TeacherDashboard({
     
     let active = true;
     async function loadLatestDbData() {
-      if (dbStatus && dbStatus.configured && dbStatus.connected) {
+      if (dbStatus && dbStatus.configured) {
         setIsLoadingStudentData(true);
         console.log(`[Supabase Fetch] Reopening/opening editor for student ID: ${editingStudent.id}. Fetching latest live data...`);
         try {
@@ -1733,20 +1733,20 @@ export default function TeacherDashboard({
     console.log(`[Supabase Save] Initiating async save for student ${updatedStudent.name} (${updatedStudent.id})...`, updatedStudent);
     
     try {
-      if (dbStatus && dbStatus.configured && dbStatus.connected) {
+      if (dbStatus && dbStatus.configured) {
         // Step 1: Persist directly to Supabase table (upsert basic data + subjects + behaviours)
-        console.log(`[Supabase Save] Connected. Invoking dbService.saveStudent...`);
+        console.log(`[Supabase Save] Configured. Invoking dbService.saveStudent...`);
         await dbService.saveStudent(updatedStudent);
         console.log(`[Supabase Save] Successfully saved ${updatedStudent.name} to online database.`);
       } else {
-        console.warn(`[Supabase Save] Supabase is either unconfigured or offline. Saving to offline storage only.`);
+        console.warn(`[Supabase Save] Supabase is not configured. Saving to offline storage only.`);
       }
 
       // Step 2: Update local state / cached local files via parent handler
       await onUpdateStudents(refreshed);
       
-      // Step 3: Keep the editing view active with the newly saved values
-      setEditingStudent(updatedStudent);
+      // Step 3: Close the editor component upon successful database response
+      setEditingStudent(null);
       
       triggerSuccess(`Reports updated perfectly for ${updatedStudent.name}! Class ranks recalculated.`);
     } catch (err: any) {
@@ -3178,7 +3178,7 @@ export default function TeacherDashboard({
                   className="bg-emerald-800 hover:bg-emerald-950 text-white font-bold text-xs px-6 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-emerald-900/10 cursor-pointer whitespace-nowrap disabled:bg-emerald-950/70 disabled:cursor-not-allowed"
                 >
                   {isSavingScores ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 
-                  {isSavingScores ? 'Saving Scores to Database...' : 'Save Score Updates'}
+                  {isSavingScores ? 'Saving...' : 'Save Score'}
                 </button>
               )}
             </div>
