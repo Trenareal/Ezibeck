@@ -205,7 +205,7 @@ export default function StudentPortal({
       
       restoreStyles();
       
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const imgData = canvas.toDataURL('image/png');
       
       // Fit comfortably in portrait A4 width (210mm) with 10mm margins on both sides
       const imgWidth = 190; 
@@ -231,7 +231,7 @@ export default function StudentPortal({
         const ySplitPoint = totalPdfHeight * ratio;
 
         // --- PAGE 1: Terminal Scores & Statistics (Part A) ---
-        pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, totalPdfHeight, undefined, 'FAST');
+        pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, totalPdfHeight, undefined, 'FAST');
         
         // Solid white cover mask to cleanly hide anything that bleeds past the first page layout break
         pdf.setFillColor(255, 255, 255);
@@ -240,7 +240,7 @@ export default function StudentPortal({
         // --- PAGE 2: Behavior character, Grades index, and remarks (Part B) ---
         pdf.addPage();
         const yOffset2 = 10 - ySplitPoint;
-        pdf.addImage(imgData, 'JPEG', 10, yOffset2, imgWidth, totalPdfHeight, undefined, 'FAST');
+        pdf.addImage(imgData, 'PNG', 10, yOffset2, imgWidth, totalPdfHeight, undefined, 'FAST');
 
         // Clean white header mask on Page 2
         pdf.setFillColor(255, 255, 255);
@@ -253,7 +253,7 @@ export default function StudentPortal({
           format: 'a4'
         });
         const yMargin = (297 - imgHeight) / 2;
-        pdf.addImage(imgData, 'JPEG', 10, yMargin, imgWidth, imgHeight, undefined, 'FAST');
+        pdf.addImage(imgData, 'PNG', 10, yMargin, imgWidth, imgHeight, undefined, 'FAST');
       } else if (imgHeight <= 340) {
         // Option 3: Slightly taller. Scale down gracefully so the entire report fits beautifully on a single A4 page.
         const scaleFactor = 277 / imgHeight;
@@ -266,7 +266,7 @@ export default function StudentPortal({
           unit: 'mm',
           format: 'a4'
         });
-        pdf.addImage(imgData, 'JPEG', xMargin, 10, adjustedWidth, adjustedHeight, undefined, 'FAST');
+        pdf.addImage(imgData, 'PNG', xMargin, 10, adjustedWidth, adjustedHeight, undefined, 'FAST');
       } else {
         // Option 4: Extremely long template. Print as an elegant single-page PDF with custom height.
         pdf = new jsPDF({
@@ -274,7 +274,7 @@ export default function StudentPortal({
           unit: 'mm',
           format: [210, imgHeight + 20]
         });
-        pdf.addImage(imgData, 'JPEG', 10, 10, imgWidth, imgHeight, undefined, 'FAST');
+        pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight, undefined, 'FAST');
       }
       
       const filename = `${template.schoolName.replace(/\s+/g, '_')}_Report_Sheet_${selectedStudent.id}_${selectedStudent.name.replace(/\s+/g, '_')}.pdf`;
