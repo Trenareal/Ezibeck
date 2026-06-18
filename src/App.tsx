@@ -310,7 +310,6 @@ export default function App() {
     const channelsMap: Record<string, any> = {};
     
     const channels = topics.map((topic) => {
-      const tableName = topic.split(':')[1];
       const ch = supabase
         .channel(topic, { config: { private: true } })
         .on('broadcast', { event: '*' }, (payload) => {
@@ -319,14 +318,6 @@ export default function App() {
             return;
           }
           console.log(`📥 Received real-time broadcast sync on topic: ${topic}`, payload);
-          setSyncTrigger((prev) => prev + 1);
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: tableName }, (payload) => {
-          if (isLocalSavingRef.current) {
-            console.log(`Ignoring realtime postgres_changes on table: ${tableName} because local save is in progress.`);
-            return;
-          }
-          console.log(`📥 Received real-time postgres_changes sync on table: ${tableName}`, payload);
           setSyncTrigger((prev) => prev + 1);
         })
         .subscribe((status) => {
