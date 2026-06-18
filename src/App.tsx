@@ -139,11 +139,13 @@ export default function App() {
 
   const [syncTrigger, setSyncTrigger] = useState(0);
   const activeChannelsRef = React.useRef<Record<string, any>>({});
+  const isLocalSavingRef = React.useRef(false);
 
   const handlePushLocalToSupabase = async (): Promise<{ success: boolean; message: string }> => {
     if (!isSupabaseConfigured) {
       return { success: false, message: "Supabase environment variables are not configured in AI Studio Secrets." };
     }
+    isLocalSavingRef.current = true;
     setDbStatus(prev => ({ ...prev, checking: true }));
     try {
       // 1. Get current local students
@@ -185,6 +187,10 @@ export default function App() {
         supabaseUrl: (import.meta as any).env?.VITE_SUPABASE_URL
       });
       return { success: false, message: `Failed to sync data: ${e?.message || String(e)}. Ensure your Supabase schema SQL is loaded and write permissions are allowed.` };
+    } finally {
+      setTimeout(() => {
+        isLocalSavingRef.current = false;
+      }, 1500);
     }
   };
 
@@ -308,10 +314,18 @@ export default function App() {
       const ch = supabase
         .channel(topic, { config: { private: true } })
         .on('broadcast', { event: '*' }, (payload) => {
+          if (isLocalSavingRef.current) {
+            console.log(`Ignoring realtime broadcast on topic: ${topic} because local save is in progress.`);
+            return;
+          }
           console.log(`📥 Received real-time broadcast sync on topic: ${topic}`, payload);
           setSyncTrigger((prev) => prev + 1);
         })
         .on('postgres_changes', { event: '*', schema: 'public', table: tableName }, (payload) => {
+          if (isLocalSavingRef.current) {
+            console.log(`Ignoring realtime postgres_changes on table: ${tableName} because local save is in progress.`);
+            return;
+          }
           console.log(`📥 Received real-time postgres_changes sync on table: ${tableName}`, payload);
           setSyncTrigger((prev) => prev + 1);
         })
@@ -417,6 +431,7 @@ export default function App() {
 
   // Update students roster and commit back to term-isolated storage + Supabase
   const handleUpdateStudents = async (updatedList: Student[]) => {
+    isLocalSavingRef.current = true;
     // Determine deleted students to delete them in Supabase
     const deletedStudents = students.filter(s => !updatedList.some(ul => ul.id === s.id));
 
@@ -437,11 +452,19 @@ export default function App() {
         broadcastChange('public:students');
       } catch (error) {
         console.error("Failed to commit student updates to Supabase:", error);
+        throw error;
+      } finally {
+        setTimeout(() => {
+          isLocalSavingRef.current = false;
+        }, 1500);
       }
+    } else {
+      isLocalSavingRef.current = false;
     }
   };
 
   const handleUpdateTemplate = async (newTemplate: Workspace15Template) => {
+    isLocalSavingRef.current = true;
     setTemplate(newTemplate);
     if (typeof window !== 'undefined') {
       localStorage.setItem('ezibeck_workspace15', JSON.stringify(newTemplate));
@@ -466,7 +489,14 @@ export default function App() {
         broadcastChange('public:school_config');
       } catch (error) {
         console.error("Failed to sync template to Supabase:", error);
+        throw error;
+      } finally {
+        setTimeout(() => {
+          isLocalSavingRef.current = false;
+        }, 1500);
       }
+    } else {
+      isLocalSavingRef.current = false;
     }
   };
 

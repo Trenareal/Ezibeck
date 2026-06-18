@@ -2642,23 +2642,7 @@ export default function TeacherDashboard({
               );
             })()}
 
-            {/* Bottom Right Escape Valve: Delete Report Card safety relocation */}
-            <div className="flex justify-end pt-4 print:hidden select-none">
-              <button
-                onClick={() => {
-                  setDeleteConfirmStudent({
-                    id: viewingReportStudent.id,
-                    name: viewingReportStudent.name,
-                    className: viewingReportStudent.className,
-                    source: 'view'
-                  });
-                }}
-                className="border border-red-200 bg-red-50 hover:bg-red-100 hover:border-red-400 text-red-650 font-black text-[11px] uppercase tracking-wider px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all cursor-pointer shadow-3xs"
-                title="Delete student and their report card"
-              >
-                <Trash2 className="w-3.5 h-3.5 text-red-600" /> Delete Report Card
-              </button>
-            </div>
+            {/* Bottom Right Escape Valve removed as requested */}
           </div>
         ) : editingStudent ? (
           <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-md">
