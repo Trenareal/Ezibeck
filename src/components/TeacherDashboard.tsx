@@ -11,7 +11,7 @@ import JSZip from 'jszip';
 import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile, DbStatus, AuditLogEntry } from '../types';
 import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal, generateUnique6DigitPassword, getDeterministicPasscode, getStudentPasscodesFromOtherTerms } from '../utils/academicUtils';
 import { logPasscodeEvent, getAuditLogs, clearAuditLogs } from '../utils/auditLogger';
-import { dbService, mapDbFacultyToFrontend } from '../lib/supabase';
+import { dbService, mapDbFacultyToFrontend, mapDbStudentToFrontend } from '../lib/supabase';
 import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
 import { ReportCardWatermark, ScratchCardWatermark } from './ReportCardWatermark';
 
@@ -1144,6 +1144,103 @@ export default function TeacherDashboard({
   const [editResumeDate, setEditResumeDate] = useState('2026-09-14');
   const [isSavingScores, setIsSavingScores] = useState(false);
   const [tempPortalLocked, setTempPortalLocked] = useState(template.portalLocked || false);
+  const [isLoadingStudentData, setIsLoadingStudentData] = useState(false);
+
+  // useEffect Hook to load latest saved student data directly from Supabase upon reopening the editor
+  useEffect(() => {
+    if (!editingStudent) return;
+    
+    let active = true;
+    async function loadLatestDbData() {
+      if (dbStatus && dbStatus.configured && dbStatus.connected) {
+        setIsLoadingStudentData(true);
+        console.log(`[Supabase Fetch] Reopening/opening editor for student ID: ${editingStudent.id}. Fetching latest live data...`);
+        try {
+          const rawDbData = await dbService.getStudentById(editingStudent.id);
+          if (rawDbData && active) {
+            const freshStudent = mapDbStudentToFrontend(rawDbData);
+            console.log(`[Supabase Success] Loaded latest live student details:`, freshStudent);
+            
+            // Re-apply values to edit form states to ensure inputs are never blank/stale
+            setEditAge(freshStudent.age);
+            setEditSex(freshStudent.sex);
+            setEditPassword(freshStudent.password || '123456');
+            setEditAttendancePresent(freshStudent.attendancePresent);
+            setEditAttendanceTotal(freshStudent.attendanceTotal);
+            
+            let subjectsListToEdit = [...freshStudent.subjects];
+            if (activeTermTab === 'Third Term') {
+              const baseId = freshStudent.id.split('_')[0];
+              try {
+                const firstTermKey = 'ezibeck_students_first_term';
+                const secondTermKey = 'ezibeck_students_second_term';
+                const firstTermData = typeof window !== 'undefined' ? localStorage.getItem(firstTermKey) : null;
+                const secondTermData = typeof window !== 'undefined' ? localStorage.getItem(secondTermKey) : null;
+                
+                const firstTermStuds: Student[] = firstTermData ? JSON.parse(firstTermData) : [];
+                const secondTermStuds: Student[] = secondTermData ? JSON.parse(secondTermData) : [];
+                
+                const matchingFirstStudent = firstTermStuds.find(s => s.id.startsWith(baseId));
+                const matchingSecondStudent = secondTermStuds.find(s => s.id.startsWith(baseId));
+                
+                subjectsListToEdit = subjectsListToEdit.map(subj => {
+                  let firstTermVal = subj.firstTermSummary !== undefined ? subj.firstTermSummary : 0;
+                  let secondTermVal = subj.secondTermSummary !== undefined ? subj.secondTermSummary : 0;
+                  let thirdTermVal = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
+                  
+                  if (firstTermVal === 0 && matchingFirstStudent) {
+                    const fs = matchingFirstStudent.subjects.find(s => s.name.toLowerCase() === subj.name.toLowerCase());
+                    if (fs) {
+                      const fsTotal = (fs.testScore || 0) + (fs.examScore || 0);
+                      firstTermVal = Math.round(fsTotal * 0.2);
+                    }
+                  }
+                  if (secondTermVal === 0 && matchingSecondStudent) {
+                    const ss = matchingSecondStudent.subjects.find(s => s.name.toLowerCase() === subj.name.toLowerCase());
+                    if (ss) {
+                      const ssTotal = (ss.testScore || 0) + (ss.examScore || 0);
+                      secondTermVal = Math.round(ssTotal * 0.2);
+                    }
+                  }
+                  if (thirdTermVal === 0) {
+                    const currentTotal = (subj.testScore || 0) + (subj.examScore || 0);
+                    thirdTermVal = Math.round(currentTotal * 0.6);
+                  }
+                  
+                  return {
+                    ...subj,
+                    firstTermSummary: firstTermVal,
+                    secondTermSummary: secondTermVal,
+                    thirdTermSummary: thirdTermVal
+                  };
+                });
+              } catch (e) {
+                console.error("Auto pre-populating summaries failed:", e);
+              }
+            }
+
+            setEditSubjects(subjectsListToEdit);
+            setEditBehaviour([...freshStudent.behaviour]);
+            setEditFormComment(freshStudent.formTeacherRemark);
+            setEditPrincipalRemark(freshStudent.principalRemark || '');
+            setEditTeacherName(freshStudent.formTeacherName);
+            setEditPrincipalName(freshStudent.principalName);
+            setEditResumeDate(freshStudent.resumptionDate);
+          }
+        } catch (e: any) {
+          console.error(`[Supabase Error] Unable to retrieve latest scores for student ID: ${editingStudent.id}`, e);
+        } finally {
+          if (active) setIsLoadingStudentData(false);
+        }
+      }
+    }
+
+    loadLatestDbData();
+
+    return () => {
+      active = false;
+    };
+  }, [editingStudent?.id]);
 
   // Trigger quick alerts helper
   const triggerSuccess = (msg: string) => {
@@ -1620,14 +1717,43 @@ export default function TeacherDashboard({
     let refreshed = students.map(s => s.id === editingStudent.id ? updatedStudent : s);
     refreshed = calculateClassPositions(refreshed, selectedClass, activeTermTab);
 
+    // Validate score boundaries to safeguard database check constraints
+    for (const s of editSubjects) {
+      if (s.testScore < 0 || s.testScore > 30) {
+        triggerWarning(`Validation Error: ${s.name} test score must be within 0-30 range.`);
+        return;
+      }
+      if (s.examScore < 0 || s.examScore > 70) {
+        triggerWarning(`Validation Error: ${s.name} exam score must be within 0-70 range.`);
+        return;
+      }
+    }
+
     setIsSavingScores(true);
+    console.log(`[Supabase Save] Initiating async save for student ${updatedStudent.name} (${updatedStudent.id})...`, updatedStudent);
+    
     try {
+      if (dbStatus && dbStatus.configured && dbStatus.connected) {
+        // Step 1: Persist directly to Supabase table (upsert basic data + subjects + behaviours)
+        console.log(`[Supabase Save] Connected. Invoking dbService.saveStudent...`);
+        await dbService.saveStudent(updatedStudent);
+        console.log(`[Supabase Save] Successfully saved ${updatedStudent.name} to online database.`);
+      } else {
+        console.warn(`[Supabase Save] Supabase is either unconfigured or offline. Saving to offline storage only.`);
+      }
+
+      // Step 2: Update local state / cached local files via parent handler
       await onUpdateStudents(refreshed);
+      
+      // Step 3: Keep the editing view active with the newly saved values
       setEditingStudent(updatedStudent);
+      
       triggerSuccess(`Reports updated perfectly for ${updatedStudent.name}! Class ranks recalculated.`);
     } catch (err: any) {
-      console.error("Failed to save student changes:", err);
-      triggerWarning(`Database Save Error: Unable to save grade changes. Please try again.`);
+      console.error("[Supabase Save Failure] Detail:", err);
+      // Construct detailed descriptive message
+      const errMsg = err?.message || err?.details || String(err);
+      triggerWarning(`Database Save Error: ${errMsg}. Please verify your network and schema. Check browser console logs for details.`);
     } finally {
       setIsSavingScores(false);
     }

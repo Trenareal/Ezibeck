@@ -227,6 +227,20 @@ export const dbService = {
     return data;
   },
 
+  async getStudentById(id: string) {
+    const { data, error } = await supabase
+      .from('students')
+      .select(`
+        *,
+        subjects:subject_grades(*),
+        behaviour:behavioural_ratings(*)
+      `)
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  },
+
   async saveStudent(student: any) {
     const { subjects, behaviour, ...studentData } = student;
     const fallbackId = `EZB-STUDENT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
