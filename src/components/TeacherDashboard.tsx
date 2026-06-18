@@ -1745,8 +1745,8 @@ export default function TeacherDashboard({
       // Step 2: Update local state / cached local files via parent handler
       await onUpdateStudents(refreshed);
       
-      // Step 3: Close the editor component upon successful database response
-      setEditingStudent(null);
+      // Step 3: Keep the editing view active with the newly saved values so the editor stays open and the button is re-enabled
+      setEditingStudent(updatedStudent);
       
       triggerSuccess(`Reports updated perfectly for ${updatedStudent.name}! Class ranks recalculated.`);
     } catch (err: any) {

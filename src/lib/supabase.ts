@@ -246,23 +246,23 @@ export const dbService = {
     const fallbackId = `EZB-STUDENT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const targetId = studentData.id || fallbackId;
 
-    // 1. Upsert student basic details
+    // 1. Upsert student basic details with strict type safety matching PostgreSQL column types
     const { data: savedStudent, error: studentError } = await supabase
       .from('students')
       .upsert({
         id: targetId,
         name: studentData.name,
-        age: studentData.age,
-        sex: studentData.sex,
-        class_name: studentData.className,
-        term_date: studentData.termDate,
-        session: studentData.session,
-        attendance_present: studentData.attendancePresent,
-        attendance_total: studentData.attendanceTotal,
-        form_teacher_remark: studentData.formTeacherRemark,
-        form_teacher_name: studentData.formTeacherName,
-        principal_name: studentData.principalName,
-        resumption_date: studentData.resumptionDate,
+        age: Math.max(1, Math.round(Number(studentData.age) || 15)),
+        sex: studentData.sex === 'Female' ? 'Female' : 'Male',
+        class_name: studentData.className || 'JSS1',
+        term_date: studentData.termDate || '',
+        session: studentData.session || '',
+        attendance_present: Math.max(0, Math.round(Number(studentData.attendancePresent) || 0)),
+        attendance_total: Math.max(0, Math.round(Number(studentData.attendanceTotal) || 110)),
+        form_teacher_remark: studentData.formTeacherRemark || '',
+        form_teacher_name: studentData.formTeacherName || '',
+        principal_name: studentData.principalName || '',
+        resumption_date: studentData.resumptionDate || '',
         password: studentData.password || '123456',
         principal_remark: studentData.principalRemark || ''
       })
@@ -278,17 +278,17 @@ export const dbService = {
       // Clear old
       await supabase.from('subject_grades').delete().eq('student_id', studentId);
       
-      // Insert new
+      // Insert new with strict bounds adhering to PostgreSQL check constraints (test <= 30, exam <= 70)
       const subjectsWithRelations = subjects.map((sub: any) => ({
         student_id: studentId,
         name: sub.name,
-        test_score: sub.testScore,
-        exam_score: sub.examScore,
-        first_term_summary: sub.firstTermSummary || 0,
-        second_term_summary: sub.secondTermSummary || 0,
-        third_term_summary: sub.thirdTermSummary || 0,
-        position: sub.position || null,
-        is_position_manual: sub.isPositionManual || false
+        test_score: Math.max(0, Math.min(30, Math.round(Number(sub.testScore) || 0))),
+        exam_score: Math.max(0, Math.min(70, Math.round(Number(sub.examScore) || 0))),
+        first_term_summary: Math.round(Number(sub.firstTermSummary) || 0),
+        second_term_summary: Math.round(Number(sub.secondTermSummary) || 0),
+        third_term_summary: Math.round(Number(sub.thirdTermSummary) || 0),
+        position: sub.position ? Math.max(1, Math.round(Number(sub.position))) : null,
+        is_position_manual: !!sub.isPositionManual
       }));
 
       const { error: subError } = await supabase
@@ -303,11 +303,11 @@ export const dbService = {
       // Clear old
       await supabase.from('behavioural_ratings').delete().eq('student_id', studentId);
 
-      // Insert new
+      // Insert new with strict rating bounds matching check constraints (1 to 5)
       const behaviourWithRelations = behaviour.map((b: any) => ({
         student_id: studentId,
         name: b.name,
-        rating: b.rating
+        rating: Math.max(1, Math.min(5, Math.round(Number(b.rating) || 5)))
       }));
 
       const { error: bError } = await supabase
@@ -323,17 +323,17 @@ export const dbService = {
   async saveAllStudents(students: Student[]) {
     if (students.length === 0) return;
 
-    // 1. Map all basic details to DB format
+    // 1. Map all basic details to DB format, enforcing strict integer data types
     const dbStudents = students.map(s => ({
       id: s.id,
       name: s.name,
-      age: s.age,
-      sex: s.sex,
-      class_name: s.className,
-      term_date: s.termDate,
-      session: s.session,
-      attendance_present: s.attendancePresent,
-      attendance_total: s.attendanceTotal,
+      age: Math.max(1, Math.round(Number(s.age) || 15)),
+      sex: s.sex === 'Female' ? 'Female' : 'Male',
+      class_name: s.className || 'JSS1',
+      term_date: s.termDate || '',
+      session: s.session || '',
+      attendance_present: Math.max(0, Math.round(Number(s.attendancePresent) || 0)),
+      attendance_total: Math.max(0, Math.round(Number(s.attendanceTotal) || 110)),
       form_teacher_remark: s.formTeacherRemark || '',
       form_teacher_name: s.formTeacherName || '',
       principal_name: s.principalName || '',
@@ -349,7 +349,7 @@ export const dbService = {
 
     if (studentError) throw studentError;
 
-    // 2. Gather all subjects and all behaviours from all students
+    // 2. Gather all subjects and all behaviours from all students, enforcing constraints
     const allSubjects: any[] = [];
     const allBehaviours: any[] = [];
     const studentIds = students.map(s => s.id);
@@ -360,13 +360,13 @@ export const dbService = {
           allSubjects.push({
             student_id: student.id,
             name: sub.name,
-            test_score: sub.testScore,
-            exam_score: sub.examScore,
-            first_term_summary: sub.firstTermSummary || 0,
-            second_term_summary: sub.secondTermSummary || 0,
-            third_term_summary: sub.thirdTermSummary || 0,
-            position: sub.position || null,
-            is_position_manual: sub.isPositionManual || false
+            test_score: Math.max(0, Math.min(30, Math.round(Number(sub.testScore) || 0))),
+            exam_score: Math.max(0, Math.min(70, Math.round(Number(sub.examScore) || 0))),
+            first_term_summary: Math.round(Number(sub.firstTermSummary) || 0),
+            second_term_summary: Math.round(Number(sub.secondTermSummary) || 0),
+            third_term_summary: Math.round(Number(sub.thirdTermSummary) || 0),
+            position: sub.position ? Math.max(1, Math.round(Number(sub.position))) : null,
+            is_position_manual: !!sub.isPositionManual
           });
         });
       }
@@ -376,7 +376,7 @@ export const dbService = {
           allBehaviours.push({
             student_id: student.id,
             name: b.name,
-            rating: b.rating
+            rating: Math.max(1, Math.min(5, Math.round(Number(b.rating) || 5)))
           });
         });
       }
