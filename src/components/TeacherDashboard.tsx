@@ -1623,7 +1623,7 @@ export default function TeacherDashboard({
     setIsSavingScores(true);
     try {
       await onUpdateStudents(refreshed);
-      setEditingStudent(null);
+      setEditingStudent(updatedStudent);
       triggerSuccess(`Reports updated perfectly for ${updatedStudent.name}! Class ranks recalculated.`);
     } catch (err: any) {
       console.error("Failed to save student changes:", err);
