@@ -19,20 +19,20 @@ import {
 } from './lib/supabase';
 
 const DEFAULT_WORKSPACE_15: Workspace15Template = {
-  schoolName: "Notion Core International College",
-  motto: "Knowledge, discipline and outstanding character excellence",
-  address: "120, Broadway Lane, New York, NY 10025",
-  phone: "+1 (555) 489-0128",
+  schoolName: "Ezibeck Academy",
+  motto: "Knowledge is Power",
+  address: "No.5 Ezibeck Crescent, Behind Udu Motor Park, Ovwian, Delta State",
+  phone: "+234070",
   email: "admissions@notioncollege.edu",
   resumptionDate: "September 14, 2026",
   termDate: "June 18, 2026",
   session: "2025/2026 Academic Year",
-  principalName: "Dr. Christopher Vance, PhD",
-  formTeacherJunior: "Mrs. Clara Vance",
-  formTeacherSenior: "Mr. Albert King",
+  principalName: "Maro German",
+  formTeacherJunior: "Maro German",
+  formTeacherSenior: "Maro German",
   currentTerm: "Third Term",
   nextTermFee: "₦150,000.00",
-  distinctionThreshold: 85,
+  distinctionThreshold: 90,
   passThreshold: 50,
 };
 

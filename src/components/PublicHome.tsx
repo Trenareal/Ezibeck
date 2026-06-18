@@ -1419,7 +1419,7 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
         </div>
       )}
 
-      {showGuidelines && <GuidelinesComponent onClose={() => setShowGuidelines(false)} />}
+      {showGuidelines && <GuidelinesComponent onClose={() => setShowGuidelines(false)} isPublic={true} />}
 
       {/* Footer */}
       <footer className="py-6 px-4 sm:px-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between text-center md:text-left gap-4 text-[9px] sm:text-[10px] text-slate-400 font-medium uppercase tracking-widest bg-white shadow-2xs">

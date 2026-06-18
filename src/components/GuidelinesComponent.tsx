@@ -7,17 +7,20 @@ import {
 interface GuidelinesComponentProps {
   onClose?: () => void;
   inlineOnly?: boolean;
+  isPublic?: boolean;
 }
 
-export default function GuidelinesComponent({ onClose, inlineOnly = false }: GuidelinesComponentProps) {
+export default function GuidelinesComponent({ onClose, inlineOnly = false, isPublic = false }: GuidelinesComponentProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'student' | 'teacher' | 'admin'>('overview');
 
   const tabs = [
     { id: 'overview', title: '📖 System Overview', bg: 'bg-emerald-50 text-emerald-800' },
     { id: 'student', title: '🎓 Student & Parent Portal', bg: 'bg-sky-50 text-sky-800' },
-    { id: 'teacher', title: '🏫 Staff & Teacher Desk', bg: 'bg-indigo-50 text-indigo-800' },
-    { id: 'admin', title: '🛡️ Admin & Security', bg: 'bg-rose-50 text-rose-800' }
-  ] as const;
+    ...(isPublic ? [] : [
+      { id: 'teacher', title: '🏫 Staff & Teacher Desk', bg: 'bg-indigo-50 text-indigo-850' },
+      { id: 'admin', title: '🛡️ Admin & Security', bg: 'bg-rose-50 text-rose-850' }
+    ])
+  ];
 
   const content = {
     overview: (
@@ -27,7 +30,7 @@ export default function GuidelinesComponent({ onClose, inlineOnly = false }: Gui
             <Award className="w-5 h-5" />
           </div>
           <div>
-            <h4 className="font-extrabold text-slate-900 text-sm">Notion College Portal (EZIBECK Academics)</h4>
+            <h4 className="font-extrabold text-slate-900 text-sm">EZIBECK Academics</h4>
             <p className="text-xs text-slate-650 mt-1 leading-relaxed">
               Welcome to our high-performance academic management ecosystem. Directed by our motto <span className="text-emerald-700 italic font-semibold">"Sharpening Minds, Inspiring Greatness"</span>, this platform integrates terminal scorecards, behavior monitoring, secure individual logins, and secure real-time online syncing.
             </p>

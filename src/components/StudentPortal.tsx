@@ -1511,7 +1511,7 @@ export default function StudentPortal({
         </div>
       )}
 
-      {showGuidelines && <GuidelinesComponent onClose={() => setShowGuidelines(false)} />}
+      {showGuidelines && <GuidelinesComponent onClose={() => setShowGuidelines(false)} isPublic={true} />}
 
     </div>
   );

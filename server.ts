@@ -42,9 +42,87 @@ async function startServer() {
       }
 
       if (!ai) {
-        res.json({
-          text: "Hello! I am ready to assist you. *(Note: GEMINI_API_KEY is currently not defined in Secrets, so I am running in Offline Simulation Mode.)*\n\nHow can I help you navigate the rosters, edit scorecard reports, reset security passcodes, or customize the Workspace 15 properties today?"
-        });
+        const lastMsg = (messages[messages.length - 1]?.text || "").toLowerCase();
+        let reply = "";
+
+        if (lastMsg.includes("score") || lastMsg.includes("exam") || lastMsg.includes("mark") || lastMsg.includes("grade")) {
+          reply = `### How to Enter Student Academic Scores
+To enter academic scores for any student, please follow these steps:
+
+1. **Select Class**: Navigate to the student roster list in the **Director Roster** page.
+2. **Open Row Editor**: Click on the specific student's name/row in the list.
+3. **Key in Data**: In the slide-out/modal **Active Row Editor**, enter the **CA Test Score** (max 30 marks) and the **Exam Score** (max 70 marks).
+4. **Behavioral Ratings**: Toggle behavioural attributes (such as Neatness, Cooperation, leadership, and hands-on Manners) on the 1–5 star scales.
+5. **Save Changes**: Click **Save Row Record**. The system automatically updates the student's final stats, averages, and grades.
+
+*(Note: In offline simulation mode, your changes are safely stored in your browser's persistent database.)*`;
+        } else if (lastMsg.includes("rank") || lastMsg.includes("position") || lastMsg.includes("calculate") || lastMsg.includes("average")) {
+          reply = `### Automatic Academic Calculations
+Yes! The calculation of averages, positions, and grades is fully automated:
+
+* **Automatic Aggregates**: The system automatically adds **CA Test Score (max 30)** + **Exam Score (max 70)** to calculate a total mark out of **100**.
+* **Automatic GPA & Percentage**: Overall percentage averages across all registered subjects are updated instantly upon saving.
+* **Auto Class Positions (Ranks)**: Student positions (e.g., 1st, 2nd, 3rd) are calculated dynamically relative to other peers in the same class. If score details change, classroom competitive positions are recalculated automatically!`;
+        } else if (lastMsg.includes("motto") || lastMsg.includes("fee") || lastMsg.includes("customize") || lastMsg.includes("branding") || lastMsg.includes("setting") || lastMsg.includes("value") || lastMsg.includes("workspace")) {
+          reply = `### How to Customize Motto, Fees & Branding (Workspace 15)
+To align the application configuration with Notion College's official mandates, Administrators can manage 15 distinct properties:
+
+1. Navigate to the **Workspace** tab inside the staff dashboard.
+2. Modify branding properties such as **School Name**, **School Motto** (*"Sharpening Minds, Inspiring Greatness"*), **School Address**, **School Phone number**, and **Official Email**.
+3. Set terminal specific fees: Set **Next Term Fees** inside the designated box.
+4. Save adjustments. Your school's name, logo badge, and motto details are instantly updated on the home portal, student login card, and printable PDF report card headers.`;
+        } else if (lastMsg.includes("lock") || lastMsg.includes("lockout") || lastMsg.includes("block")) {
+          reply = `### How to Lock / Block Student Portal Access
+You can lock student portal logins during examination periods, grading computation days, or fees clearance reviews:
+
+1. Navigate to the **Workspace** tab in your dashboard.
+2. Toggle the **Portal Locked / Gatekeeper Lockout** switch to **ON**.
+3. When locked, any student attempting to login using their passcode will be blocked and see a dynamic message: *"Student Report Portal is currently locked under maintenance."*
+4. Turn the switch back to **OFF** to restore global self-service access immediately.`;
+        } else if (lastMsg.includes("login") || lastMsg.includes("passcode") || lastMsg.includes("password") || lastMsg.includes("pin")) {
+          reply = `### Student Passcode Security & Access
+Our platform prioritizes secure yet convenient passkey logins with no passwords to remember:
+
+* **Unique 6-Digit Passcodes**: Every student is assigned a secure 6-digit numeric OTP/passcode.
+* **Accessing Reports**: On the home portal, students select their class, select their name, enter their passcode, and hit **Access Report**.
+* **Distributing slips**: Admins can batch-print beautiful passcode cards from the **Passcards** tab to distribute direct physical logins.
+* **Emergency Reset self-service**: If a student is locked out, they can input their emergency family email to request password/passcode resets directly.`;
+        } else if (lastMsg.includes("pdf") || lastMsg.includes("print") || lastMsg.includes("export") || lastMsg.includes("download") || lastMsg.includes("report")) {
+          reply = `### Downloading Stamped PDF Reports
+This workspace features a high-density PDF generation engine:
+
+1. **Launches Review Frame**: Locate the target student, and click the **Eye (Print Preview)** icon. This renders a high-definition mock report card.
+2. **Verified Stamps & Signatures**: The report card renders with certified school badges, official watermarks, principal stamps, and electronic signatures.
+3. **Execute PDF Download**: Click the **Download Official PDF** button. Your browser downloads a crystal-clear, printer-ready PDF.`;
+        } else if (lastMsg.includes("backup") || lastMsg.includes("csv") || lastMsg.includes("save") || lastMsg.includes("import")) {
+          reply = `### Backups and Excel/CSV Alignment
+Prevent accidental local database loss easily:
+
+* **CSV Import**: Tutors can import class records instantly using comma-separated spreadsheets containing row data: \`name\`, \`age\`, \`sex\` to avoid manual entry.
+* **ZIP Backups**: Click the **Download Classroom Backup** button to securely compress student datasets into a convenient zip file. You can restore this file at any time via the **Upload Backup** button.`;
+        } else if (lastMsg.includes("staff") || lastMsg.includes("tutor") || lastMsg.includes("teacher") || lastMsg.includes("permission")) {
+          reply = `### Role Assignments and Restricted Permissions
+Manage staff roles and enforce access security:
+
+* **Staff Desk Directory**: Administrators can configure dedicated profiles for individual tutors.
+* **Class Locking**: Turn on restrictions such as **SS2 Only** for a tutor. This locks their workspace inside their class. They won't be able to view, modify, or leak scores belonging to JSS1 or SS3.
+* **Security Audits**: The **Audit Logs** track all changes made by staff users, including passcode lookups, record edits, and term changes.`;
+        } else {
+          reply = `### EZIBECK Workspace Assistant (Offline Simulation Mode)
+I am here to guide you through managing Notion College's school systems. Since no \`GEMINI_API_KEY\` is configured in Secrets, I am running on local index rules.
+
+Here are some specific questions you can ask me:
+* **"How do I enter student exam scores?"**
+* **"How can I automatically calculate class positions and ranks?"**
+* **"How to customize our School Motto, Logo, and next term Fees?"**
+* **"How can I lock or unlock student portal access?"**
+* **"How do students log into the portal using 6-digit passcodes?"**
+* **"How to print or download reports as official stamped PDFs?"**
+
+*Simply ask about scores, ranks, customization, lockouts, logins, or PDFs, and I will supply detailed guidelines!*`;
+        }
+
+        res.json({ text: reply });
         return;
       }
 
