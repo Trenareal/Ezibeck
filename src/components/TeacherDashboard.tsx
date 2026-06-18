@@ -14,6 +14,8 @@ import { logPasscodeEvent, getAuditLogs, clearAuditLogs } from '../utils/auditLo
 import { dbService, mapDbFacultyToFrontend, mapDbStudentToFrontend } from '../lib/supabase';
 import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
 import { ReportCardWatermark, ScratchCardWatermark } from './ReportCardWatermark';
+import GuidelinesComponent from './GuidelinesComponent';
+import AIAgentComponent from './AIAgentComponent';
 
 interface TeacherDashboardProps {
   students: Student[];
@@ -24,6 +26,7 @@ interface TeacherDashboardProps {
   dbStatus?: DbStatus;
   onPushLocalToSupabase?: () => Promise<{ success: boolean; message: string }>;
   onPullFromSupabase?: () => Promise<{ success: boolean; message: string }>;
+  isSaving?: boolean;
 }
 
 export function isPasswordStandardCompliant(password: string): boolean {
@@ -117,7 +120,8 @@ export default function TeacherDashboard({
   onUpdateTemplate,
   dbStatus,
   onPushLocalToSupabase,
-  onPullFromSupabase
+  onPullFromSupabase,
+  isSaving = false
 }: TeacherDashboardProps) {
   const [currentUser, setCurrentUser] = useState<FacultyProfile | null>(() => {
     if (typeof window !== 'undefined') {
@@ -812,7 +816,7 @@ export default function TeacherDashboard({
   };
   
   // Dashboard Sub-navigation Tab
-  const [activeSubTab, setActiveSubTab] = useState<'roster' | 'workspace' | 'staff' | 'audit' | 'passcodes'>('roster');
+  const [activeSubTab, setActiveSubTab] = useState<'roster' | 'workspace' | 'staff' | 'audit' | 'passcodes' | 'guidelines'>('roster');
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
 
   // Update audit logs state on mount and tab activations
@@ -1733,19 +1737,10 @@ export default function TeacherDashboard({
     console.log(`[Supabase Save] Initiating async save for student ${updatedStudent.name} (${updatedStudent.id})...`, updatedStudent);
     
     try {
-      if (dbStatus && dbStatus.configured) {
-        // Step 1: Persist directly to Supabase table (upsert basic data + subjects + behaviours)
-        console.log(`[Supabase Save] Configured. Invoking dbService.saveStudent...`);
-        await dbService.saveStudent(updatedStudent);
-        console.log(`[Supabase Save] Successfully saved ${updatedStudent.name} to online database.`);
-      } else {
-        console.warn(`[Supabase Save] Supabase is not configured. Saving to offline storage only.`);
-      }
-
-      // Step 2: Update local state / cached local files via parent handler
+      // Streamline: Let high-performance parent handler perform selective differential upserting to both localStorage and Supabase
       await onUpdateStudents(refreshed);
       
-      // Step 3: Keep the editing view active with the newly saved values so the editor stays open and the button is re-enabled
+      // Keep local editing view active with the newly saved values so the editor stays open and form components are fully interactive
       setEditingStudent(updatedStudent);
       
       triggerSuccess(`Reports updated perfectly for ${updatedStudent.name}! Class ranks recalculated.`);
@@ -2167,6 +2162,12 @@ export default function TeacherDashboard({
               🔑 Passcards Directory
             </button>
           )}
+          <button
+            onClick={() => setActiveSubTab('guidelines')}
+            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${activeSubTab === 'guidelines' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-650'}`}
+          >
+            📖 Staff User Handbook
+          </button>
         </div>
       )}
 
@@ -3173,12 +3174,12 @@ export default function TeacherDashboard({
               </button>
               {!isTermReadOnly && (
                 <button
-                  disabled={isSavingScores}
+                  disabled={isSavingScores || isSaving}
                   onClick={saveStudentChanges}
                   className="bg-emerald-800 hover:bg-emerald-950 text-white font-bold text-xs px-6 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-emerald-900/10 cursor-pointer whitespace-nowrap disabled:bg-emerald-950/70 disabled:cursor-not-allowed"
                 >
-                  {isSavingScores ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 
-                  {isSavingScores ? 'Saving...' : 'Save Score'}
+                  {(isSavingScores || isSaving) ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 
+                  {(isSavingScores || isSaving) ? 'Saving...' : 'Save Score'}
                 </button>
               )}
             </div>
@@ -3641,6 +3642,11 @@ export default function TeacherDashboard({
                 );
               })()}
             </div>
+          </div>
+        ) : activeSubTab === 'guidelines' ? (
+          /* COMPREHENSIVE USER GUIDELINES PANEL */
+          <div className="max-w-6xl mx-auto animate-fade-in">
+            <GuidelinesComponent inlineOnly={true} />
           </div>
         ) : activeSubTab === 'workspace' ? (
           /* VIEW 3: WORKSPACE 15 PROPERTIES EDITABLE TEMPLATE FOR TEACHERS */
@@ -5248,6 +5254,9 @@ export default function TeacherDashboard({
           </div>
         </div>
       )}
+
+      {/* Floating AI Staff Assistant */}
+      <AIAgentComponent />
     </div>
   );
 }

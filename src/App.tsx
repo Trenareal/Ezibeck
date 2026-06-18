@@ -138,6 +138,7 @@ export default function App() {
   });
 
   const [syncTrigger, setSyncTrigger] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
   const activeChannelsRef = React.useRef<Record<string, any>>({});
   const isLocalSavingRef = React.useRef(false);
 
@@ -422,35 +423,93 @@ export default function App() {
 
   // Update students roster and commit back to term-isolated storage + Supabase
   const handleUpdateStudents = async (updatedList: Student[]) => {
+    setIsSaving(true);
     isLocalSavingRef.current = true;
-    // Determine deleted students to delete them in Supabase
-    const deletedStudents = students.filter(s => !updatedList.some(ul => ul.id === s.id));
+    try {
+      // Determine deleted students to delete them in Supabase
+      const deletedStudents = students.filter(s => !updatedList.some(ul => ul.id === s.id));
 
-    // Optimistically update frontend state and local storage fallback
-    setStudents(updatedList);
-    saveStudents(updatedList, template.currentTerm);
+      // Optimistically update frontend state and local storage fallback
+      setStudents(updatedList);
+      saveStudents(updatedList, template.currentTerm);
 
-    if (isSupabaseConfigured) {
-      try {
-        // Delete missing students from real database
-        for (const ds of deletedStudents) {
-          await dbService.deleteStudent(ds.id);
+      if (isSupabaseConfigured) {
+        try {
+          // 1. Delete missing students from real database
+          for (const ds of deletedStudents) {
+            await dbService.deleteStudent(ds.id);
+          }
+          
+          // 2. Identify and upsert only the added/modified students to prevent expensive bulk wiping
+          const changedStudents = updatedList.filter(ul => {
+            const original = students.find(s => s.id === ul.id);
+            if (!original) return true; // Brand new student
+
+            // Compare scalar student attributes
+            if (original.name !== ul.name ||
+                original.age !== ul.age ||
+                original.sex !== ul.sex ||
+                original.password !== ul.password ||
+                original.formTeacherRemark !== ul.formTeacherRemark ||
+                original.principalRemark !== ul.principalRemark ||
+                original.attendancePresent !== ul.attendancePresent ||
+                original.attendanceTotal !== ul.attendanceTotal ||
+                original.resumptionDate !== ul.resumptionDate ||
+                original.formTeacherName !== ul.formTeacherName ||
+                original.principalName !== ul.principalName) {
+              return true;
+            }
+
+            // Compare subjects array length and inner contents
+            if ((original.subjects || []).length !== (ul.subjects || []).length) return true;
+            for (let i = 0; i < (original.subjects || []).length; i++) {
+              const os = original.subjects[i];
+              const us = ul.subjects[i];
+              if (!us || 
+                  os.name !== us.name ||
+                  os.testScore !== us.testScore ||
+                  os.examScore !== us.examScore ||
+                  os.firstTermSummary !== us.firstTermSummary ||
+                  os.secondTermSummary !== us.secondTermSummary ||
+                  os.thirdTermSummary !== us.thirdTermSummary ||
+                  os.position !== us.position) {
+                return true;
+              }
+            }
+
+            // Compare behaviours array length and ratings
+            if ((original.behaviour || []).length !== (ul.behaviour || []).length) return true;
+            for (let i = 0; i < (original.behaviour || []).length; i++) {
+              const ob = original.behaviour[i];
+              const ub = ul.behaviour[i];
+              if (!ub || ob.name !== ub.name || ob.rating !== ub.rating) {
+                return true;
+              }
+            }
+
+            return false;
+          });
+
+          // 3. Persist each changed student to Supabase (doing single-record upsert)
+          for (const cs of changedStudents) {
+            await dbService.saveStudent(cs);
+          }
+          
+          // Broadcast change so other active devices reload instantly
+          broadcastChange('public:students');
+        } catch (error) {
+          console.error("Failed to commit student updates to Supabase:", error);
+          throw error;
+        } finally {
+          setTimeout(() => {
+            isLocalSavingRef.current = false;
+          }, 1500);
         }
-        // Save the updated/registered students
-        await dbService.saveAllStudents(updatedList);
-        
-        // Broadcast change so other active devices reload instantly
-        broadcastChange('public:students');
-      } catch (error) {
-        console.error("Failed to commit student updates to Supabase:", error);
-        throw error;
-      } finally {
-        setTimeout(() => {
-          isLocalSavingRef.current = false;
-        }, 1500);
+      } else {
+        isLocalSavingRef.current = false;
       }
-    } else {
-      isLocalSavingRef.current = false;
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -526,6 +585,7 @@ export default function App() {
             dbStatus={dbStatus}
             onPushLocalToSupabase={handlePushLocalToSupabase}
             onPullFromSupabase={handlePullFromSupabase}
+            isSaving={isSaving}
           />
         </div>
       )}

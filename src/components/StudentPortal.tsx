@@ -13,6 +13,7 @@ import { logPasscodeEvent } from '../utils/auditLogger';
 import { isSupabaseConfigured, dbService, mapDbStudentToFrontend } from '../lib/supabase';
 import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
 import { ReportCardWatermark } from './ReportCardWatermark';
+import GuidelinesComponent from './GuidelinesComponent';
 
 interface StudentPortalProps {
   students: Student[];
@@ -58,6 +59,7 @@ export default function StudentPortal({
   const [simulatedNotification, setSimulatedNotification] = useState('');
   const [newPass, setNewPass] = useState('');
   const [newPassConfirm, setNewPassConfirm] = useState('');
+  const [showGuidelines, setShowGuidelines] = useState(false);
 
   const [viewingTerm, setViewingTerm] = useState<'First Term' | 'Second Term' | 'Third Term'>(() => {
     if (template.currentTerm === 'First Term' || template.currentTerm === 'Second Term' || template.currentTerm === 'Third Term') {
@@ -517,12 +519,21 @@ export default function StudentPortal({
       
       {/* Search Selection Header Card (hidden during print) */}
       <div className="max-w-4xl mx-auto mb-8 print:hidden">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-emerald-705 transition-all mb-5 uppercase tracking-wider cursor-pointer"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to School Homepage
-        </button>
+        <div className="flex items-center justify-between gap-4 mb-5">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-emerald-705 transition-all uppercase tracking-wider cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to School Homepage
+          </button>
+          
+          <button
+            onClick={() => setShowGuidelines(true)}
+            className="flex items-center gap-1.5 bg-sky-50 border border-sky-100 text-sky-850 hover:bg-sky-100/80 transition-all px-3 py-1.5 rounded-full text-[10px] font-black uppercase cursor-pointer"
+          >
+            <BookOpen className="w-3.5 h-3.5" /> Portal Guidebook
+          </button>
+        </div>
 
          {/* Terminal Sessions Directory inside Student Portal */}
         <div className="bg-slate-900 border border-slate-800 text-white rounded-3xl p-6 mb-6 shadow-md overflow-hidden relative select-none">
@@ -1500,6 +1511,7 @@ export default function StudentPortal({
         </div>
       )}
 
+      {showGuidelines && <GuidelinesComponent onClose={() => setShowGuidelines(false)} />}
 
     </div>
   );

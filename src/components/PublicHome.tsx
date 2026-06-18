@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Workspace15Template } from '../types';
 import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
+import GuidelinesComponent from './GuidelinesComponent';
 
 interface PublicHomeProps {
   onEnterPortal: (role: 'student' | 'teacher') => void;
@@ -158,6 +159,7 @@ const EVENT_DEFINITIONS: CalendarEvent[] = [
 
 export default function PublicHome({ onEnterPortal, template }: PublicHomeProps) {
   const [activeTab, setActiveTab] = useState<'welcome' | 'about'>('welcome');
+  const [showGuidelines, setShowGuidelines] = useState(false);
 
   const handleTabChange = (tab: 'welcome' | 'about') => {
     setActiveTab(tab);
@@ -377,6 +379,12 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
               className="text-sm font-bold transition-all py-1.5 border-b-2 text-slate-500 hover:text-emerald-600 border-transparent"
             >
               Google Calendars
+            </button>
+            <button 
+              onClick={() => setShowGuidelines(true)} 
+              className="text-sm font-bold transition-all py-1.5 border-b-2 text-slate-500 hover:text-emerald-600 border-transparent cursor-pointer"
+            >
+              System Guidelines
             </button>
           </nav>
 
@@ -1410,6 +1418,8 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
           </div>
         </div>
       )}
+
+      {showGuidelines && <GuidelinesComponent onClose={() => setShowGuidelines(false)} />}
 
       {/* Footer */}
       <footer className="py-6 px-4 sm:px-12 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between text-center md:text-left gap-4 text-[9px] sm:text-[10px] text-slate-400 font-medium uppercase tracking-widest bg-white shadow-2xs">
