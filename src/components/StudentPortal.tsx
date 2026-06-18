@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, GraduationCap, Search, BookOpen, Eye, EyeOff, Layers, Printer, Star, Wifi, WifiOff, CloudLightning, Clock } from 'lucide-react';
+import { ArrowLeft, GraduationCap, Search, BookOpen, Eye, EyeOff, Layers, Printer, Star, Wifi, WifiOff, CloudLightning, Clock, Lock } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Student, ClassName, Workspace15Template, DbStatus, AuditLogEntry } from '../types';
@@ -475,6 +475,42 @@ export default function StudentPortal({
     setShowResetForm(false);
     setSimulatedNotification('');
   };
+
+  if (template.portalLocked) {
+    return (
+      <div className="bg-slate-100 min-h-screen py-12 px-4 sm:px-6 lg:px-8 font-sans flex items-center justify-center">
+        <div className="max-w-md w-full bg-white border border-slate-200 rounded-3xl p-8 text-center shadow-xl animate-fade-in relative overflow-hidden">
+          {/* Accent decoration */}
+          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-red-500 to-rose-600"></div>
+          
+          <button
+            onClick={onBack}
+            className="absolute top-4 left-4 flex items-center gap-1.5 text-[10px] font-black uppercase text-slate-400 hover:text-slate-600 transition-all cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Back
+          </button>
+
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-100 shadow-3xs text-red-650 animate-pulse mt-4">
+            <Lock className="w-8 h-8" />
+          </div>
+          
+          <h2 className="text-xl font-black text-slate-900 tracking-tight mb-2 uppercase">Access Restricted</h2>
+          <p className="text-sm text-slate-650 font-extrabold leading-relaxed mb-6">
+            Result are not yet ready try again later
+          </p>
+          
+          <div className="pt-2">
+            <button
+              onClick={onBack}
+              className="w-full bg-slate-900 hover:bg-slate-950 text-white font-extrabold text-[11px] tracking-widest uppercase py-3.5 rounded-xl transition-all cursor-pointer shadow-md"
+            >
+              Back to Homepage
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-slate-50/70 min-h-screen py-10 px-4 sm:px-6 lg:px-8 font-sans print:bg-white print:py-0 print:px-0">

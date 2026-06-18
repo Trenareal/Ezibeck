@@ -1078,6 +1078,7 @@ export default function TeacherDashboard({
     setTempNextTermFee(template.nextTermFee);
     setTempDistinctionThreshold(template.distinctionThreshold);
     setTempPassThreshold(template.passThreshold);
+    setTempPortalLocked(template.portalLocked || false);
   }, [template]);
 
   // Enforce dynamic staff account restriction live and dynamically propagate credential changes (username/password/name)
@@ -1141,6 +1142,8 @@ export default function TeacherDashboard({
   const [editTeacherName, setEditTeacherName] = useState('');
   const [editPrincipalName, setEditPrincipalName] = useState('');
   const [editResumeDate, setEditResumeDate] = useState('2026-09-14');
+  const [isSavingScores, setIsSavingScores] = useState(false);
+  const [tempPortalLocked, setTempPortalLocked] = useState(template.portalLocked || false);
 
   // Trigger quick alerts helper
   const triggerSuccess = (msg: string) => {
@@ -1571,7 +1574,7 @@ export default function TeacherDashboard({
   };
 
   // Save Student Academic updates
-  const saveStudentChanges = () => {
+  const saveStudentChanges = async () => {
     if (!editingStudent) return;
 
     if (editPassword) {
@@ -1617,9 +1620,17 @@ export default function TeacherDashboard({
     let refreshed = students.map(s => s.id === editingStudent.id ? updatedStudent : s);
     refreshed = calculateClassPositions(refreshed, selectedClass, activeTermTab);
 
-    onUpdateStudents(refreshed);
-    setEditingStudent(null);
-    triggerSuccess(`Reports updated perfectly for ${updatedStudent.name}! Class ranks recalculated.`);
+    setIsSavingScores(true);
+    try {
+      await onUpdateStudents(refreshed);
+      setEditingStudent(null);
+      triggerSuccess(`Reports updated perfectly for ${updatedStudent.name}! Class ranks recalculated.`);
+    } catch (err: any) {
+      console.error("Failed to save student changes:", err);
+      triggerWarning(`Database Save Error: Unable to save grade changes. Please try again.`);
+    } finally {
+      setIsSavingScores(false);
+    }
   };
 
   // Remove Student Profile Efficaciously
@@ -3042,44 +3053,24 @@ export default function TeacherDashboard({
             </div>
 
             {/* Save Buttons and actions */}
-            <div className="border-t pt-6 mt-8 flex flex-wrap justify-between items-center gap-3 print:hidden">
+            <div className="border-t pt-6 mt-8 flex justify-end gap-3 print:hidden">
               <button
-                disabled={isTermReadOnly}
-                onClick={() => {
-                  setDeleteConfirmStudent({
-                    id: editingStudent.id,
-                    name: editingStudent.name,
-                    className: editingStudent.className,
-                    source: 'edit'
-                  });
-                }}
-                className={`font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer ${
-                  isTermReadOnly 
-                    ? 'bg-slate-100 text-slate-450 border border-slate-250 cursor-not-allowed select-none' 
-                    : 'border border-red-200 bg-red-50 hover:bg-red-100 hover:border-red-400 text-red-650'
-                }`}
-                title="Delete student and their report card"
+                disabled={isSavingScores}
+                onClick={() => setEditingStudent(null)}
+                className="border border-slate-350 hover:bg-slate-50 text-slate-650 font-bold text-xs px-6 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isTermReadOnly ? <Lock className="w-3.5 h-3.5 text-slate-400" /> : <Trash2 className="w-3.5 h-3.5" />} 
-                Delete Report Card
+                {isTermReadOnly ? 'Close Profile' : 'Discard Changes'}
               </button>
-
-              <div className="flex gap-2">
+              {!isTermReadOnly && (
                 <button
-                  onClick={() => setEditingStudent(null)}
-                  className="border border-slate-350 hover:bg-slate-50 text-slate-650 font-bold text-xs px-6 py-2.5 rounded-xl transition-all cursor-pointer whitespace-nowrap"
+                  disabled={isSavingScores}
+                  onClick={saveStudentChanges}
+                  className="bg-emerald-800 hover:bg-emerald-950 text-white font-bold text-xs px-6 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-emerald-900/10 cursor-pointer whitespace-nowrap disabled:bg-emerald-950/70 disabled:cursor-not-allowed"
                 >
-                  {isTermReadOnly ? 'Close Profile' : 'Discard Changes'}
+                  {isSavingScores ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 
+                  {isSavingScores ? 'Saving Scores to Database...' : 'Save Score Updates'}
                 </button>
-                {!isTermReadOnly && (
-                  <button
-                    onClick={saveStudentChanges}
-                    className="bg-emerald-800 hover:bg-emerald-950 text-white font-bold text-xs px-6 py-2.5 rounded-xl transition-all flex items-center gap-1.5 shadow-md shadow-emerald-900/10 cursor-pointer whitespace-nowrap"
-                  >
-                    <Save className="w-4 h-4" /> Save Score Updates
-                  </button>
-                )}
-              </div>
+              )}
             </div>
 
             {/* Interactive Real-Time Report Sheet Live Preview */}
@@ -3576,8 +3567,9 @@ export default function TeacherDashboard({
                   nextTermFee: tempNextTermFee,
                   distinctionThreshold: Number(tempDistinctionThreshold),
                   passThreshold: Number(tempPassThreshold),
+                  portalLocked: tempPortalLocked,
                 });
-                triggerSuccess('Scholastic report template settings (15 properties) successfully saved!');
+                triggerSuccess('Scholastic report template settings and portal status successfully saved!');
               }}
               className="space-y-6 text-xs"
             >
@@ -3796,6 +3788,47 @@ export default function TeacherDashboard({
                     />
                   </div>
                 </div>
+                </div>
+
+                {/* Section E: Student Portal Control */}
+                <div className="space-y-3.5 pt-4">
+                  <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-l-4 border-slate-900 pl-2">
+                    Section E: Student Portal Control
+                  </h4>
+                  <div className="bg-slate-50 border border-slate-205 rounded-2xl p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="space-y-1 text-left w-full md:w-2/3">
+                      <span className="font-bold text-xs text-slate-905 flex items-center gap-1.5">
+                        📂 Student Report Card Access Portal
+                      </span>
+                      <p className="text-[11px] text-slate-505 leading-relaxed font-sans">
+                        Toggle this switch to control whether students are permitted to log in and inspect their termly result report cards. If locked, students attempting to log in will receive a secure notification that results are not yet ready.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setTempPortalLocked(false)}
+                        className={`px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer ${
+                          !tempPortalLocked 
+                            ? 'bg-emerald-600 border border-emerald-500 text-white shadow-3xs' 
+                            : 'bg-white border border-slate-250 text-slate-500 hover:bg-slate-50'
+                        }`}
+                      >
+                        🔓 Open / Unlock
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTempPortalLocked(true)}
+                        className={`px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest rounded-xl transition-all cursor-pointer ${
+                          tempPortalLocked 
+                            ? 'bg-red-650 border border-red-500 text-white shadow-3xs' 
+                            : 'bg-white border border-slate-250 text-slate-500 hover:bg-slate-50'
+                        }`}
+                      >
+                        🔒 Locked
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </fieldset>
 

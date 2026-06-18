@@ -71,6 +71,7 @@ export interface Workspace15Template {
   nextTermFee: string;           // 13
   distinctionThreshold: number;  // 14
   passThreshold: number;         // 15
+  portalLocked?: boolean;        // 16: Lock status for students
 }
 
 export interface SchoolInfo {

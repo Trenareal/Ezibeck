@@ -60,9 +60,12 @@ export const mapDbStudentToFrontend = (dbStudent: any): Student => {
 };
 
 export const mapDbConfigToTemplate = (cfg: any): Workspace15Template => {
+  const mottoRaw = cfg.motto || '';
+  const isLocked = mottoRaw.includes('|LOCKED') || !!cfg.portal_locked;
+  const cleanMotto = mottoRaw.split('|LOCKED')[0];
   return {
     schoolName: cfg.school_name,
-    motto: cfg.motto,
+    motto: cleanMotto,
     address: cfg.address,
     phone: cfg.phone,
     email: cfg.email,
@@ -76,13 +79,16 @@ export const mapDbConfigToTemplate = (cfg: any): Workspace15Template => {
     nextTermFee: cfg.next_term_fee,
     distinctionThreshold: cfg.distinction_threshold,
     passThreshold: cfg.pass_threshold,
+    portalLocked: isLocked,
   };
 };
 
 export const mapTemplateToDbConfig = (tpl: Workspace15Template) => {
+  const cleanMotto = tpl.motto ? tpl.motto.split('|LOCKED')[0] : '';
+  const mottoToStore = tpl.portalLocked ? `${cleanMotto}|LOCKED` : cleanMotto;
   return {
     school_name: tpl.schoolName,
-    motto: tpl.motto,
+    motto: mottoToStore,
     address: tpl.address,
     phone: tpl.phone,
     email: tpl.email,
