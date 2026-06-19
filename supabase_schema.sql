@@ -17,11 +17,11 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- Table 1. School Profile Configuration
 CREATE TABLE IF NOT EXISTS public.school_config (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    school_name text NOT NULL DEFAULT 'Notion Core International College',
+    school_name text NOT NULL DEFAULT 'Ezibeck Core International College',
     motto text NOT NULL DEFAULT 'Knowledge, discipline and outstanding character excellence',
     address text NOT NULL DEFAULT '120, Broadway Lane, New York, NY 10025',
     phone text NOT NULL DEFAULT '+1 (555) 489-0128',
-    email text NOT NULL DEFAULT 'admissions@notioncollege.edu',
+    email text NOT NULL DEFAULT 'admissions@ezibeckcollege.edu',
     resumption_date text NOT NULL DEFAULT 'September 14, 2026',
     term_date text NOT NULL DEFAULT 'June 18, 2026',
     session text NOT NULL DEFAULT '2025/2026 Academic Year',
@@ -185,7 +185,7 @@ CREATE POLICY "Allow public delete operations" ON public.calendar_events FOR DEL
 -- =====================================================================
 -- Insert Initial Defaults safely
 INSERT INTO public.school_config (school_name, motto, address, phone, email, resumption_date, term_date, session, principal_name, form_teacher_junior, form_teacher_senior, current_term, next_term_fee, distinction_threshold, pass_threshold) 
-VALUES ('Notion Core International College', 'Knowledge, discipline and outstanding character excellence', '120, Broadway Lane, New York, NY 10025', '+1 (555) 489-0128', 'admissions@notioncollege.edu', 'September 14, 2026', 'June 18, 2026', '2025/2026 Academic Year', 'Dr. Christopher Vance, PhD', 'Mrs. Clara Vance', 'Mr. Albert King', 'Third Term Summary', '₦150,000.00', 85, 50)
+VALUES ('Ezibeck Core International College', 'Knowledge, discipline and outstanding character excellence', '120, Broadway Lane, New York, NY 10025', '+1 (555) 489-0128', 'admissions@ezibeckcollege.edu', 'September 14, 2026', 'June 18, 2026', '2025/2026 Academic Year', 'Dr. Christopher Vance, PhD', 'Mrs. Clara Vance', 'Mr. Albert King', 'Third Term Summary', '₦150,000.00', 85, 50)
 ON CONFLICT DO NOTHING;
 
 

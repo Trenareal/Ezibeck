@@ -267,7 +267,7 @@ export default function App() {
     try {
       const ch = activeChannelsRef.current[topic];
       if (ch) {
-        console.log(`📡 Sending realtime sync broadcast on active channel: ${topic}`);
+        // Realtime sync broadcast
         ch.send({
           type: 'broadcast',
           event: 'sync',
@@ -315,14 +315,13 @@ export default function App() {
         .channel(topic, { config: { private: true } })
         .on('broadcast', { event: '*' }, (payload) => {
           if (isLocalSavingRef.current) {
-            console.log(`Ignoring realtime broadcast on topic: ${topic} because local save is in progress.`);
             return;
           }
-          console.log(`📥 Received real-time broadcast sync on topic: ${topic}`, payload);
+          // Real-time broadcast sync received
           setSyncTrigger((prev) => prev + 1);
         })
         .subscribe((status) => {
-          console.log(`📡 Real-time channel ${topic} status: ${status}`);
+          // Connected status handler
         });
         
       channelsMap[topic] = ch;
@@ -346,7 +345,6 @@ export default function App() {
           // 1. Try loading school config from Supabase
           let cfg = await dbService.getSchoolConfig();
           if (!cfg) {
-            console.log("No school config found in Supabase, seeding default config row...");
             const dbTpl = mapTemplateToDbConfig(DEFAULT_WORKSPACE_15);
             const { data, error } = await supabase.from('school_config').insert(dbTpl).select();
             if (!error && data && data.length > 0) {
@@ -381,7 +379,6 @@ export default function App() {
           if (termFiltered.length > 0) {
             setStudents(termFiltered);
           } else {
-            console.log(`Supabase: No students found for active term "${targetTerm}". Seeding database with current cached dataset...`);
             const initialForTerm = loadStoredStudents(targetTerm);
             setStudents(initialForTerm);
             await dbService.saveAllStudents(initialForTerm);
@@ -526,7 +523,7 @@ export default function App() {
         try {
           cfg = await dbService.getSchoolConfig();
         } catch (err) {
-          console.log("No config found, we will insert.");
+          // Config was not found, insert will follow
         }
         const dbTpl = mapTemplateToDbConfig(newTemplate);
         if (cfg && cfg.id) {

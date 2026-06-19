@@ -65,7 +65,7 @@ Yes! The calculation of averages, positions, and grades is fully automated:
 * **Auto Class Positions (Ranks)**: Student positions (e.g., 1st, 2nd, 3rd) are calculated dynamically relative to other peers in the same class. If score details change, classroom competitive positions are recalculated automatically!`;
         } else if (lastMsg.includes("motto") || lastMsg.includes("fee") || lastMsg.includes("customize") || lastMsg.includes("branding") || lastMsg.includes("setting") || lastMsg.includes("value") || lastMsg.includes("workspace")) {
           reply = `### How to Customize Motto, Fees & Branding (Workspace 15)
-To align the application configuration with Notion College's official mandates, Administrators can manage 15 distinct properties:
+To align the application configuration with Ezibeck Academy's official mandates, Administrators can manage 15 distinct properties:
 
 1. Navigate to the **Workspace** tab inside the staff dashboard.
 2. Modify branding properties such as **School Name**, **School Motto** (*"Sharpening Minds, Inspiring Greatness"*), **School Address**, **School Phone number**, and **Official Email**.
@@ -109,7 +109,7 @@ Manage staff roles and enforce access security:
 * **Security Audits**: The **Audit Logs** track all changes made by staff users, including passcode lookups, record edits, and term changes.`;
         } else {
           reply = `### EZIBECK Workspace Assistant (Offline Simulation Mode)
-I am here to guide you through managing Notion College's school systems. Since no \`GEMINI_API_KEY\` is configured in Secrets, I am running on local index rules.
+I am here to guide you through managing Ezibeck Academy's school systems. Since no \`GEMINI_API_KEY\` is configured in Secrets, I am running on local index rules.
 
 Here are some specific questions you can ask me:
 * **"How do I enter student exam scores?"**
@@ -139,7 +139,7 @@ Here are some specific questions you can ask me:
       }
 
       const systemInstruction = 
-        `You are the EZIBECK Academics AI Assistant, an elite, professional, and friendly coordinator helper. Your goal is to support the staff, educators, and administrators of Notion College / EZIBECK Academics in using their Workspace Desk.
+        `You are the EZIBECK Academics AI Assistant, an elite, professional, and friendly coordinator helper. Your goal is to support the staff, educators, and administrators of Ezibeck Academy / EZIBECK Academics in using their Workspace Desk.
 
 Here is an overview of the platform functionalities and systems you can guide users on:
 1. **Roster & Academic Marks Directory**:

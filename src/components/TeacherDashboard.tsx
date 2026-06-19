@@ -259,7 +259,7 @@ export default function TeacherDashboard({
 
       // Generate razor sharp canvas ignoring active window scrolls
       const canvas = await html2canvas(element, {
-        scale: 2.0, // High-DPI razor sharp scaling
+        scale: 3.0, // High-DPI razor sharp scaling
         useCORS: true,
         allowTaint: true,
         logging: false,
@@ -297,7 +297,7 @@ export default function TeacherDashboard({
         const ySplitPoint = totalPdfHeight * ratio;
 
         // --- PAGE 1: Terminal Scores & Statistics (Part A) ---
-        pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, totalPdfHeight, undefined, 'FAST');
+        pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, totalPdfHeight, undefined, 'NONE');
         
         // Solid white cover mask to cleanly hide anything that bleeds past the first page layout break
         pdf.setFillColor(255, 255, 255);
@@ -306,7 +306,7 @@ export default function TeacherDashboard({
         // --- PAGE 2: Behavior character, Grades index, and remarks (Part B) ---
         pdf.addPage();
         const yOffset2 = 10 - ySplitPoint;
-        pdf.addImage(imgData, 'PNG', 10, yOffset2, imgWidth, totalPdfHeight, undefined, 'FAST');
+        pdf.addImage(imgData, 'PNG', 10, yOffset2, imgWidth, totalPdfHeight, undefined, 'NONE');
 
         // Clean white header mask on Page 2
         pdf.setFillColor(255, 255, 255);
@@ -319,7 +319,7 @@ export default function TeacherDashboard({
           format: 'a4'
         });
         const yMargin = (297 - imgHeight) / 2;
-        pdf.addImage(imgData, 'PNG', 10, yMargin, imgWidth, imgHeight, undefined, 'FAST');
+        pdf.addImage(imgData, 'PNG', 10, yMargin, imgWidth, imgHeight, undefined, 'NONE');
       } else if (imgHeight <= 340) {
         // Option 3: Slightly taller. Scale down gracefully so the entire report fits beautifully on a single A4 page.
         const scaleFactor = 277 / imgHeight;
@@ -332,7 +332,7 @@ export default function TeacherDashboard({
           unit: 'mm',
           format: 'a4'
         });
-        pdf.addImage(imgData, 'PNG', xMargin, 10, adjustedWidth, adjustedHeight, undefined, 'FAST');
+        pdf.addImage(imgData, 'PNG', xMargin, 10, adjustedWidth, adjustedHeight, undefined, 'NONE');
       } else {
         // Option 4: Extremely long template. Print as an elegant single-page PDF with custom height.
         pdf = new jsPDF({
@@ -340,7 +340,7 @@ export default function TeacherDashboard({
           unit: 'mm',
           format: [210, imgHeight + 20]
         });
-        pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight, undefined, 'FAST');
+        pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight, undefined, 'NONE');
       }
       
       const filename = `${template.schoolName.replace(/\s+/g, '_')}_Report_Sheet_${viewingReportStudent.id}_${viewingReportStudent.name.replace(/\s+/g, '_')}.pdf`;
@@ -901,8 +901,6 @@ export default function TeacherDashboard({
   useEffect(() => {
     if (dbStatus && dbStatus.error) {
       console.error("🔴 DATABASE SYNC FAILURE DETAILS:", dbStatus.error);
-    } else if (dbStatus && dbStatus.configured && dbStatus.connected) {
-      console.log("🟢 Supabase Database connected and synchronized successfully!");
     }
   }, [dbStatus]);
 
@@ -927,7 +925,6 @@ export default function TeacherDashboard({
             const alignedIds = aligned.map(f => f.id);
             const extraProfiles = mapped.filter(f => !alignedIds.includes(f.id));
             for (const extra of extraProfiles) {
-              console.log("Supabase: Removing non-core educator profile:", extra.name || extra.id);
               await dbService.deleteFacultyProfile(extra.id).catch(err => {
                 console.error("Failed to clean up non-core faculty profile:", extra.id, err);
               });
@@ -939,7 +936,6 @@ export default function TeacherDashboard({
             }
           } else {
             // Seed defaults to Supabase so it's always populated initially
-            console.log("Supabase: Seeding default faculty profiles to database...");
             for (const f of DEFAULT_FACULTY) {
               await dbService.saveFacultyProfile(f).catch(err => {
                 console.error("Failed to seed default faculty profile:", f.name, err);
@@ -1287,12 +1283,10 @@ export default function TeacherDashboard({
     async function loadLatestDbData() {
       if (dbStatus && dbStatus.configured) {
         setIsLoadingStudentData(true);
-        console.log(`[Supabase Fetch] Reopening/opening editor for student ID: ${editingStudent.id}. Fetching latest live data...`);
         try {
           const rawDbData = await dbService.getStudentById(editingStudent.id);
           if (rawDbData && active) {
             const freshStudent = mapDbStudentToFrontend(rawDbData);
-            console.log(`[Supabase Success] Loaded latest live student details:`, freshStudent);
             
             // Re-apply values to edit form states to ensure inputs are never blank/stale
             setEditAge(freshStudent.age);
@@ -1871,7 +1865,6 @@ export default function TeacherDashboard({
     }
 
     setIsSavingScores(true);
-    console.log(`[Supabase Save] Initiating async save for student ${updatedStudent.name} (${updatedStudent.id})...`, updatedStudent);
     
     try {
       // Streamline: Let high-performance parent handler perform selective differential upserting to both localStorage and Supabase
