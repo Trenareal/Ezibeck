@@ -138,7 +138,7 @@ const EVENT_DEFINITIONS: CalendarEvent[] = [
   { id: 'e-26-em', title: "Easter Monday", desc: "Post-Easter relaxation break.", type: 'holiday', day: 6, month: 3, year: 2026 },
   { id: 'res-26-t3', title: "3rd Term Reopening", desc: "Final summer-flow term begins.", type: 'academic', day: 20, month: 3, year: 2026 },
   { id: 'exam-26-t3', title: "Promotion Exams & Tests", desc: "Determines standard upgrade logs.", type: 'exam', day: 15, month: 5, year: 2026 },
-  { id: 'term-26-close', title: "Academic Term Graduation Day", desc: "Awarding of report slips of Notion College.", type: 'academic', day: 18, month: 5, year: 2026 },
+  { id: 'term-26-close', title: "Academic Term Graduation Day", desc: "Awarding of report slips of Ezibeck College.", type: 'academic', day: 18, month: 5, year: 2026 },
   { id: 'break-26-summer', title: "Summer Retreat Vacation", desc: "August general vacation periods.", type: 'break', day: 20, month: 6, year: 2026 },
   { id: 'res-26-st1', title: "Session Reopening (2026/2027)", desc: "Fresh academic year distribution of lockers.", type: 'academic', day: 14, month: 8, year: 2026 },
   { id: 'break-26-mid1', title: "1st Term Mid-Term Rest", desc: "Active recess checking progress.", type: 'break', day: 30, month: 9, year: 2026 },
@@ -791,7 +791,7 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
                   />
                   <div className="bg-slate-900 p-4 text-center">
                     <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">
-                      Notion Core Principal Block Exterior
+                      Ezibeck Core Principal Block Exterior
                     </span>
                   </div>
                 </div>

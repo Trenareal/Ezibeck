@@ -403,7 +403,7 @@ export default function StudentPortal({
     e.preventDefault();
     if (!selectedStudent) return;
     
-    const hostDomain = template.email.includes('@') ? template.email.split('@')[1] : 'notioncollege.edu';
+    const hostDomain = template.email.includes('@') ? template.email.split('@')[1] : 'ezibeckcollege.edu';
     const expectedEmail = selectedStudent.name.toLowerCase().replace(/\s+/g, '') + "@" + hostDomain;
     if (resetEmailInput.trim().toLowerCase() !== expectedEmail) {
       setResetError(`Incorrect email address. For this student, please enter: ${expectedEmail}`);
@@ -918,7 +918,7 @@ export default function StudentPortal({
                 {/* Print layout decorator line */}
                 <div className="absolute inset-1.5 xs:inset-3 border border-slate-100 rounded-2xl pointer-events-none print:hidden"></div>
 
-                {/* Notion Style Header Breadcrumbs */}
+                {/* Ezibeck Style Header Breadcrumbs */}
                 <div className="flex flex-wrap items-center gap-1.5 text-[10px] sm:text-[11px] font-medium text-slate-400 border-b border-slate-100/70 pb-3 mb-2 relative z-10 select-none">
                   <span className="hover:text-slate-600 transition-colors cursor-pointer">🏫 {template.schoolName}</span>
                   <span>/</span>
@@ -1054,11 +1054,11 @@ export default function StudentPortal({
                     </span>
                   </h3>
                   
-                  {/* Notion-style database table */}
+                  {/* Ezibeck-style database table */}
                   <div className="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-3xs">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        {/* Header columns styled like raw Notion headers */}
+                        {/* Header columns styled like raw Ezibeck headers */}
                         <tr className="bg-[#EAEAEA] border-b border-slate-300 text-slate-950 font-black select-none text-[10.5px] uppercase tracking-wider">
                           <th className="py-2.5 px-3 border-r border-slate-300 min-w-[150px]">
                             <span className="flex items-center gap-1.5">📝 Subjects</span>
@@ -1103,7 +1103,7 @@ export default function StudentPortal({
                         {selectedStudent.subjects.map(subj => {
                           const tot = calculateSubjectTotal(subj);
                           
-                          // Formulate annual / session average data realistically matching the 20/20/60 formula of Notion
+                          // Formulate annual / session average data realistically matching the 20/20/60 formula of Ezibeck
                           const firstTerm = subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0 ? subj.firstTermSummary : Math.round(tot * 0.2);
                           const secondTerm = subj.secondTermSummary !== undefined && subj.secondTermSummary !== 0 ? subj.secondTermSummary : Math.round(tot * 0.2);
                           const thirdTerm = subj.thirdTermSummary !== undefined && subj.thirdTermSummary !== 0 ? subj.thirdTermSummary : Math.round(tot * 0.6);
@@ -1138,7 +1138,7 @@ export default function StudentPortal({
                           );
                         })}
 
-                        {/* Calculation Footer styled exactly like Notion database table calculation footer */}
+                        {/* Calculation Footer styled exactly like Ezibeck database table calculation footer */}
                         <tr className="bg-[#FAF9F9]/90 border-t border-slate-200 text-slate-400 font-medium select-none text-[10px] uppercase tracking-wider divide-x divide-slate-100">
                           <td className="py-2 px-3 font-semibold text-slate-500">
                             Count: {selectedStudent.subjects.length}

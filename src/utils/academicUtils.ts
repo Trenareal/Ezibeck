@@ -1,11 +1,11 @@
 import { Student, SubjectGrade, BehaviourRating, ClassName, SchoolInfo } from '../types';
 
 export const SCHOOL_INFO: SchoolInfo = {
-  name: "Notion Core International College",
+  name: "Ezibeck Core International College",
   motto: "Knowledge, discipline and outstanding character excellence",
   address: "120, Broadway Lane, New York, NY 10025",
   phone: "+1 (555) 489-0128",
-  email: "admissions@notioncollege.edu"
+  email: "admissions@ezibeckcollege.edu"
 };
 
 export const JSS_SUBJECTS = [

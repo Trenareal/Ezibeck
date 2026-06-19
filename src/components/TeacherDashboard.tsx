@@ -2361,7 +2361,7 @@ export default function TeacherDashboard({
               </div>
             </div>
 
-            {/* Notion Style Report Sheet Card */}
+            {/* Ezibeck Style Report Sheet Card */}
             {(() => {
               const stats = calculateStudentStatsForTerm(viewingReportStudent, activeTermTab);
               return (
@@ -2375,7 +2375,7 @@ export default function TeacherDashboard({
                   {/* Print layout decorator line */}
                   <div className="absolute inset-3 border border-slate-100 rounded-2xl pointer-events-none print:hidden"></div>
 
-                  {/* Notion Style Header Breadcrumbs */}
+                  {/* Ezibeck Style Header Breadcrumbs */}
                   <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-slate-400 border-b border-slate-100/70 pb-3 mb-2 relative z-10 select-none">
                     <span>🏫 {template.schoolName}</span>
                     <span>/</span>
@@ -2500,7 +2500,7 @@ export default function TeacherDashboard({
                       <span>Part A: Academic Course Evaluation</span>
                       <span className="text-[10px] text-slate-400 normal-case font-bold">Standard Formula Matrix Layout</span>
                     </h3>
-                    {/* Notion-style database table */}
+                    {/* Ezibeck-style database table */}
                     <div className="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-3xs">
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
@@ -2548,7 +2548,7 @@ export default function TeacherDashboard({
                           {viewingReportStudent.subjects.map(subj => {
                             const tot = calculateSubjectTotal(subj);
                             
-                            // Formulate annual / session average data realistically matching the 20/20/60 formula of Notion
+                            // Formulate annual / session average data realistically matching the 20/20/60 formula of Ezibeck
                             const firstTerm = subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0 ? subj.firstTermSummary : Math.round(tot * 0.2);
                             const secondTerm = subj.secondTermSummary !== undefined && subj.secondTermSummary !== 0 ? subj.secondTermSummary : Math.round(tot * 0.2);
                             const thirdTerm = subj.thirdTermSummary !== undefined && subj.thirdTermSummary !== 0 ? subj.thirdTermSummary : Math.round(tot * 0.6);
@@ -3369,7 +3369,7 @@ export default function TeacherDashboard({
                     {/* Visual slate borders */}
                     <div className="absolute inset-3 border border-slate-100 rounded-2xl pointer-events-none"></div>
 
-                    {/* Notion Style Header Breadcrumbs */}
+                    {/* Ezibeck Style Header Breadcrumbs */}
                     <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-slate-400 border-b border-slate-100/70 pb-3 mb-2 relative z-10">
                       <span>🏫 {template.schoolName}</span>
                       <span>/</span>
@@ -3491,7 +3491,7 @@ export default function TeacherDashboard({
                         <span>Part A: Academic Course Evaluation</span>
                       </h3>
                       
-                      {/* Notion Table draft view */}
+                      {/* Ezibeck Table draft view */}
                       <div className="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-3xs">
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
@@ -3550,7 +3550,7 @@ export default function TeacherDashboard({
                                 </tr>
                               );
                             })}
-                            {/* Calculation Footer styled exactly like Notion database table calculation footer */}
+                            {/* Calculation Footer styled exactly like Ezibeck database table calculation footer */}
                             <tr className="bg-[#FAF9F9]/90 border-t border-slate-205 text-slate-400 font-medium select-none text-[10px] uppercase tracking-wider divide-x divide-slate-100">
                               <td className="py-2 px-3 font-semibold text-slate-500">
                                 Count: {previewStudent.subjects.length}

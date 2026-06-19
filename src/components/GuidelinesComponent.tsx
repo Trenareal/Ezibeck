@@ -317,7 +317,7 @@ export default function GuidelinesComponent({ onClose, inlineOnly = false, isPub
       </div>
 
       <div className="border-t border-slate-100 pt-3 flex justify-between items-center text-[10px] text-slate-400 font-extrabold select-none">
-        <span>Notion College Faculty Systems</span>
+        <span>Ezibeck College Faculty Systems</span>
         <span>Version 1.2 • Verified Stable</span>
       </div>
     </div>

@@ -23,7 +23,7 @@ const DEFAULT_WORKSPACE_15: Workspace15Template = {
   motto: "Knowledge is Power",
   address: "No.5 Ezibeck Crescent, Behind Udu Motor Park, Ovwian, Delta State",
   phone: "+234070",
-  email: "admissions@notioncollege.edu",
+  email: "admissions@ezibeckcollege.edu",
   resumptionDate: "September 14, 2026",
   termDate: "June 18, 2026",
   session: "2025/2026 Academic Year",
