@@ -58,24 +58,78 @@
 }
 
 /* Report card print preview should preserve perfect light theme during rendering to prevent dark backgrounds in downloaded PDFs */
-.pdf-force-light, .pdf-force-light * {
-  background-color: white !important;
+.pdf-force-light {
+  background-color: #ffffff !important;
   color: #0f172a !important;
-  border-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
 }
-.pdf-force-light .bg-[#FCFCFC]/60, .pdf-force-light [class*="bg-[#FCFCFC]"], .pdf-force-light .bg-slate-50, .pdf-force-light [class*="bg-slate-50"] {
-  background-color: #fcfcfc !important;
+
+/* Base resets for container and immediate children, avoiding universal '*' to prevent nested background-color destruction */
+.pdf-force-light .bg-white,
+.pdf-force-light .bg-slate-50,
+.pdf-force-light .bg-[#FCFCFC]/80,
+.pdf-force-light .bg-[#FCFCFC]/60,
+.pdf-force-light [class*="bg-[#FCFCFC]"] {
+  background-color: #ffffff !important;
 }
+
+/* Ensure background of the stats/summary boxes has a clean subtle grey fill instead of disappearing */
+.pdf-force-light .bg-[#FAF9F9],
+.pdf-force-light .bg-slate-100,
+.pdf-force-light [class*="bg-slate-100"] {
+  background-color: #f8fafc !important;
+}
+
+/* Keep borders crisp and visible for grid lines/boxes */
+.pdf-force-light,
+.pdf-force-light div,
+.pdf-force-light table,
+.pdf-force-light tr,
+.pdf-force-light td,
+.pdf-force-light th {
+  border-color: #cbd5e1 !important;
+}
+
+/* Elevate contrast of all neutral slates so they print ultra-clear on paper */
+.pdf-force-light .text-slate-950,
+.pdf-force-light .text-slate-900,
+.pdf-force-light .text-slate-800,
+.pdf-force-light .text-slate-700 {
+  color: #0f172a !important; /* Perfect obsidian/black for high readability */
+}
+
+.pdf-force-light .text-slate-600,
+.pdf-force-light .text-slate-500 {
+  color: #334155 !important; /* Dark slate */
+}
+
 .pdf-force-light .text-slate-400 {
-  color: #94a3b8 !important;
+  color: #475569 !important; /* Steel gray instead of light gray */
 }
+
+/* Make semantic color texts darker and richer for high print contrast */
+.pdf-force-light .text-emerald-700,
 .pdf-force-light .text-emerald-800 {
-  color: #065f46 !important;
+  color: #064e3b !important; /* Deep emerald green */
 }
-.pdf-force-light .text-sky-850 {
-  color: #0369a1 !important;
+
+.pdf-force-light .text-sky-850,
+.pdf-force-light .text-sky-800 {
+  color: #075985 !important; /* Deep ocean blue */
 }
+
+.pdf-force-light .text-red-850,
 .pdf-force-light .text-red-800 {
-  color: #991b1b !important;
+  color: #7f1d1d !important; /* Crimson red */
+}
+
+/* Table header styling */
+.pdf-force-light thead tr {
+  background-color: #f1f5f9 !important;
+}
+
+.pdf-force-light thead th {
+  color: #0f172a !important;
+  font-weight: 800 !important;
 }
 
