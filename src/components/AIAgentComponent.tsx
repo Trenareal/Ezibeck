@@ -108,7 +108,7 @@ export default function AIAgentComponent() {
     {
       id: 'welcome-msg',
       role: 'assistant',
-      text: "Hello! I am your **EZIBECK Academics Assistant**. I am here to help educators easily manage classroom rosters, edit term scorecard ratios, calculate class ranks, or customize the portal template. \n\nHow can I help you support Notion College today?"
+      text: "Hello! I am your **EZIBECK Academics Assistant**. I am here to help educators easily manage classroom rosters, edit term scorecard ratios, calculate class ranks, or customize the portal template. \n\nHow can I assist you today?"
     }
   ]);
   const [inputValue, setInputValue] = useState('');

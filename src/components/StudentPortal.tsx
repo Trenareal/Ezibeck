@@ -1059,42 +1059,42 @@ export default function StudentPortal({
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
                         {/* Header columns styled like raw Notion headers */}
-                        <tr className="bg-[#F7F7F7] border-b border-slate-200 text-slate-500 font-medium select-none text-[10.5px]">
-                          <th className="py-2.5 px-3 border-r border-slate-200 min-w-[150px]">
+                        <tr className="bg-[#EAEAEA] border-b border-slate-300 text-slate-950 font-black select-none text-[10.5px] uppercase tracking-wider">
+                          <th className="py-2.5 px-3 border-r border-slate-300 min-w-[150px]">
                             <span className="flex items-center gap-1.5">📝 Subjects</span>
                           </th>
-                          <th className="py-2.5 px-3 border-r border-slate-200 text-center w-24">
+                          <th className="py-2.5 px-3 border-r border-slate-300 text-center w-24">
                             <span className="flex items-center justify-center gap-1"># TEST (30)</span>
                           </th>
-                          <th className="py-2.5 px-3 border-r border-slate-200 text-center w-24">
+                          <th className="py-2.5 px-3 border-r border-slate-300 text-center w-24">
                             <span className="flex items-center justify-center gap-1"># EXAM (70)</span>
                           </th>
-                          <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/30 w-24">
-                            <span className="flex items-center justify-center gap-1 text-emerald-750">Σ TERM (100)</span>
+                          <th className="py-2.5 px-3 border-r border-slate-300 text-center bg-emerald-100/40 w-24">
+                            <span className="flex items-center justify-center gap-1 text-emerald-950">Σ TERM (100)</span>
                           </th>
                           {viewingTerm === 'Third Term' && (
                             <>
-                              <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20">
+                              <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
                                 <span className="flex items-center justify-center gap-1"># 1ST TERM (20)</span>
                               </th>
-                              <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20">
+                              <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
                                 <span className="flex items-center justify-center gap-1"># 2ND TERM (20)</span>
                               </th>
-                              <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20">
+                              <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
                                 <span className="flex items-center justify-center gap-1"># 3RD TERM (60)</span>
                               </th>
-                              <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/20 w-28">
-                                <span className="flex items-center justify-center gap-1 text-slate-800 font-bold">Σ SESSION AVE</span>
+                              <th className="py-2.5 px-3 border-r border-slate-300 text-center bg-emerald-100/30 w-28 text-slate-950 font-black">
+                                <span className="flex items-center justify-center gap-1 text-slate-950 font-black">Σ SESSION AVE</span>
                               </th>
                             </>
                           )}
-                          <th className="py-2.5 px-3 border-r border-slate-200 text-center w-20">
+                          <th className="py-2.5 px-3 border-r border-slate-300 text-center w-20">
                             <span className="flex items-center justify-center gap-1">Σ GRADE</span>
                           </th>
-                          <th className="py-2.5 px-3 border-r border-slate-200 text-center w-16">
+                          <th className="py-2.5 px-3 border-r border-slate-300 text-center w-16">
                             <span className="flex items-center justify-center gap-1"># RANK</span>
                           </th>
-                          <th className="py-2.5 px-4 font-bold text-slate-500">
+                          <th className="py-2.5 px-4 font-black text-slate-950">
                             <span className="flex items-center gap-1.5">💬 TEACHER'S REMARK</span>
                           </th>
                         </tr>
@@ -1114,26 +1114,26 @@ export default function StudentPortal({
                           );
 
                           return (
-                            <tr key={subj.id} className="hover:bg-slate-50/60 transition-all">
-                              <td className="py-2.5 px-3 border-r border-slate-100 font-extrabold text-slate-900 bg-slate-50/20">{subj.name}</td>
-                              <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-500">{subj.testScore}</td>
-                              <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-500">{subj.examScore}</td>
-                              <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-700 bg-emerald-50/20">{tot}</td>
+                            <tr key={subj.id} className="hover:bg-slate-50/60 transition-all border-b border-slate-200">
+                              <td className="py-2.5 px-3 border-r border-slate-200 font-extrabold text-slate-950 bg-slate-50/40">{subj.name}</td>
+                              <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{subj.testScore}</td>
+                              <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{subj.examScore}</td>
+                              <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black font-mono text-emerald-950 bg-emerald-50/30">{tot}</td>
                               {viewingTerm === 'Third Term' && (
                                 <>
-                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{firstTerm}</td>
-                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-455">{secondTerm}</td>
-                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-455">{thirdTerm}</td>
-                                  <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-700/80 bg-slate-50/40">{sessionAvg}</td>
+                                  <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{firstTerm}</td>
+                                  <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{secondTerm}</td>
+                                  <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{thirdTerm}</td>
+                                  <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black font-mono text-emerald-950 bg-slate-50/60">{sessionAvg}</td>
                                 </>
                               )}
-                              <td className="py-2.5 px-3 border-r border-slate-100 text-center">
+                              <td className="py-2.5 px-3 border-r border-slate-200 text-center">
                                 <span className={`px-2 py-0.5 text-[10px] font-black rounded-sm tracking-wider ${ratingClass}`}>
                                   {letter}
                                 </span>
                               </td>
-                              <td className="py-2.5 px-3 border-r border-slate-100 text-center font-bold text-slate-600 bg-slate-50/20">{subj.position ? `${subj.position}` : '-'}</td>
-                              <td className="py-2.5 px-4 italic text-slate-500 text-[11px] font-normal leading-tight">{remark}</td>
+                              <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black text-slate-950 bg-slate-50/20">{subj.position ? `${subj.position}` : '-'}</td>
+                              <td className="py-2.5 px-4 italic text-slate-950 text-[11px] font-bold leading-tight bg-[#FCFCFC]">{remark}</td>
                             </tr>
                           );
                         })}

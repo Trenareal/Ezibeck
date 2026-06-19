@@ -127,10 +127,16 @@ Here are some specific questions you can ask me:
       }
 
       // Format custom messages from the frontend to the correct @google/genai structure
-      const contents = messages.map((m: any) => ({
+      // Gemini API contents array must start with a 'user' turn.
+      let contents = messages.map((m: any) => ({
         role: m.role === "assistant" ? "model" : "user",
         parts: [{ text: m.text || m.content || "" }]
       }));
+
+      // Filter out any leading model messages
+      while (contents.length > 0 && contents[0].role === "model") {
+        contents.shift();
+      }
 
       const systemInstruction = 
         `You are the EZIBECK Academics AI Assistant, an elite, professional, and friendly coordinator helper. Your goal is to support the staff, educators, and administrators of Notion College / EZIBECK Academics in using their Workspace Desk.

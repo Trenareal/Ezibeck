@@ -120,7 +120,9 @@ export function mapFrontendIdToUuid(id: string): string {
     sarah: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df4",
     benson: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df5",
     florence: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df6",
-    david: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df7"
+    david: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df7",
+    maroger: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df8",
+    spare: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df9"
   };
   if (mappings[id.toLowerCase()]) {
     return mappings[id.toLowerCase()];
@@ -143,7 +145,9 @@ export function mapUuidToFrontendId(uuid: string): string {
     "ea4d6a45-0015-4b1a-b5bd-6f23006e2df4": "sarah",
     "ea4d6a45-0015-4b1a-b5bd-6f23006e2df5": "benson",
     "ea4d6a45-0015-4b1a-b5bd-6f23006e2df6": "florence",
-    "ea4d6a45-0015-4b1a-b5bd-6f23006e2df7": "david"
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2df7": "david",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2df8": "maroger",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2df9": "spare"
   };
   const lowered = uuid.toLowerCase();
   if (reverseMappings[lowered]) {

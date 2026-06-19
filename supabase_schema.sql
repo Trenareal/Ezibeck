@@ -265,3 +265,15 @@ END $$;
 -- If direct system channels/configuration limits don't support PGRST notification,
 -- the schema can be reloaded directly through the Supabase Dashboard -> Database -> Schema Cache.
 NOTIFY pgrst, 'reload schema';
+
+-- =====================================================================
+-- 8. DATABASE CONNECTION POOLING OPTIMIZATIONS (FREE TIER & MEMORY PROTECTION)
+-- =====================================================================
+-- To prevent exhausting the 18-20 direct PostgreSQL connection limit on the 
+-- Supabase free instances, we configure PostgreSQL's session supervisor to 
+-- actively terminate idle connections. This frees up connection slots nearly 
+-- instantly for new incoming transactions.
+ALTER DATABASE postgres SET idle_session_timeout = '30000'; -- Terminate any sessions inactive for 30 seconds
+ALTER DATABASE postgres SET idle_in_transaction_session_timeout = '45000'; -- Terminate hung transactions after 45 seconds
+ALTER DATABASE postgres SET statement_timeout = '60000'; -- Max query execute duration 1 minute (guards memory)
+

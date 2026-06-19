@@ -45,7 +45,9 @@ const DEFAULT_FACULTY: FacultyProfile[] = [
   { id: "sarah", name: "Mrs. Sarah John", role: "Form Teacher - JSS3", avatar: "👩‍🏫", password: "Sarah@Jss3", email: "sarah@ezibeckacademy.edu.ng", assignedClass: "JSS3" },
   { id: "benson", name: "Mr. Benson Chidi", role: "Form Teacher - SS1", avatar: "👨‍🏫", password: "Benson@Ss1", email: "benson@ezibeckacademy.edu.ng", assignedClass: "SS1" },
   { id: "florence", name: "Mrs. Florence Musa", role: "Form Teacher - SS2", avatar: "👩‍🏫", password: "Florence@Ss2", email: "florence@ezibeckacademy.edu.ng", assignedClass: "SS2" },
-  { id: "david", name: "Mr. David Ibrahim", role: "Form Teacher - SS3", avatar: "👨‍💻", password: "David@Ss3", email: "david@ezibeckacademy.edu.ng", assignedClass: "SS3" }
+  { id: "david", name: "Mr. David Ibrahim", role: "Form Teacher - SS3", avatar: "👨‍💻", password: "David@Ss3", email: "david@ezibeckacademy.edu.ng", assignedClass: "SS3" },
+  { id: "maroger", name: "Maro German", role: "Co-Administrator", avatar: "🛡️", password: "Maro@2026", email: "maro@ezibeckacademy.edu.ng" },
+  { id: "spare", name: "Spare Teacher", role: "Substitute Teacher (Spare)", avatar: "🏫", password: "Spare@2026", email: "spare@ezibeckacademy.edu.ng" }
 ];
 
 function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
@@ -56,7 +58,9 @@ function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
     "teacher3": "Sarah@Jss3",
     "teacher4": "Benson@Ss1",
     "teacher5": "Florence@Ss2",
-    "teacher6": "David@Ss3"
+    "teacher6": "David@Ss3",
+    "maroger": "Maro@2026",
+    "spare": "Spare@2026"
   };
 
   const slots = [
@@ -105,7 +109,7 @@ function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
       updatedPass = 'Ezekiel@2026';
     }
     const up = { ...f, password: updatedPass };
-    if (up.id === 'ezekiel') {
+    if (up.id === 'ezekiel' || up.id === 'maroger') {
       return { ...up, isRestricted: false };
     }
     return up;
@@ -136,7 +140,9 @@ export default function TeacherDashboard({
             "teacher3": "Sarah@Jss3",
             "teacher4": "Benson@Ss1",
             "teacher5": "Florence@Ss2",
-            "teacher6": "David@Ss3"
+            "teacher6": "David@Ss3",
+            "maroger": "Maro@2026",
+            "spare": "Spare@2026"
           };
           if (parsed && parsed.password && oldToNewPassMap[parsed.password]) {
             parsed.password = oldToNewPassMap[parsed.password];
@@ -920,9 +926,9 @@ export default function TeacherDashboard({
 
   // Ensure Administrator is never restricted under any circumstances and clear any stale restriction
   useEffect(() => {
-    const hasRestrictedEzekiel = facultyProfiles.some(f => f.id === 'ezekiel' && f.isRestricted);
-    if (hasRestrictedEzekiel) {
-      const updated = facultyProfiles.map(f => f.id === 'ezekiel' ? { ...f, isRestricted: false } : f);
+    const hasRestrictedAdmin = facultyProfiles.some(f => (f.id === 'ezekiel' || f.id === 'maroger') && f.isRestricted);
+    if (hasRestrictedAdmin) {
+      const updated = facultyProfiles.map(f => (f.id === 'ezekiel' || f.id === 'maroger') ? { ...f, isRestricted: false } : f);
       setFacultyProfiles(updated);
       if (typeof window !== 'undefined') {
         localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(updated));
@@ -931,6 +937,12 @@ export default function TeacherDashboard({
       if (ezekielProfile && dbStatus && dbStatus.configured && dbStatus.connected) {
         dbService.saveFacultyProfile(ezekielProfile).catch(err => {
           console.error("Failed to unrestrict Ezekiel in database:", err);
+        });
+      }
+      const marogerProfile = updated.find(f => f.id === 'maroger');
+      if (marogerProfile && dbStatus && dbStatus.configured && dbStatus.connected) {
+        dbService.saveFacultyProfile(marogerProfile).catch(err => {
+          console.error("Failed to unrestrict Maro German in database:", err);
         });
       }
     }
@@ -1092,11 +1104,11 @@ export default function TeacherDashboard({
       const activeProfile = facultyProfiles.find(p => 
         p.id === currentUser.id || 
         (currentUser.assignedClass && p.assignedClass === currentUser.assignedClass) ||
-        (!currentUser.assignedClass && p.id === 'ezekiel')
+        (!currentUser.assignedClass && (p.id === 'ezekiel' || p.id === 'maroger'))
       );
 
       if (activeProfile) {
-        if (activeProfile.isRestricted && currentUser.id !== 'ezekiel') {
+        if (activeProfile.isRestricted && !(currentUser.id === 'ezekiel' || currentUser.id === 'maroger')) {
           setCurrentUser(null);
           setEditingStudent(null);
           setViewingReportStudent(null);
@@ -1363,7 +1375,7 @@ export default function TeacherDashboard({
     }
 
     if (matchedUser.isRestricted) {
-      setTeacherLoginError('This educator account has been restricted by the Administrator. Please contact Dr. Ezekiel Beck.');
+      setTeacherLoginError('This educator account has been restricted by the Administrator. Please contact the School Administrator.');
       return;
     }
 
@@ -2359,47 +2371,47 @@ export default function TeacherDashboard({
                     <div className="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-3xs">
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
-                          <tr className="bg-[#F7F7F7] border-b border-slate-200 text-slate-500 font-medium select-none text-[10.5px]">
-                            <th className="py-2.5 px-3 border-r border-slate-200 min-w-[150px]">
+                          <tr className="bg-[#EAEAEA] border-b border-slate-300 text-slate-950 font-black select-none text-[10.5px] uppercase tracking-wider">
+                            <th className="py-2.5 px-3 border-r border-slate-300 min-w-[150px]">
                               <span className="flex items-center gap-1.5">📝 Subjects</span>
                             </th>
-                            <th className="py-2.5 px-3 border-r border-slate-200 text-center w-24">
+                            <th className="py-2.5 px-3 border-r border-slate-300 text-center w-24">
                               <span className="flex items-center justify-center gap-1"># TEST (30)</span>
                             </th>
-                            <th className="py-2.5 px-3 border-r border-slate-200 text-center w-24">
+                            <th className="py-2.5 px-3 border-r border-slate-300 text-center w-24">
                               <span className="flex items-center justify-center gap-1"># EXAM (70)</span>
                             </th>
-                            <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/20 w-24">
-                              <span className="flex items-center justify-center gap-1 text-emerald-750">Σ TERM (100)</span>
+                            <th className="py-2.5 px-3 border-r border-slate-300 text-center bg-emerald-100/40 w-24">
+                              <span className="flex items-center justify-center gap-1 text-emerald-950">Σ TERM (100)</span>
                             </th>
                             {activeTermTab === 'Third Term' && (
                               <>
-                                <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20">
+                                <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
                                   <span className="flex items-center justify-center gap-1"># 1ST TERM (20)</span>
                                 </th>
-                                <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20">
+                                <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
                                   <span className="flex items-center justify-center gap-1"># 2ND TERM (20)</span>
                                 </th>
-                                <th className="py-2.5 px-3 border-r border-slate-205 text-center text-[10px] w-20">
+                                <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
                                   <span className="flex items-center justify-center gap-1"># 3RD TERM (60)</span>
                                 </th>
-                                <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/10 w-28 text-slate-800 font-bold">
-                                  <span className="flex items-center justify-center gap-1 text-slate-805 font-bold">Σ SESSION AVE</span>
+                                <th className="py-2.5 px-3 border-r border-slate-300 text-center bg-emerald-100/30 w-28 text-slate-950 font-black">
+                                  <span className="flex items-center justify-center gap-1 text-slate-950 font-black">Σ SESSION AVE</span>
                                 </th>
                               </>
                             )}
-                            <th className="py-2.5 px-3 border-r border-slate-200 text-center w-20">
+                            <th className="py-2.5 px-3 border-r border-slate-300 text-center w-20">
                               <span className="flex items-center justify-center gap-1">Σ GRADE</span>
                             </th>
-                            <th className="py-2.5 px-3 border-r border-slate-200 text-center w-16">
+                            <th className="py-2.5 px-3 border-r border-slate-300 text-center w-16">
                               <span className="flex items-center justify-center gap-1"># RANK</span>
                             </th>
-                            <th className="py-2.5 px-4 font-bold text-slate-500">
+                            <th className="py-2.5 px-4 font-black text-slate-950">
                               <span className="flex items-center gap-1.5">💬 TEACHER'S REMARK</span>
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                        <tbody className="divide-y divide-slate-100 font-medium text-slate-705">
                           {viewingReportStudent.subjects.map(subj => {
                             const tot = calculateSubjectTotal(subj);
                             
@@ -2414,26 +2426,26 @@ export default function TeacherDashboard({
                             );
 
                             return (
-                              <tr key={subj.id} className="hover:bg-slate-50/60 transition-all">
-                                <td className="py-2.5 px-3 border-r border-slate-100 font-extrabold text-slate-1000 bg-slate-50/20">{subj.name}</td>
-                                <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-500">{subj.testScore}</td>
-                                <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-500">{subj.examScore}</td>
-                                <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-750 bg-emerald-50/10">{tot}</td>
+                              <tr key={subj.id} className="hover:bg-slate-50/60 transition-all border-b border-slate-200">
+                                <td className="py-2.5 px-3 border-r border-slate-200 font-extrabold text-slate-955 bg-slate-50/40">{subj.name}</td>
+                                <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955">{subj.testScore}</td>
+                                <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955">{subj.examScore}</td>
+                                <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black font-mono text-emerald-955 bg-emerald-50/30">{tot}</td>
                                 {activeTermTab === 'Third Term' && (
                                   <>
-                                    <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{firstTerm}</td>
-                                    <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{secondTerm}</td>
-                                    <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-455">{thirdTerm}</td>
-                                    <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-700 bg-slate-50/40">{sessionAvg}</td>
+                                    <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955">{firstTerm}</td>
+                                    <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955">{secondTerm}</td>
+                                    <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955">{thirdTerm}</td>
+                                    <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black font-mono text-emerald-955 bg-slate-50/60">{sessionAvg}</td>
                                   </>
                                 )}
-                                <td className="py-2.5 px-3 border-r border-slate-100 text-center">
+                                <td className="py-2.5 px-3 border-r border-slate-200 text-center">
                                   <span className={`px-2 py-0.5 text-[10px] font-black rounded-sm tracking-wider ${ratingClass}`}>
                                     {letter}
                                   </span>
                                 </td>
-                                <td className="py-2.5 px-3 border-r border-slate-100 text-center font-bold text-slate-800 bg-slate-50/20">{formatOrdinal(subj.position)}</td>
-                                <td className="py-2.5 px-4 italic text-slate-500 text-[11px] font-normal leading-tight">{remark}</td>
+                                <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black text-slate-955 bg-slate-50/20">{formatOrdinal(subj.position)}</td>
+                                <td className="py-2.5 px-4 italic text-slate-955 text-[11px] font-bold leading-tight bg-[#FCFCFC]">{remark}</td>
                               </tr>
                             );
                           })}
@@ -3695,7 +3707,7 @@ export default function TeacherDashboard({
                   <div>
                     <span className="font-extrabold text-slate-950 uppercase tracking-wide">Read-Only Workspace Configuration</span>
                     <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
-                      You are logged in as <strong className="text-slate-900 font-bold">{currentUser?.name}</strong> ({currentUser?.role}). Only the School Head Principal (<strong className="text-slate-900 font-bold">Dr. Ezekiel Beck</strong>) has permission to customize these 15 core template settings. However, all active configurations are synchronized and fully reflected on your students' records.
+                      You are logged in as <strong className="text-slate-900 font-bold">{currentUser?.name}</strong> ({currentUser?.role}). Only School Administrators have permission to customize these 15 core template settings. However, all active configurations are synchronized and fully reflected on your students' records.
                     </p>
                   </div>
                 </div>
@@ -4146,7 +4158,7 @@ export default function TeacherDashboard({
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">{p.role}</p>
                         <p className="text-[10px] text-slate-500 font-mono mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
                           <span>Username ID: <strong className="font-bold text-slate-800 tracking-wider bg-slate-100 px-1.5 py-0.5 rounded font-mono">{p.id}</strong></span>
-                          <span>Password Passcode: <strong className="font-bold text-slate-800 tracking-wider bg-slate-100 px-1.5 py-0.5 rounded font-mono">{p.password || (p.id === 'ezekiel' ? 'Ezekiel@2026' : 'Gladys@Jss1')}</strong></span>
+                          <span>Password Passcode: <strong className="font-bold text-slate-800 tracking-wider bg-slate-100 px-1.5 py-0.5 rounded font-mono">{p.password || (p.id === 'ezekiel' ? 'Ezekiel@2026' : p.id === 'maroger' ? 'Maro@2026' : p.id === 'spare' ? 'Spare@2026' : 'Gladys@Jss1')}</strong></span>
                         </p>
                       </div>
                     </div>
@@ -4159,7 +4171,7 @@ export default function TeacherDashboard({
                           setEditingFacultyId(p.id);
                           setEditingFacultyName(p.name);
                           setEditingFacultyEmail(p.email || `${p.id}@ezibeckacademy.edu.ng`);
-                          setEditingFacultyPassword(p.password || (p.id === 'ezekiel' ? 'Ezekiel@2026' : 'Gladys@Jss1'));
+                          setEditingFacultyPassword(p.password || (p.id === 'ezekiel' ? 'Ezekiel@2026' : p.id === 'maroger' ? 'Maro@2026' : p.id === 'spare' ? 'Spare@2026' : 'Gladys@Jss1'));
                           setEditingFacultyClass(p.assignedClass || 'JSS1');
                           setEditingFacultyAvatar(p.avatar || '👩‍🏫');
                           setFacultyPasswordError('');
