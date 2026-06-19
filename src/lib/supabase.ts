@@ -458,5 +458,73 @@ export const dbService = {
       .eq('id', dbId);
     if (error) throw error;
     return true;
+  },
+
+  // --- Ezibeck Calendar Events ---
+  async getCalendarEvents() {
+    try {
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .order('year', { ascending: true, nullsFirst: true })
+        .order('month', { ascending: true })
+        .order('day', { ascending: true });
+      if (error) {
+        console.warn("Could not query calendar_events table. If it doesn't exist, please run the SQL migration in your Supabase editor.", error);
+        return null;
+      }
+      return data.map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        desc: row.description || '',
+        type: row.type as 'holiday' | 'academic' | 'break' | 'exam',
+        day: Number(row.day),
+        month: Number(row.month),
+        year: row.year ? Number(row.year) : undefined
+      }));
+    } catch (e) {
+      console.warn("Exception fetching calendar events:", e);
+      return null;
+    }
+  },
+
+  async saveCalendarEvent(event: any) {
+    const payload: any = {
+      title: event.title,
+      description: event.desc || '',
+      type: event.type,
+      day: Math.max(1, Math.min(31, Math.round(Number(event.day)))),
+      month: Math.max(0, Math.min(11, Math.round(Number(event.month)))),
+      year: event.year ? Math.round(Number(event.year)) : null
+    };
+
+    if (event.id && event.id.length === 36) {
+      payload.id = event.id;
+    }
+
+    const { data, error } = await supabase
+      .from('calendar_events')
+      .upsert(payload)
+      .select()
+      .single();
+    if (error) throw error;
+    return {
+      id: data.id,
+      title: data.title,
+      desc: data.description || '',
+      type: data.type as 'holiday' | 'academic' | 'break' | 'exam',
+      day: Number(data.day),
+      month: Number(data.month),
+      year: data.year ? Number(data.year) : undefined
+    };
+  },
+
+  async deleteCalendarEvent(id: string) {
+    const { error } = await supabase
+      .from('calendar_events')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+    return true;
   }
 };

@@ -12,6 +12,7 @@ import {
 import { Workspace15Template } from '../types';
 import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
 import GuidelinesComponent from './GuidelinesComponent';
+import { dbService } from '../lib/supabase';
 
 interface PublicHomeProps {
   onEnterPortal: (role: 'student' | 'teacher') => void;
@@ -160,6 +161,30 @@ const EVENT_DEFINITIONS: CalendarEvent[] = [
 export default function PublicHome({ onEnterPortal, template }: PublicHomeProps) {
   const [activeTab, setActiveTab] = useState<'welcome' | 'about'>('welcome');
   const [showGuidelines, setShowGuidelines] = useState(false);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(EVENT_DEFINITIONS);
+
+  useEffect(() => {
+    async function loadEvents() {
+      try {
+        const dbEvents = await dbService.getCalendarEvents();
+        if (dbEvents && dbEvents.length > 0) {
+          setCalendarEvents(prev => {
+            const merged = [...dbEvents];
+            prev.forEach(p => {
+              const exists = dbEvents.some(d => d.title.toLowerCase() === p.title.toLowerCase() && d.day === p.day && d.month === p.month && d.year === p.year);
+              if (!exists) {
+                merged.push(p);
+              }
+            });
+            return merged;
+          });
+        }
+      } catch (e) {
+        console.warn("Could not load dynamic calendar events:", e);
+      }
+    }
+    loadEvents();
+  }, []);
 
   const handleTabChange = (tab: 'welcome' | 'about') => {
     setActiveTab(tab);
@@ -169,7 +194,7 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
   const scrollToCalendar = () => {
     setActiveTab('welcome');
     setTimeout(() => {
-      const element = document.getElementById('google-calendars-dashboard');
+      const element = document.getElementById('ezibeck-calendars-dashboard');
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
@@ -234,7 +259,7 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
 
   // Build the list of events matching current month, year, query and checks
   const getEventsForDay = (year: number, month: number, day: number) => {
-    return EVENT_DEFINITIONS.filter(evt => {
+    return calendarEvents.filter(evt => {
       // Check year match
       if (evt.year !== undefined && evt.year !== year) return false;
       // Check month match
@@ -378,7 +403,7 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
               onClick={scrollToCalendar} 
               className="text-sm font-bold transition-all py-1.5 border-b-2 text-slate-500 hover:text-emerald-600 border-transparent"
             >
-              Google Calendars
+              Ezibeck Calendar
             </button>
             <button 
               onClick={() => setShowGuidelines(true)} 
@@ -452,7 +477,7 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
             onClick={scrollToCalendar}
             className="flex-1 text-center py-2 text-[11px] font-black uppercase tracking-wider rounded-xl transition-all text-slate-500 hover:text-slate-905"
           >
-            Google Calendar
+            Ezibeck Calendar
           </button>
         </div>
       </div>
@@ -957,7 +982,7 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
           )}
 
           {activeTab === 'welcome' && (
-            <div className="bg-white rounded-3xl border border-slate-105 p-4 sm:p-8 shadow-sm space-y-6 text-left mt-16 sm:mt-24" id="google-calendars-dashboard">
+            <div className="bg-white rounded-3xl border border-slate-105 p-4 sm:p-8 shadow-sm space-y-6 text-left mt-16 sm:mt-24" id="ezibeck-calendars-dashboard">
               {/* Header */}
               <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-150 pb-4 gap-4">
                 <div className="flex items-center gap-3">
@@ -965,7 +990,7 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
                     <Calendar className="w-6 h-6 text-emerald-700" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-slate-900 uppercase">Google Calendar Workspace</h3>
+                    <h3 className="text-xl font-black text-slate-900 uppercase">Ezibeck Calendar</h3>
                     <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Holidays & Academic Calendar (4 Years: 2024–2027)</p>
                   </div>
                 </div>
@@ -1003,7 +1028,7 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
 
               {/* Subtitle description */}
               <p className="text-slate-550 text-xs leading-relaxed max-w-3xl">
-                Track full national holiday rosters, term closures, promotional examination slates, and summer vacation schedules plotted precisely in Google Calendar aesthetics across <strong>2024, 2025, 2026, and 2027</strong>.
+                Track full national holiday rosters, term closures, promotional examination slates, and summer vacation schedules plotted precisely inside Ezibeck Calendar across <strong>2024, 2025, 2026, and 2027</strong>.
               </p>
 
               {/* TWO COLUMN GRID WORKSPACE (Left: Sidebar Filters | Right: Main Month Grid) */}
@@ -1306,7 +1331,7 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
                     
                     {(() => {
                       // Compile all events for that year and index month
-                      const monthlyList = EVENT_DEFINITIONS.filter(e => {
+                      const monthlyList = calendarEvents.filter(e => {
                         if (e.year !== undefined && e.year !== currentYear) return false;
                         if (e.month !== currentMonth) return false;
                         return enabledCalendars[e.type];

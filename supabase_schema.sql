@@ -100,6 +100,19 @@ CREATE TABLE IF NOT EXISTS public.behavioural_ratings (
     unique (student_id, name)
 );
 
+-- Table 5B. Ezibeck Calendar Events
+CREATE TABLE IF NOT EXISTS public.calendar_events (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    title text NOT NULL,
+    description text DEFAULT '',
+    type text NOT NULL, -- 'holiday' | 'academic' | 'break' | 'exam'
+    day integer NOT NULL,
+    month integer NOT NULL, -- 0-indexed (0 = Jan, 11 = Dec)
+    year integer, -- NULL means repeating annually
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- =====================================================================
 -- 3. INDEXES FOR PERFORMANCE OPTIMIZATION
 -- =====================================================================
@@ -117,6 +130,7 @@ ALTER TABLE public.faculty_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subject_grades ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.behavioural_ratings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.calendar_events ENABLE ROW LEVEL SECURITY;
 
 -- Clean up any conflicting policy definitions from older migration trials
 DO $$
@@ -124,10 +138,10 @@ DECLARE
     pol RECORD;
 BEGIN
     FOR pol IN 
-        SELECT policyname, tablename 
-        FROM pg_policies 
-        WHERE schemaname = 'public' 
-          AND tablename IN ('school_config', 'faculty_profiles', 'students', 'subject_grades', 'behavioural_ratings')
+         SELECT policyname, tablename 
+         FROM pg_policies 
+         WHERE schemaname = 'public' 
+           AND tablename IN ('school_config', 'faculty_profiles', 'students', 'subject_grades', 'behavioural_ratings', 'calendar_events')
     LOOP
         EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', pol.policyname, pol.tablename);
     END LOOP;
@@ -160,6 +174,11 @@ CREATE POLICY "Allow public select operations" ON public.behavioural_ratings FOR
 CREATE POLICY "Allow public insert operations" ON public.behavioural_ratings FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update operations" ON public.behavioural_ratings FOR UPDATE USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public delete operations" ON public.behavioural_ratings FOR DELETE USING (true);
+
+CREATE POLICY "Allow public select operations" ON public.calendar_events FOR SELECT USING (true);
+CREATE POLICY "Allow public insert operations" ON public.calendar_events FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update operations" ON public.calendar_events FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public delete operations" ON public.calendar_events FOR DELETE USING (true);
 
 -- =====================================================================
 -- 5. SEED DATA GENERATION
