@@ -21,11 +21,11 @@ if (apiKey) {
   });
 }
 
-app.get("/api/health", (req, res) => {
+app.get(["/api/health", "/health"], (req, res) => {
   res.json({ status: "ok", aiConfigured: !!apiKey });
 });
 
-app.post("/api/gemini/chat", async (req, res) => {
+app.post(["/api/gemini/chat", "/gemini/chat"], async (req, res) => {
   try {
     const { messages } = req.body;
     if (!messages || !Array.isArray(messages)) {
