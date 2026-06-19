@@ -64,13 +64,31 @@ function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
   };
 
   const slots = [
-    { key: 'Admin', check: (f: FacultyProfile) => !f.assignedClass, def: DEFAULT_FACULTY[0] },
+    { key: 'Admin', check: (f: FacultyProfile) => f.id === 'ezekiel' || f.name.toLowerCase().includes('ezekiel'), def: DEFAULT_FACULTY[0] },
     { key: 'JSS1', check: (f: FacultyProfile) => f.assignedClass === 'JSS1', def: DEFAULT_FACULTY[1] },
     { key: 'JSS2', check: (f: FacultyProfile) => f.assignedClass === 'JSS2', def: DEFAULT_FACULTY[2] },
     { key: 'JSS3', check: (f: FacultyProfile) => f.assignedClass === 'JSS3', def: DEFAULT_FACULTY[3] },
     { key: 'SS1', check: (f: FacultyProfile) => f.assignedClass === 'SS1', def: DEFAULT_FACULTY[4] },
     { key: 'SS2', check: (f: FacultyProfile) => f.assignedClass === 'SS2', def: DEFAULT_FACULTY[5] },
     { key: 'SS3', check: (f: FacultyProfile) => f.assignedClass === 'SS3', def: DEFAULT_FACULTY[6] },
+    { 
+      key: 'CoAdmin', 
+      check: (f: FacultyProfile) => 
+        f.id === 'maroger' || 
+        f.name.toLowerCase().includes('maro') || 
+        f.name.toLowerCase().includes('german'), 
+      def: DEFAULT_FACULTY[7] 
+    },
+    { 
+      key: 'Spare', 
+      check: (f: FacultyProfile) => 
+        f.id === 'spare' || 
+        f.name.toLowerCase().includes('spare') || 
+        f.name.toLowerCase().includes('substitute') ||
+        f.role.toLowerCase().includes('substitute') ||
+        f.role.toLowerCase().includes('spare'), 
+      def: DEFAULT_FACULTY[8] 
+    }
   ];
 
   const aligned: FacultyProfile[] = [];
@@ -85,6 +103,17 @@ function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
     }
 
     if (match) {
+      // Upgrade database placeholder generic names to slots default settings
+      if (match.name === 'Administrator' || match.role === 'Admin') {
+        match = {
+          ...match,
+          name: slot.def.name,
+          role: slot.def.role,
+          avatar: slot.def.avatar,
+          email: slot.def.email || match.email,
+          password: (match.password === 'admin123' || !match.password) ? slot.def.password : match.password
+        };
+      }
       aligned.push(match);
       assignedIds.add(match.id);
     } else {
@@ -96,8 +125,12 @@ function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
   // Also preserve all extra/additional custom profiles so they never get deleted during database sync
   for (const p of profiles) {
     if (!assignedIds.has(p.id)) {
-      aligned.push(p);
-      assignedIds.add(p.id);
+      // Filter out any leftover seeded or manual generic "Administrator" accounts so they get cleanly deleted
+      const isLegacyAdmin = p.id === 'admin' || p.name === 'Administrator' || p.role === 'Admin' || p.role === 'Administrator' || p.name.includes('Administrator');
+      if (!isLegacyAdmin) {
+        aligned.push(p);
+        assignedIds.add(p.id);
+      }
     }
   }
 
@@ -109,7 +142,7 @@ function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
       updatedPass = 'Ezekiel@2026';
     }
     const up = { ...f, password: updatedPass };
-    if (up.id === 'ezekiel' || up.id === 'maroger') {
+    if (up.id === 'ezekiel') {
       return { ...up, isRestricted: false };
     }
     return up;
@@ -926,9 +959,9 @@ export default function TeacherDashboard({
 
   // Ensure Administrator is never restricted under any circumstances and clear any stale restriction
   useEffect(() => {
-    const hasRestrictedAdmin = facultyProfiles.some(f => (f.id === 'ezekiel' || f.id === 'maroger') && f.isRestricted);
+    const hasRestrictedAdmin = facultyProfiles.some(f => f.id === 'ezekiel' && f.isRestricted);
     if (hasRestrictedAdmin) {
-      const updated = facultyProfiles.map(f => (f.id === 'ezekiel' || f.id === 'maroger') ? { ...f, isRestricted: false } : f);
+      const updated = facultyProfiles.map(f => f.id === 'ezekiel' ? { ...f, isRestricted: false } : f);
       setFacultyProfiles(updated);
       if (typeof window !== 'undefined') {
         localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(updated));
@@ -937,12 +970,6 @@ export default function TeacherDashboard({
       if (ezekielProfile && dbStatus && dbStatus.configured && dbStatus.connected) {
         dbService.saveFacultyProfile(ezekielProfile).catch(err => {
           console.error("Failed to unrestrict Ezekiel in database:", err);
-        });
-      }
-      const marogerProfile = updated.find(f => f.id === 'maroger');
-      if (marogerProfile && dbStatus && dbStatus.configured && dbStatus.connected) {
-        dbService.saveFacultyProfile(marogerProfile).catch(err => {
-          console.error("Failed to unrestrict Maro German in database:", err);
         });
       }
     }
@@ -1008,7 +1035,7 @@ export default function TeacherDashboard({
   const [editingFacultyName, setEditingFacultyName] = useState('');
   const [editingFacultyEmail, setEditingFacultyEmail] = useState('');
   const [editingFacultyPassword, setEditingFacultyPassword] = useState('');
-  const [editingFacultyClass, setEditingFacultyClass] = useState<ClassName>('JSS1');
+  const [editingFacultyClass, setEditingFacultyClass] = useState<ClassName | ''>('');
   const [editingFacultyAvatar, setEditingFacultyAvatar] = useState('👩‍🏫');
   const [facultyPasswordError, setFacultyPasswordError] = useState('');
 
@@ -1104,11 +1131,11 @@ export default function TeacherDashboard({
       const activeProfile = facultyProfiles.find(p => 
         p.id === currentUser.id || 
         (currentUser.assignedClass && p.assignedClass === currentUser.assignedClass) ||
-        (!currentUser.assignedClass && (p.id === 'ezekiel' || p.id === 'maroger'))
+        (!currentUser.assignedClass && p.id === 'ezekiel')
       );
 
       if (activeProfile) {
-        if (activeProfile.isRestricted && !(currentUser.id === 'ezekiel' || currentUser.id === 'maroger')) {
+        if (activeProfile.isRestricted && currentUser.id !== 'ezekiel') {
           setCurrentUser(null);
           setEditingStudent(null);
           setViewingReportStudent(null);
@@ -1315,9 +1342,17 @@ export default function TeacherDashboard({
       name: editingFacultyName.trim(),
       email: editingFacultyEmail.trim(),
       password: editingFacultyPassword.trim(),
-      assignedClass: editingFacultyClass,
+      assignedClass: editingFacultyClass || undefined,
       avatar: editingFacultyAvatar,
-      role: editingFacultyClass ? `Form Teacher - ${editingFacultyClass}` : editingFaculty.role
+      role: editingFacultyClass 
+        ? `Form Teacher - ${editingFacultyClass}` 
+        : (newId === 'ezekiel' 
+            ? 'Administrator (Head Principal)' 
+            : newId === 'maroger' 
+              ? 'Co-Administrator' 
+              : newId === 'spare' 
+                ? 'Substitute Teacher (Spare)' 
+                : editingFaculty.role)
     };
 
     const updated = facultyProfiles.map(f => {
@@ -4044,9 +4079,10 @@ export default function TeacherDashboard({
                     <label className="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Class Assigned</label>
                     <select
                       value={editingFacultyClass || ''}
-                      onChange={(e) => setEditingFacultyClass(e.target.value as ClassName)}
+                      onChange={(e) => setEditingFacultyClass(e.target.value as ClassName | '')}
                       className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:border-emerald-600 font-black outline-none"
                     >
+                      <option value="">No Class Assigned (Principal / Co-Admin / Spare)</option>
                       <option value="JSS1">JSS1 (Junior Secondary 1)</option>
                       <option value="JSS2">JSS2 (Junior Secondary 2)</option>
                       <option value="JSS3">JSS3 (Junior Secondary 3)</option>
@@ -4172,7 +4208,7 @@ export default function TeacherDashboard({
                           setEditingFacultyName(p.name);
                           setEditingFacultyEmail(p.email || `${p.id}@ezibeckacademy.edu.ng`);
                           setEditingFacultyPassword(p.password || (p.id === 'ezekiel' ? 'Ezekiel@2026' : p.id === 'maroger' ? 'Maro@2026' : p.id === 'spare' ? 'Spare@2026' : 'Gladys@Jss1'));
-                          setEditingFacultyClass(p.assignedClass || 'JSS1');
+                          setEditingFacultyClass(p.assignedClass || '');
                           setEditingFacultyAvatar(p.avatar || '👩‍🏫');
                           setFacultyPasswordError('');
                         }}
@@ -4181,7 +4217,7 @@ export default function TeacherDashboard({
                         ⚙️ Edit & Assign Class
                       </button>
 
-                      {!isSelf && (
+                      {!isSelf && p.id !== 'ezekiel' && (
                         <button
                           type="button"
                           onClick={() => {

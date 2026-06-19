@@ -169,9 +169,7 @@ INSERT INTO public.school_config (school_name, motto, address, phone, email, res
 VALUES ('Notion Core International College', 'Knowledge, discipline and outstanding character excellence', '120, Broadway Lane, New York, NY 10025', '+1 (555) 489-0128', 'admissions@notioncollege.edu', 'September 14, 2026', 'June 18, 2026', '2025/2026 Academic Year', 'Dr. Christopher Vance, PhD', 'Mrs. Clara Vance', 'Mr. Albert King', 'Third Term Summary', '₦150,000.00', 85, 50)
 ON CONFLICT DO NOTHING;
 
-INSERT INTO public.faculty_profiles (name, role, password)
-VALUES ('Administrator', 'Admin', 'admin123')
-ON CONFLICT DO NOTHING;
+
 
 -- =====================================================================
 -- 6. SAFE IN-PLACE MIGRATION SCRIPT (DUPLICATE COLUMN PREVENTERS)
