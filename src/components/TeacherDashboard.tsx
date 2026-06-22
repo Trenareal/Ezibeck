@@ -207,6 +207,11 @@ export default function TeacherDashboard({
     currentUser.role.toLowerCase().includes('principal') ||
     currentUser.role.toLowerCase().includes('admin')
   );
+  const isCoAdmin = !!(currentUser && (
+    currentUser.id === 'maroger' ||
+    currentUser.role.toLowerCase().includes('co-') ||
+    currentUser.role.toLowerCase().includes('coadmin')
+  ));
   const [selectedClass, setSelectedClass] = useState<ClassName>('JSS1');
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [viewingReportStudent, setViewingReportStudent] = useState<Student | null>(null);
@@ -888,6 +893,13 @@ export default function TeacherDashboard({
     }
   }, [activeSubTab]);
 
+  // Prevent Co-Administrators from hanging on the forbidden staff tab
+  React.useEffect(() => {
+    if (currentUser && isCoAdmin && activeSubTab === 'staff') {
+      setActiveSubTab('roster');
+    }
+  }, [currentUser, isCoAdmin, activeSubTab]);
+
   const [activeTermTab, setActiveTermTab] = useState<'First Term' | 'Second Term' | 'Third Term'>(() => {
     if (template.currentTerm === 'First Term' || template.currentTerm === 'Second Term' || template.currentTerm === 'Third Term') {
       return template.currentTerm;
@@ -1213,11 +1225,9 @@ export default function TeacherDashboard({
   // Enforce dynamic staff account restriction live and dynamically propagate credential changes (username/password/name)
   React.useEffect(() => {
     if (currentUser) {
-      // Find matching live profile from facultyProfiles loaded from Supabase database
-      const activeProfile = facultyProfiles.find(p => 
-        p.id === currentUser.id || 
-        (currentUser.assignedClass && p.assignedClass === currentUser.assignedClass) ||
-        (!currentUser.assignedClass && p.id === 'ezekiel')
+      // Find matching live profile from facultyProfiles loaded from Supabase database by ID first to ensure precise session tracking
+      const activeProfile = facultyProfiles.find(p => p.id === currentUser.id) || facultyProfiles.find(p => 
+        (currentUser.assignedClass && p.assignedClass === currentUser.assignedClass)
       );
 
       if (activeProfile) {
@@ -1592,12 +1602,15 @@ export default function TeacherDashboard({
   // Get allowed classes for current user dynamic roles
   const allowedClasses: ClassName[] = React.useMemo(() => {
     if (!currentUser) return ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
+    const matchProfile = facultyProfiles.find(f => f.id === currentUser.id);
+    const assigned = matchProfile?.assignedClass || currentUser.assignedClass;
+    
+    if (currentUser.id !== 'ezekiel' && assigned) {
+      return [assigned];
+    }
+    
     if (isAdmin) {
       return ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
-    }
-    const matchProfile = facultyProfiles.find(f => f.id === currentUser.id);
-    if (matchProfile && matchProfile.assignedClass) {
-      return [matchProfile.assignedClass];
     }
     return ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
   }, [currentUser, facultyProfiles, isAdmin]);
@@ -2269,7 +2282,7 @@ export default function TeacherDashboard({
           >
             ⚙️ Workspace Config Template (15 properties)
           </button>
-          {isAdmin && (
+          {isAdmin && !isCoAdmin && (
             <button
               id="subtab-manage-staff-restrict"
               onClick={() => setActiveSubTab('staff')}
@@ -4105,7 +4118,7 @@ export default function TeacherDashboard({
 
 
           </div>
-        ) : activeSubTab === 'staff' && isAdmin ? (
+        ) : activeSubTab === 'staff' && isAdmin && !isCoAdmin ? (
           /* VIEW 4: ADMIN STAFF MANAGEMENT SCREEN */
           <div className="bg-white border rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm animate-fade-in text-slate-800">
             <div className="border-b pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
