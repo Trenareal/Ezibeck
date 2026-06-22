@@ -31,9 +31,37 @@ const DEFAULT_WORKSPACE_15: Workspace15Template = {
   formTeacherJunior: "Maro German",
   formTeacherSenior: "Maro German",
   currentTerm: "Third Term",
-  nextTermFee: "₦150,000.00",
+  nextTermFee: "₦100,000.00|₦15,000.00|₦15,000.00|₦20,000.00;₦100,000.00|₦15,000.00|₦15,000.00|₦20,000.00;₦100,000.00|₦15,000.00|₦15,000.00|₦20,000.00;₦100,000.00|₦15,000.00|₦15,000.00|₦20,000.00",
   distinctionThreshold: 90,
   passThreshold: 50,
+  schoolFee: "₦100,000.00",
+  partyFee: "₦15,000.00",
+  enrollmentFee: "₦15,000.00",
+  bookFee: "₦20,000.00",
+
+  // Nursery Section
+  schoolFeeNursery: "₦100,000.00",
+  partyFeeNursery: "₦15,000.00",
+  enrollmentFeeNursery: "₦15,000.00",
+  bookFeeNursery: "₦20,000.00",
+
+  // Primary Section
+  schoolFeePrimary: "₦100,000.00",
+  partyFeePrimary: "₦15,000.00",
+  enrollmentFeePrimary: "₦15,000.00",
+  bookFeePrimary: "₦20,000.00",
+
+  // Junior Section
+  schoolFeeJunior: "₦100,000.00",
+  partyFeeJunior: "₦15,000.00",
+  enrollmentFeeJunior: "₦15,000.00",
+  bookFeeJunior: "₦20,000.00",
+
+  // Senior Section
+  schoolFeeSenior: "₦100,000.00",
+  partyFeeSenior: "₦15,000.00",
+  enrollmentFeeSenior: "₦15,000.00",
+  bookFeeSenior: "₦20,000.00",
 };
 
 export default function App() {

@@ -34,6 +34,26 @@ export const SS_SUBJECTS = [
   "Information Technology"
 ];
 
+export const NURSERY_SUBJECTS = [
+  "Numeracy (Maths)",
+  "Literacy (English)",
+  "Sensory & Creative Arts",
+  "Health & Physical Play",
+  "Cognitive & Pre-Science",
+  "Social & Emotional Dev"
+];
+
+export const PRIMARY_SUBJECTS = [
+  "Mathematics",
+  "English Language",
+  "Primary Science & Tech",
+  "Social Studies",
+  "Computer Studies (ICT)",
+  "Cultural & Creative Arts",
+  "Civic Education",
+  "Home Economics / Agri"
+];
+
 export const BEHAVIOUR_TRAITS = [
   "Punctuality",
   "Neatness & Grooming",
@@ -251,13 +271,11 @@ export function calculateClassPositions(students: Student[], className?: ClassNa
           };
         }).sort((x, y) => y.total - x.total);
         
-        const subjPos = subj.isPositionManual && subj.position !== undefined
-          ? subj.position
-          : allScoresForSubj.findIndex(scoreObj => scoreObj.id === item.student.id) + 1;
+        const subjPos = allScoresForSubj.findIndex(scoreObj => scoreObj.id === item.student.id) + 1;
         return {
           ...subj,
           position: subjPos,
-          isPositionManual: subj.isPositionManual
+          isPositionManual: false
         };
       })
     };
@@ -362,11 +380,31 @@ export function generateUnique6DigitPassword(studentName: string, baseIdOrName: 
 
 export function createStudent(name: string, className: ClassName, idx: number, term?: string): Student {
   const activeTerm = term || 'Third Term';
-  const isJSS = className.startsWith('JSS');
-  const subjectsList = isJSS ? JSS_SUBJECTS : SS_SUBJECTS;
-  const age = isJSS 
-    ? (className === 'JSS1' ? 11 : className === 'JSS2' ? 12 : 13)
-    : (className === 'SS1' ? 14 : className === 'SS2' ? 15 : 16);
+  
+  let subjectsList = JSS_SUBJECTS;
+  if (className === 'Pre-Kg' || className.startsWith('KG')) {
+    subjectsList = NURSERY_SUBJECTS;
+  } else if (className.startsWith('Basic')) {
+    subjectsList = PRIMARY_SUBJECTS;
+  } else if (className.startsWith('SS')) {
+    subjectsList = SS_SUBJECTS;
+  }
+  
+  let age = 15;
+  if (className === 'Pre-Kg') {
+    age = 2;
+  } else if (className.startsWith('KG')) {
+    if (className === 'KG 1') age = 3;
+    else if (className === 'KG 2') age = 4;
+    else age = 5;
+  } else if (className.startsWith('Basic')) {
+    const num = parseInt(className.replace('Basic ', ''));
+    age = 5 + (isNaN(num) ? 1 : num);
+  } else if (className.startsWith('JSS')) {
+    age = className === 'JSS1' ? 11 : className === 'JSS2' ? 12 : 13;
+  } else {
+    age = className === 'SS1' ? 14 : className === 'SS2' ? 15 : 16;
+  }
     
   const sex = idx % 2 === 0 ? 'Male' : 'Female';
   
@@ -436,6 +474,24 @@ export function createStudent(name: string, className: ClassName, idx: number, t
   const remarkIdx = idx % remarks.length;
   const termSlug = activeTerm.toLowerCase().replace(/\s+/g, '_');
 
+  let formTeacherName = "Mrs. Gladys Alabi";
+  if (className === 'Pre-Kg') formTeacherName = "Mrs. Evelyn Ndu";
+  else if (className === 'KG 1') formTeacherName = "Mrs. Rose Mary";
+  else if (className === 'KG 2') formTeacherName = "Mr. Kelvin Joe";
+  else if (className === 'KG 3') formTeacherName = "Mrs. Mercy Joy";
+  else if (className === 'Basic 1') formTeacherName = "Mr. Samuel Adele";
+  else if (className === 'Basic 2') formTeacherName = "Mrs. Blessing Praise";
+  else if (className === 'Basic 3') formTeacherName = "Mr. Patrick Obi";
+  else if (className === 'Basic 4') formTeacherName = "Mrs. Victoria Oge";
+  else if (className === 'Basic 5') formTeacherName = "Mr. Emmanuel Eze";
+  else if (className === 'Basic 6') formTeacherName = "Mrs. Juliet Ngozi";
+  else if (className === 'JSS1') formTeacherName = "Mrs. Gladys Alabi";
+  else if (className === 'JSS2') formTeacherName = "Mr. Anthony Okon";
+  else if (className === 'JSS3') formTeacherName = "Mrs. Sarah John";
+  else if (className === 'SS1') formTeacherName = "Mr. Benson Chidi";
+  else if (className === 'SS2') formTeacherName = "Mrs. Florence Musa";
+  else if (className === 'SS3') formTeacherName = "Mr. David Ibrahim";
+
   return {
     id: `EZB-${className}-${101 + idx}_${termSlug}`,
     name,
@@ -449,7 +505,7 @@ export function createStudent(name: string, className: ClassName, idx: number, t
     subjects: generateRandomGrades(subjectsList, activeTerm, idx),
     behaviour: generateDefaultBehaviour(),
     formTeacherRemark: remarks[remarkIdx],
-    formTeacherName: isJSS ? "Mrs. Gladys Alabi" : "Mr. Anthony Okon",
+    formTeacherName,
     principalName: "Dr. Ezekiel Beck",
     resumptionDate: activeTerm === 'First Term' ? "2026-01-08" : activeTerm === 'Second Term' ? "2026-04-20" : "2026-09-14",
     password: getDeterministicPasscode(name, className, idx, activeTerm),
@@ -469,7 +525,7 @@ export function isStudentInTerm(studentId: string, termName: string): boolean {
 
 export function getInitialStudents(term?: string): Student[] {
   const activeTerm = term || 'Third Term';
-  const classes: ClassName[] = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
+  const classes: ClassName[] = ['Pre-Kg', 'KG 1', 'KG 2', 'KG 3', 'Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6', 'JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
   let students: Student[] = [];
 
   // Generate 4 students per class

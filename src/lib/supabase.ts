@@ -63,6 +63,33 @@ export const mapDbConfigToTemplate = (cfg: any): Workspace15Template => {
   const mottoRaw = cfg.motto || '';
   const isLocked = mottoRaw.includes('|LOCKED') || !!cfg.portal_locked;
   const cleanMotto = mottoRaw.split('|LOCKED')[0];
+  
+  const rawFee = cfg.next_term_fee || '';
+  const sections = rawFee.includes(';') ? rawFee.split(';') : [];
+  
+  let nurseryParts = ['', '', '', ''];
+  let primaryParts = ['', '', '', ''];
+  let juniorParts = ['', '', '', ''];
+  let seniorParts = ['', '', '', ''];
+  
+  if (sections.length >= 4) {
+    nurseryParts = sections[0].split('|');
+    primaryParts = sections[1].split('|');
+    juniorParts = sections[2].split('|');
+    seniorParts = sections[3].split('|');
+  } else {
+    const parts = rawFee.split('|');
+    const rootSchoolFee = parts[0] || rawFee || '₦0.00';
+    const rootPartyFee = parts[1] || '₦0.00';
+    const rootEnrollmentFee = parts[2] || '₦0.00';
+    const rootBookFee = parts[3] || '₦0.00';
+    
+    nurseryParts = [rootSchoolFee, rootPartyFee, rootEnrollmentFee, rootBookFee];
+    primaryParts = [rootSchoolFee, rootPartyFee, rootEnrollmentFee, rootBookFee];
+    juniorParts = [rootSchoolFee, rootPartyFee, rootEnrollmentFee, rootBookFee];
+    seniorParts = [rootSchoolFee, rootPartyFee, rootEnrollmentFee, rootBookFee];
+  }
+
   return {
     schoolName: cfg.school_name,
     motto: cleanMotto,
@@ -80,12 +107,48 @@ export const mapDbConfigToTemplate = (cfg: any): Workspace15Template => {
     distinctionThreshold: cfg.distinction_threshold,
     passThreshold: cfg.pass_threshold,
     portalLocked: isLocked,
+    schoolFee: nurseryParts[0] || '₦0.00',
+    partyFee: nurseryParts[1] || '₦0.00',
+    enrollmentFee: nurseryParts[2] || '₦0.00',
+    bookFee: nurseryParts[3] || '₦0.00',
+    
+    // Nursery Section
+    schoolFeeNursery: nurseryParts[0] || '₦100,000.00',
+    partyFeeNursery: nurseryParts[1] || '₦15,000.00',
+    enrollmentFeeNursery: nurseryParts[2] || '₦15,000.00',
+    bookFeeNursery: nurseryParts[3] || '₦20,000.00',
+    
+    // Primary Section
+    schoolFeePrimary: primaryParts[0] || '₦100,000.00',
+    partyFeePrimary: primaryParts[1] || '₦15,000.00',
+    enrollmentFeePrimary: primaryParts[2] || '₦15,000.00',
+    bookFeePrimary: primaryParts[3] || '₦20,000.00',
+    
+    // Junior Section
+    schoolFeeJunior: juniorParts[0] || '₦100,000.00',
+    partyFeeJunior: juniorParts[1] || '₦15,000.00',
+    enrollmentFeeJunior: juniorParts[2] || '₦15,000.00',
+    bookFeeJunior: juniorParts[3] || '₦20,000.00',
+    
+    // Senior Section
+    schoolFeeSenior: seniorParts[0] || '₦100,000.00',
+    partyFeeSenior: seniorParts[1] || '₦15,000.00',
+    enrollmentFeeSenior: seniorParts[2] || '₦15,000.00',
+    bookFeeSenior: seniorParts[3] || '₦20,000.00',
   };
 };
 
 export const mapTemplateToDbConfig = (tpl: Workspace15Template) => {
   const cleanMotto = tpl.motto ? tpl.motto.split('|LOCKED')[0] : '';
   const mottoToStore = tpl.portalLocked ? `${cleanMotto}|LOCKED` : cleanMotto;
+  
+  const nurseryFee = `${tpl.schoolFeeNursery || tpl.schoolFee || ''}|${tpl.partyFeeNursery || tpl.partyFee || ''}|${tpl.enrollmentFeeNursery || tpl.enrollmentFee || ''}|${tpl.bookFeeNursery || tpl.bookFee || ''}`;
+  const primaryFee = `${tpl.schoolFeePrimary || tpl.schoolFee || ''}|${tpl.partyFeePrimary || tpl.partyFee || ''}|${tpl.enrollmentFeePrimary || tpl.enrollmentFee || ''}|${tpl.bookFeePrimary || tpl.bookFee || ''}`;
+  const juniorFee = `${tpl.schoolFeeJunior || tpl.schoolFee || ''}|${tpl.partyFeeJunior || tpl.partyFee || ''}|${tpl.enrollmentFeeJunior || tpl.enrollmentFee || ''}|${tpl.bookFeeJunior || tpl.bookFee || ''}`;
+  const seniorFee = `${tpl.schoolFeeSenior || tpl.schoolFee || ''}|${tpl.partyFeeSenior || tpl.partyFee || ''}|${tpl.enrollmentFeeSenior || tpl.enrollmentFee || ''}|${tpl.bookFeeSenior || tpl.bookFee || ''}`;
+  
+  const serializedFee = `${nurseryFee};${primaryFee};${juniorFee};${seniorFee}`;
+  
   return {
     school_name: tpl.schoolName,
     motto: mottoToStore,
@@ -99,7 +162,7 @@ export const mapTemplateToDbConfig = (tpl: Workspace15Template) => {
     form_teacher_junior: tpl.formTeacherJunior,
     form_teacher_senior: tpl.formTeacherSenior,
     current_term: tpl.currentTerm,
-    next_term_fee: tpl.nextTermFee,
+    next_term_fee: serializedFee,
     distinction_threshold: tpl.distinctionThreshold,
     pass_threshold: tpl.passThreshold,
   };

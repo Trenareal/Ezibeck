@@ -3,7 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type ClassName = 'JSS1' | 'JSS2' | 'JSS3' | 'SS1' | 'SS2' | 'SS3';
+export type ClassName = 'Pre-Kg' | 'KG 1' | 'KG 2' | 'KG 3' | 'Basic 1' | 'Basic 2' | 'Basic 3' | 'Basic 4' | 'Basic 5' | 'Basic 6' | 'JSS1' | 'JSS2' | 'JSS3' | 'SS1' | 'SS2' | 'SS3';
+
+export const ALL_CLASSES: ClassName[] = [
+  'Pre-Kg', 'KG 1', 'KG 2', 'KG 3', 
+  'Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6', 
+  'JSS1', 'JSS2', 'JSS3', 
+  'SS1', 'SS2', 'SS3'
+];
 
 export interface SubjectGrade {
   id: string;
@@ -72,6 +79,34 @@ export interface Workspace15Template {
   distinctionThreshold: number;  // 14
   passThreshold: number;         // 15
   portalLocked?: boolean;        // 16: Lock status for students
+  schoolFee: string;             // Itemized 1
+  partyFee: string;              // Itemized 2
+  enrollmentFee: string;         // Itemized 3
+  bookFee: string;               // Itemized 4
+
+  // Nursery Section
+  schoolFeeNursery?: string;
+  partyFeeNursery?: string;
+  enrollmentFeeNursery?: string;
+  bookFeeNursery?: string;
+
+  // Primary Section
+  schoolFeePrimary?: string;
+  partyFeePrimary?: string;
+  enrollmentFeePrimary?: string;
+  bookFeePrimary?: string;
+
+  // Junior Section
+  schoolFeeJunior?: string;
+  partyFeeJunior?: string;
+  enrollmentFeeJunior?: string;
+  bookFeeJunior?: string;
+
+  // Senior Section
+  schoolFeeSenior?: string;
+  partyFeeSenior?: string;
+  enrollmentFeeSenior?: string;
+  bookFeeSenior?: string;
 }
 
 export interface SchoolInfo {

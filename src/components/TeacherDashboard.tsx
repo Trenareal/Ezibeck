@@ -8,7 +8,7 @@ import { ArrowLeft, School, GraduationCap, Plus, Save, Trash2, Edit2, CheckCircl
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
-import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile, DbStatus, AuditLogEntry } from '../types';
+import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile, DbStatus, AuditLogEntry, ALL_CLASSES } from '../types';
 import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal, generateUnique6DigitPassword, getDeterministicPasscode, getStudentPasscodesFromOtherTerms } from '../utils/academicUtils';
 import { logPasscodeEvent, getAuditLogs, clearAuditLogs } from '../utils/auditLogger';
 import { dbService, mapDbFacultyToFrontend, mapDbStudentToFrontend } from '../lib/supabase';
@@ -40,14 +40,31 @@ export function isPasswordStandardCompliant(password: string): boolean {
 
 const DEFAULT_FACULTY: FacultyProfile[] = [
   { id: "ezekiel", name: "Dr. Ezekiel Beck", role: "Administrator (Head Principal)", avatar: "👨‍🏫", password: "Ezekiel@2026", email: "ezekiel@ezibeckacademy.edu.ng" },
+  
+  // 10 classes: Pre-Kg, KG 1-3, Basic 1-6
+  { id: "evelyn", name: "Mrs. Evelyn Ndu", role: "Form Teacher - Pre-Kg", avatar: "👩‍🏫", password: "Evelyn@PreKg", email: "evelyn@ezibeckacademy.edu.ng", assignedClass: "Pre-Kg" },
+  { id: "rose", name: "Mrs. Rose Mary", role: "Form Teacher - KG 1", avatar: "👩‍🏫", password: "Rose@Kg1", email: "rose@ezibeckacademy.edu.ng", assignedClass: "KG 1" },
+  { id: "kelvin", name: "Mr. Kelvin Joe", role: "Form Teacher - KG 2", avatar: "👨‍🏫", password: "Kelvin@Kg2", email: "kelvin@ezibeckacademy.edu.ng", assignedClass: "KG 2" },
+  { id: "mercy", name: "Mrs. Mercy Joy", role: "Form Teacher - KG 3", avatar: "👩‍🏫", password: "Mercy@Kg3", email: "mercy@ezibeckacademy.edu.ng", assignedClass: "KG 3" },
+  { id: "samuel", name: "Mr. Samuel Adele", role: "Form Teacher - Basic 1", avatar: "👨‍🏫", password: "Samuel@Basic1", email: "samuel@ezibeckacademy.edu.ng", assignedClass: "Basic 1" },
+  { id: "blessing", name: "Mrs. Blessing Praise", role: "Form Teacher - Basic 2", avatar: "👩‍🏫", password: "Blessing@Basic2", email: "blessing@ezibeckacademy.edu.ng", assignedClass: "Basic 2" },
+  { id: "patrick", name: "Mr. Patrick Obi", role: "Form Teacher - Basic 3", avatar: "👨‍💻", password: "Patrick@Basic3", email: "patrick@ezibeckacademy.edu.ng", assignedClass: "Basic 3" },
+  { id: "victoria", name: "Mrs. Victoria Oge", role: "Form Teacher - Basic 4", avatar: "👩‍🏫", password: "Victoria@Basic4", email: "victoria@ezibeckacademy.edu.ng", assignedClass: "Basic 4" },
+  { id: "emmanuel", name: "Mr. Emmanuel Eze", role: "Form Teacher - Basic 5", avatar: "👨‍💻", password: "Emmanuel@Basic5", email: "emmanuel@ezibeckacademy.edu.ng", assignedClass: "Basic 5" },
+  { id: "juliet", name: "Mrs. Juliet Ngozi", role: "Form Teacher - Basic 6", avatar: "👩‍🏫", password: "Juliet@Basic6", email: "juliet@ezibeckacademy.edu.ng", assignedClass: "Basic 6" },
+
+  // 6 secondary classes: JSS1-3, SS1-3
   { id: "gladys", name: "Mrs. Gladys Alabi", role: "Form Teacher - JSS1", avatar: "👩‍🏫", password: "Gladys@Jss1", email: "gladys@ezibeckacademy.edu.ng", assignedClass: "JSS1" },
   { id: "anthony", name: "Mr. Anthony Okon", role: "Form Teacher - JSS2", avatar: "👨‍💻", password: "Anthony@Jss2", email: "anthony@ezibeckacademy.edu.ng", assignedClass: "JSS2" },
   { id: "sarah", name: "Mrs. Sarah John", role: "Form Teacher - JSS3", avatar: "👩‍🏫", password: "Sarah@Jss3", email: "sarah@ezibeckacademy.edu.ng", assignedClass: "JSS3" },
   { id: "benson", name: "Mr. Benson Chidi", role: "Form Teacher - SS1", avatar: "👨‍🏫", password: "Benson@Ss1", email: "benson@ezibeckacademy.edu.ng", assignedClass: "SS1" },
   { id: "florence", name: "Mrs. Florence Musa", role: "Form Teacher - SS2", avatar: "👩‍🏫", password: "Florence@Ss2", email: "florence@ezibeckacademy.edu.ng", assignedClass: "SS2" },
   { id: "david", name: "Mr. David Ibrahim", role: "Form Teacher - SS3", avatar: "👨‍💻", password: "David@Ss3", email: "david@ezibeckacademy.edu.ng", assignedClass: "SS3" },
-  { id: "maroger", name: "Maro German", role: "Co-Administrator", avatar: "🛡️", password: "Maro@2026", email: "maro@ezibeckacademy.edu.ng" },
-  { id: "spare", name: "Spare Teacher", role: "Substitute Teacher (Spare)", avatar: "🏫", password: "Spare@2026", email: "spare@ezibeckacademy.edu.ng" }
+
+  // 3 Section Admins (besides Principal)
+  { id: "nancy", name: "Mrs. Nancy Yusuf", role: "Head Teacher (Pre-Kg to Basic 6)", avatar: "🏫", password: "Nancy@HeadTeacher", email: "nancy.head@ezibeckacademy.edu.ng" },
+  { id: "justina", name: "Mrs. Justina Cole", role: "Junior Secondary Admin (JSS1 to JSS3)", avatar: "🏫", password: "Justina@Junior", email: "justina.junior@ezibeckacademy.edu.ng" },
+  { id: "samson", name: "Mr. Samson Duke", role: "Senior Secondary Admin (SS1 to SS3)", avatar: "🏫", password: "Samson@Senior", email: "samson.senior@ezibeckacademy.edu.ng" }
 ];
 
 function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
@@ -59,36 +76,48 @@ function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
     "teacher4": "Benson@Ss1",
     "teacher5": "Florence@Ss2",
     "teacher6": "David@Ss3",
-    "maroger": "Maro@2026",
-    "spare": "Spare@2026"
+    "evelyn": "Evelyn@PreKg",
+    "rose": "Rose@Kg1",
+    "kelvin": "Kelvin@Kg2",
+    "mercy": "Mercy@Kg3",
+    "samuel": "Samuel@Basic1",
+    "blessing": "Blessing@Basic2",
+    "patrick": "Patrick@Basic3",
+    "victoria": "Victoria@Basic4",
+    "emmanuel": "Emmanuel@Basic5",
+    "juliet": "Juliet@Basic6",
+    "nancy": "Nancy@HeadTeacher",
+    "justina": "Justina@Junior",
+    "samson": "Samson@Senior"
   };
 
   const slots = [
     { key: 'Admin', check: (f: FacultyProfile) => f.id === 'ezekiel' || f.name.toLowerCase().includes('ezekiel'), def: DEFAULT_FACULTY[0] },
-    { key: 'JSS1', check: (f: FacultyProfile) => f.assignedClass === 'JSS1', def: DEFAULT_FACULTY[1] },
-    { key: 'JSS2', check: (f: FacultyProfile) => f.assignedClass === 'JSS2', def: DEFAULT_FACULTY[2] },
-    { key: 'JSS3', check: (f: FacultyProfile) => f.assignedClass === 'JSS3', def: DEFAULT_FACULTY[3] },
-    { key: 'SS1', check: (f: FacultyProfile) => f.assignedClass === 'SS1', def: DEFAULT_FACULTY[4] },
-    { key: 'SS2', check: (f: FacultyProfile) => f.assignedClass === 'SS2', def: DEFAULT_FACULTY[5] },
-    { key: 'SS3', check: (f: FacultyProfile) => f.assignedClass === 'SS3', def: DEFAULT_FACULTY[6] },
-    { 
-      key: 'CoAdmin', 
-      check: (f: FacultyProfile) => 
-        f.id === 'maroger' || 
-        f.name.toLowerCase().includes('maro') || 
-        f.name.toLowerCase().includes('german'), 
-      def: DEFAULT_FACULTY[7] 
-    },
-    { 
-      key: 'Spare', 
-      check: (f: FacultyProfile) => 
-        f.id === 'spare' || 
-        f.name.toLowerCase().includes('spare') || 
-        f.name.toLowerCase().includes('substitute') ||
-        f.role.toLowerCase().includes('substitute') ||
-        f.role.toLowerCase().includes('spare'), 
-      def: DEFAULT_FACULTY[8] 
-    }
+    
+    // 10 primary classes
+    { key: 'Pre-Kg', check: (f: FacultyProfile) => f.assignedClass === 'Pre-Kg', def: DEFAULT_FACULTY[1] },
+    { key: 'KG 1', check: (f: FacultyProfile) => f.assignedClass === 'KG 1', def: DEFAULT_FACULTY[2] },
+    { key: 'KG 2', check: (f: FacultyProfile) => f.assignedClass === 'KG 2', def: DEFAULT_FACULTY[3] },
+    { key: 'KG 3', check: (f: FacultyProfile) => f.assignedClass === 'KG 3', def: DEFAULT_FACULTY[4] },
+    { key: 'Basic 1', check: (f: FacultyProfile) => f.assignedClass === 'Basic 1', def: DEFAULT_FACULTY[5] },
+    { key: 'Basic 2', check: (f: FacultyProfile) => f.assignedClass === 'Basic 2', def: DEFAULT_FACULTY[6] },
+    { key: 'Basic 3', check: (f: FacultyProfile) => f.assignedClass === 'Basic 3', def: DEFAULT_FACULTY[7] },
+    { key: 'Basic 4', check: (f: FacultyProfile) => f.assignedClass === 'Basic 4', def: DEFAULT_FACULTY[8] },
+    { key: 'Basic 5', check: (f: FacultyProfile) => f.assignedClass === 'Basic 5', def: DEFAULT_FACULTY[9] },
+    { key: 'Basic 6', check: (f: FacultyProfile) => f.assignedClass === 'Basic 6', def: DEFAULT_FACULTY[10] },
+
+    // 6 secondary classes
+    { key: 'JSS1', check: (f: FacultyProfile) => f.assignedClass === 'JSS1', def: DEFAULT_FACULTY[11] },
+    { key: 'JSS2', check: (f: FacultyProfile) => f.assignedClass === 'JSS2', def: DEFAULT_FACULTY[12] },
+    { key: 'JSS3', check: (f: FacultyProfile) => f.assignedClass === 'JSS3', def: DEFAULT_FACULTY[13] },
+    { key: 'SS1', check: (f: FacultyProfile) => f.assignedClass === 'SS1', def: DEFAULT_FACULTY[14] },
+    { key: 'SS2', check: (f: FacultyProfile) => f.assignedClass === 'SS2', def: DEFAULT_FACULTY[15] },
+    { key: 'SS3', check: (f: FacultyProfile) => f.assignedClass === 'SS3', def: DEFAULT_FACULTY[16] },
+
+    // 3 Section Admins
+    { key: 'NancyHead', check: (f: FacultyProfile) => f.id === 'nancy' || f.role.toLowerCase().includes('head teacher') || f.role.toLowerCase().includes('nursery'), def: DEFAULT_FACULTY[17] },
+    { key: 'JustinaJunior', check: (f: FacultyProfile) => f.id === 'justina' || f.role.toLowerCase().includes('junior secondary'), def: DEFAULT_FACULTY[18] },
+    { key: 'SamsonSenior', check: (f: FacultyProfile) => f.id === 'samson' || f.role.toLowerCase().includes('senior secondary'), def: DEFAULT_FACULTY[19] }
   ];
 
   const aligned: FacultyProfile[] = [];
@@ -212,7 +241,7 @@ export default function TeacherDashboard({
     currentUser.role.toLowerCase().includes('co-') ||
     currentUser.role.toLowerCase().includes('coadmin')
   ));
-  const [selectedClass, setSelectedClass] = useState<ClassName>('JSS1');
+  const [selectedClass, setSelectedClass] = useState<ClassName>('Pre-Kg');
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [viewingReportStudent, setViewingReportStudent] = useState<Student | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -624,12 +653,11 @@ export default function TeacherDashboard({
     const kpis = [
       { label: "CUMULATIVE TOTAL", value: `${stats.totalScore} / ${stats.maxPossibleScore}` },
       { label: "TERMLY AVERAGE", value: `${stats.avgScore.toFixed(1)}%` },
-      { label: "CLASS GPA RATIO", value: `${stats.gpa} / 5.00` },
       { label: positionStr === 'N/A' ? "CLASS SIZE" : "POSITION IN CLASS", value: positionStr === 'N/A' ? `${classSize} Students` : `${positionStr} of ${classSize}` }
     ];
 
-    const kpiWidth = 44.5;
-    const kpiGap = 4;
+    const kpiWidth = 60;
+    const kpiGap = 5;
     kpis.forEach((k, idx) => {
       const kpiX = 10 + idx * (kpiWidth + kpiGap);
       doc.setFillColor(248, 250, 252);
@@ -756,10 +784,10 @@ export default function TeacherDashboard({
 
     try {
       const zip = new JSZip();
-      const classes: ClassName[] = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
+      const classes = ALL_CLASSES;
       
       // Global CSV report content
-      let schoolWideCsv = "Class,Rank,Student ID,Student Name,Gender,Cumulative Total,Average Score,GPA\n";
+      let schoolWideCsv = "Class,Rank,Student ID,Student Name,Gender,Cumulative Total,Average Score\n";
       let totalPdfsGenerated = 0;
 
       for (const cls of classes) {
@@ -782,7 +810,7 @@ export default function TeacherDashboard({
         if (!classFolder) continue;
 
         // Populate CSV results data for this class
-        let classCsv = "Rank,Student ID,Student Name,Gender,Cumulative Total,Average Score,GPA\n";
+        let classCsv = "Rank,Student ID,Student Name,Gender,Cumulative Total,Average Score\n";
 
         // Generate student sheets sequentially
         for (let i = 0; i < sortedRoster.length; i++) {
@@ -799,10 +827,10 @@ export default function TeacherDashboard({
           classFolder.file(filename, pdfBlob);
 
           // Add to CSV reports
-          const rowText = `${cls},${position},${stud.id},"${stud.name}",${stud.sex},${stats.totalScore},${stats.avgScore.toFixed(2)}%,${stats.gpa}\n`;
+          const rowText = `${cls},${position},${stud.id},"${stud.name}",${stud.sex},${stats.totalScore},${stats.avgScore.toFixed(2)}%\n`;
           schoolWideCsv += rowText;
 
-          const classRowText = `${position},${stud.id},"${stud.name}",${stud.sex},${stats.totalScore},${stats.avgScore.toFixed(2)}%,${stats.gpa}\n`;
+          const classRowText = `${position},${stud.id},"${stud.name}",${stud.sex},${stats.totalScore},${stats.avgScore.toFixed(2)}%\n`;
           classCsv += classRowText;
 
           totalPdfsGenerated++;
@@ -1069,6 +1097,7 @@ export default function TeacherDashboard({
   const [editingFacultyEmail, setEditingFacultyEmail] = useState('');
   const [editingFacultyPassword, setEditingFacultyPassword] = useState('');
   const [editingFacultyClass, setEditingFacultyClass] = useState<ClassName | ''>('');
+  const [editingFacultyRole, setEditingFacultyRole] = useState('');
   const [editingFacultyAvatar, setEditingFacultyAvatar] = useState('👩‍🏫');
   const [facultyPasswordError, setFacultyPasswordError] = useState('');
 
@@ -1199,6 +1228,35 @@ export default function TeacherDashboard({
   const [tempDistinctionThreshold, setTempDistinctionThreshold] = useState(template.distinctionThreshold);
   const [tempPassThreshold, setTempPassThreshold] = useState(template.passThreshold);
 
+  const [tempSchoolFee, setTempSchoolFee] = useState(template.schoolFee || "₦100,000.00");
+  const [tempPartyFee, setTempPartyFee] = useState(template.partyFee || "₦15,000.00");
+  const [tempEnrollmentFee, setTempEnrollmentFee] = useState(template.enrollmentFee || "₦15,000.00");
+  const [tempBookFee, setTempBookFee] = useState(template.bookFee || "₦20,000.00");
+
+  // Nursery section fees (Pre-KG to KG3)
+  const [tempSchoolFeeNursery, setTempSchoolFeeNursery] = useState(template.schoolFeeNursery || template.schoolFee || "₦100,000.00");
+  const [tempPartyFeeNursery, setTempPartyFeeNursery] = useState(template.partyFeeNursery || template.partyFee || "₦15,000.00");
+  const [tempEnrollmentFeeNursery, setTempEnrollmentFeeNursery] = useState(template.enrollmentFeeNursery || template.enrollmentFee || "₦15,000.00");
+  const [tempBookFeeNursery, setTempBookFeeNursery] = useState(template.bookFeeNursery || template.bookFee || "₦20,000.00");
+
+  // Primary section fees (Basic 1 to 6)
+  const [tempSchoolFeePrimary, setTempSchoolFeePrimary] = useState(template.schoolFeePrimary || template.schoolFee || "₦100,000.00");
+  const [tempPartyFeePrimary, setTempPartyFeePrimary] = useState(template.partyFeePrimary || template.partyFee || "₦15,000.00");
+  const [tempEnrollmentFeePrimary, setTempEnrollmentFeePrimary] = useState(template.enrollmentFeePrimary || template.enrollmentFee || "₦15,000.00");
+  const [tempBookFeePrimary, setTempBookFeePrimary] = useState(template.bookFeePrimary || template.bookFee || "₦20,000.00");
+
+  // Junior Secondary section fees (JSS1 to JSS3)
+  const [tempSchoolFeeJunior, setTempSchoolFeeJunior] = useState(template.schoolFeeJunior || template.schoolFee || "₦100,000.00");
+  const [tempPartyFeeJunior, setTempPartyFeeJunior] = useState(template.partyFeeJunior || template.partyFee || "₦15,000.00");
+  const [tempEnrollmentFeeJunior, setTempEnrollmentFeeJunior] = useState(template.enrollmentFeeJunior || template.enrollmentFee || "₦15,000.00");
+  const [tempBookFeeJunior, setTempBookFeeJunior] = useState(template.bookFeeJunior || template.bookFee || "₦20,000.00");
+
+  // Senior Secondary section fees (SS1 to SS3)
+  const [tempSchoolFeeSenior, setTempSchoolFeeSenior] = useState(template.schoolFeeSenior || template.schoolFee || "₦100,000.00");
+  const [tempPartyFeeSenior, setTempPartyFeeSenior] = useState(template.partyFeeSenior || template.partyFee || "₦15,000.00");
+  const [tempEnrollmentFeeSenior, setTempEnrollmentFeeSenior] = useState(template.enrollmentFeeSenior || template.enrollmentFee || "₦15,000.00");
+  const [tempBookFeeSenior, setTempBookFeeSenior] = useState(template.bookFeeSenior || template.bookFee || "₦20,000.00");
+
   // Synchronize dynamic template modifications
   React.useEffect(() => {
     setTempSchoolName(template.schoolName);
@@ -1220,6 +1278,31 @@ export default function TeacherDashboard({
     setTempDistinctionThreshold(template.distinctionThreshold);
     setTempPassThreshold(template.passThreshold);
     setTempPortalLocked(template.portalLocked || false);
+    
+    setTempSchoolFee(template.schoolFee || "₦100,000.00");
+    setTempPartyFee(template.partyFee || "₦15,000.00");
+    setTempEnrollmentFee(template.enrollmentFee || "₦15,000.00");
+    setTempBookFee(template.bookFee || "₦20,000.00");
+
+    setTempSchoolFeeNursery(template.schoolFeeNursery || template.schoolFee || "₦100,000.00");
+    setTempPartyFeeNursery(template.partyFeeNursery || template.partyFee || "₦15,000.00");
+    setTempEnrollmentFeeNursery(template.enrollmentFeeNursery || template.enrollmentFee || "₦15,000.00");
+    setTempBookFeeNursery(template.bookFeeNursery || template.bookFee || "₦20,000.00");
+
+    setTempSchoolFeePrimary(template.schoolFeePrimary || template.schoolFee || "₦100,000.00");
+    setTempPartyFeePrimary(template.partyFeePrimary || template.partyFee || "₦15,000.00");
+    setTempEnrollmentFeePrimary(template.enrollmentFeePrimary || template.enrollmentFee || "₦15,000.00");
+    setTempBookFeePrimary(template.bookFeePrimary || template.bookFee || "₦20,000.00");
+
+    setTempSchoolFeeJunior(template.schoolFeeJunior || template.schoolFee || "₦100,000.00");
+    setTempPartyFeeJunior(template.partyFeeJunior || template.partyFee || "₦15,000.00");
+    setTempEnrollmentFeeJunior(template.enrollmentFeeJunior || template.enrollmentFee || "₦15,000.00");
+    setTempBookFeeJunior(template.bookFeeJunior || template.bookFee || "₦20,000.00");
+
+    setTempSchoolFeeSenior(template.schoolFeeSenior || template.schoolFee || "₦100,000.00");
+    setTempPartyFeeSenior(template.partyFeeSenior || template.partyFee || "₦15,000.00");
+    setTempEnrollmentFeeSenior(template.enrollmentFeeSenior || template.enrollmentFee || "₦15,000.00");
+    setTempBookFeeSenior(template.bookFeeSenior || template.bookFee || "₦20,000.00");
   }, [template]);
 
   // Enforce dynamic staff account restriction live and dynamically propagate credential changes (username/password/name)
@@ -1440,13 +1523,7 @@ export default function TeacherDashboard({
       avatar: editingFacultyAvatar,
       role: editingFacultyClass 
         ? `Form Teacher - ${editingFacultyClass}` 
-        : (newId === 'ezekiel' 
-            ? 'Administrator (Head Principal)' 
-            : newId === 'maroger' 
-              ? 'Co-Administrator' 
-              : newId === 'spare' 
-                ? 'Substitute Teacher (Spare)' 
-                : editingFaculty.role)
+        : editingFacultyRole
     };
 
     const updated = facultyProfiles.map(f => {
@@ -1601,19 +1678,34 @@ export default function TeacherDashboard({
 
   // Get allowed classes for current user dynamic roles
   const allowedClasses: ClassName[] = React.useMemo(() => {
-    if (!currentUser) return ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
+    if (!currentUser) return ALL_CLASSES;
     const matchProfile = facultyProfiles.find(f => f.id === currentUser.id);
+    const roleStr = ((matchProfile?.role || currentUser.role) || '').toLowerCase();
+
+    if (currentUser.id === 'nancy' || roleStr.includes('head teacher')) {
+      return ['Pre-Kg', 'KG 1', 'KG 2', 'KG 3', 'Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6'];
+    }
+    if (roleStr.includes('nursery section admin') || roleStr.includes('nursery admin')) {
+      return ['Pre-Kg', 'KG 1', 'KG 2', 'KG 3'];
+    }
+    if (roleStr.includes('primary section admin') || roleStr.includes('primary admin')) {
+      return ['Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6'];
+    }
+    if (currentUser.id === 'justina' || roleStr.includes('junior secondary admin') || roleStr.includes('junior secondary section admin')) {
+      return ['JSS1', 'JSS2', 'JSS3'];
+    }
+    if (currentUser.id === 'samson' || roleStr.includes('senior secondary admin') || roleStr.includes('senior secondary section admin')) {
+      return ['SS1', 'SS2', 'SS3'];
+    }
+
     const assigned = matchProfile?.assignedClass || currentUser.assignedClass;
     
-    if (currentUser.id !== 'ezekiel' && assigned) {
+    if (currentUser.id !== 'ezekiel' && !roleStr.includes('administrator') && assigned) {
       return [assigned];
     }
     
-    if (isAdmin) {
-      return ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
-    }
-    return ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
-  }, [currentUser, facultyProfiles, isAdmin]);
+    return ALL_CLASSES;
+  }, [currentUser, facultyProfiles]);
 
   // Keep selected class parameter within bounds when roles change
   React.useEffect(() => {
@@ -1633,9 +1725,9 @@ export default function TeacherDashboard({
   const maxClassCumulative = classStudents.length > 0
     ? (classStudents[0].subjects.length * 100)
     : 1000;
-  const averageGPAInClass = classStudents.length > 0
-    ? (classStudents.reduce((sum, s) => sum + parseFloat(calculateStudentStatsForTerm(s, activeTermTab).gpa), 0) / classStudents.length).toFixed(2)
-    : "0.00";
+  const averageClassScorePercent = classStudents.length > 0
+    ? (classStudents.reduce((sum, s) => sum + calculateStudentStatsForTerm(s, activeTermTab).avgScore, 0) / classStudents.length).toFixed(1)
+    : "0.0";
 
   // Create Student
   const handleAddStudent = (e: React.FormEvent) => {
@@ -2709,13 +2801,6 @@ export default function TeacherDashboard({
                     )}
 
                     <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                      <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">GPA</span>
-                      <p className="font-extrabold text-emerald-750 text-[10.5px] sm:text-xs leading-none">
-                        {stats.gpa}<span className="text-[8px] text-slate-400 font-normal">/5.0</span>
-                      </p>
-                    </div>
-
-                    <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
                       <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">Attendance</span>
                       <p className="font-extrabold text-emerald-600 text-[10.5px] sm:text-xs leading-none">
                         {Math.round(viewingReportStudent.attendancePresent / viewingReportStudent.attendanceTotal * 100)}%
@@ -3068,8 +3153,8 @@ export default function TeacherDashboard({
                         </span>
                       </>
                     )}
-                    <span className="col-span-2 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300">
-                      # Position
+                    <span className="col-span-2 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300" title="Automatically calculated from Student grades list ranking">
+                      Subject Rank (Auto)
                     </span>
                     <span className="col-span-1 text-center font-bold text-slate-400">Action</span>
                   </div>
@@ -3172,22 +3257,11 @@ export default function TeacherDashboard({
                             </>
                           )}
 
-                          {/* Position (Editable Rank) */}
+                          {/* Position (Auto calculated Rank) */}
                           <span className="col-span-2 flex justify-center px-2">
-                            <div className="flex items-center gap-1">
-                              <input
-                                type="number"
-                                min={1}
-                                max={150}
-                                disabled={isTermReadOnly}
-                                value={subj.position || 1}
-                                onChange={(e) => handleScoreChange(subj.id, 'position', parseInt(e.target.value) || 1)}
-                                className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-emerald-600 font-bold font-mono text-slate-800 disabled:opacity-75 disabled:cursor-not-allowed"
-                              />
-                              {subj.isPositionManual && (
-                                <span className="text-[10px] text-emerald-600 font-black select-none" title="Manually edited position">✍️</span>
-                              )}
-                            </div>
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-700 rounded font-mono font-bold text-xs" title="Position is automatically calculated based on class subject ranking">
+                              {formatOrdinal(subj.position || 1)}
+                            </span>
                           </span>
 
                           {/* Action Button */}
@@ -3676,13 +3750,6 @@ export default function TeacherDashboard({
                       )}
 
                       <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">GPA</span>
-                        <p className="font-extrabold text-emerald-750 text-[10.5px] sm:text-xs leading-none">
-                          {stats.gpa}<span className="text-[8px] text-slate-400 font-normal">/5.0</span>
-                        </p>
-                      </div>
-
-                      <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
                         <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">Attendance</span>
                         <p className="font-extrabold text-emerald-600 text-[10.5px] sm:text-xs leading-none">
                           {Math.round(previewStudent.attendancePresent / previewStudent.attendanceTotal * 100) || 0}%
@@ -3818,6 +3885,11 @@ export default function TeacherDashboard({
               onSubmit={(e) => {
                 e.preventDefault();
                 if (!isAdmin) return;
+                const nurseryFee = `${tempSchoolFeeNursery.trim()}|${tempPartyFeeNursery.trim()}|${tempEnrollmentFeeNursery.trim()}|${tempBookFeeNursery.trim()}`;
+                const primaryFee = `${tempSchoolFeePrimary.trim()}|${tempPartyFeePrimary.trim()}|${tempEnrollmentFeePrimary.trim()}|${tempBookFeePrimary.trim()}`;
+                const juniorFee = `${tempSchoolFeeJunior.trim()}|${tempPartyFeeJunior.trim()}|${tempEnrollmentFeeJunior.trim()}|${tempBookFeeJunior.trim()}`;
+                const seniorFee = `${tempSchoolFeeSenior.trim()}|${tempPartyFeeSenior.trim()}|${tempEnrollmentFeeSenior.trim()}|${tempBookFeeSenior.trim()}`;
+                const serializedFees = `${nurseryFee};${primaryFee};${juniorFee};${seniorFee}`;
                 onUpdateTemplate({
                   schoolName: tempSchoolName,
                   motto: tempMotto,
@@ -3831,12 +3903,32 @@ export default function TeacherDashboard({
                   principalName: tempPrincipalName,
                   formTeacherJunior: tempFormTeacherJunior,
                   formTeacherSenior: tempFormTeacherSenior,
-                  nextTermFee: tempNextTermFee,
+                  nextTermFee: serializedFees,
                   distinctionThreshold: Number(tempDistinctionThreshold),
                   passThreshold: Number(tempPassThreshold),
                   portalLocked: tempPortalLocked,
+                  schoolFee: tempSchoolFeeNursery,
+                  partyFee: tempPartyFeeNursery,
+                  enrollmentFee: tempEnrollmentFeeNursery,
+                  bookFee: tempBookFeeNursery,
+                  schoolFeeNursery: tempSchoolFeeNursery,
+                  partyFeeNursery: tempPartyFeeNursery,
+                  enrollmentFeeNursery: tempEnrollmentFeeNursery,
+                  bookFeeNursery: tempBookFeeNursery,
+                  schoolFeePrimary: tempSchoolFeePrimary,
+                  partyFeePrimary: tempPartyFeePrimary,
+                  enrollmentFeePrimary: tempEnrollmentFeePrimary,
+                  bookFeePrimary: tempBookFeePrimary,
+                  schoolFeeJunior: tempSchoolFeeJunior,
+                  partyFeeJunior: tempPartyFeeJunior,
+                  enrollmentFeeJunior: tempEnrollmentFeeJunior,
+                  bookFeeJunior: tempBookFeeJunior,
+                  schoolFeeSenior: tempSchoolFeeSenior,
+                  partyFeeSenior: tempPartyFeeSenior,
+                  enrollmentFeeSenior: tempEnrollmentFeeSenior,
+                  bookFeeSenior: tempBookFeeSenior,
                 });
-                triggerSuccess('Scholastic report template settings and portal status successfully saved!');
+                triggerSuccess('Scholastic report template settings (including section-specific school fees schedules) and portal status successfully saved!');
               }}
               className="space-y-6 text-xs"
             >
@@ -3952,17 +4044,6 @@ export default function TeacherDashboard({
                     </p>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Next Term School Fees (₦)</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. ₦120,000"
-                      value={tempNextTermFee}
-                      onChange={(e) => setTempNextTermFee(e.target.value)}
-                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-emerald-700 font-mono text-center"
-                    />
-                  </div>
-                  <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Report Card Issue Date</label>
                     <input
                       type="text"
@@ -3972,7 +4053,7 @@ export default function TeacherDashboard({
                       className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-slate-800"
                     />
                   </div>
-                  <div>
+                  <div className="md:col-span-3">
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Next Term Resumption Date</label>
                     <input
                       type="text"
@@ -3984,6 +4065,269 @@ export default function TeacherDashboard({
                   </div>
                 </div>
               </div>
+
+              <div className="space-y-4 pt-4 border-t">
+                  <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-l-4 border-indigo-700 pl-2">
+                    Section C: Section-specific School Fees Schedules
+                  </h4>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Configure school fees, books and auxiliary expenses individually for each level section. Students' portal bills will adapt dynamically to their standard class category.
+                  </p>
+
+                  <div className="space-y-6">
+                    {/* Nursery Section Fees card */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-3xl p-5 shadow-3xs">
+                      <span className="text-[9px] bg-indigo-50 border border-indigo-200 text-indigo-700 font-extrabold tracking-wider uppercase px-2.5 py-1 rounded select-none">
+                        👶 Nursery Section Fees schedule (Pre-KG to KG3)
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3.5 mt-3 text-xs">
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">School Fees (₦)</label>
+                          <input
+                            type="text"
+                            required
+                            value={tempSchoolFeeNursery}
+                            onChange={(e) => setTempSchoolFeeNursery(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2.5 outline-none font-bold text-slate-800 font-mono text-center focus:border-indigo-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Party Fee (₦)</label>
+                          <input
+                            type="text"
+                            required
+                            value={tempPartyFeeNursery}
+                            onChange={(e) => setTempPartyFeeNursery(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2.5 outline-none font-bold text-slate-800 font-mono text-center focus:border-indigo-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Enrollment Fee (₦)</label>
+                          <input
+                            type="text"
+                            required
+                            value={tempEnrollmentFeeNursery}
+                            onChange={(e) => setTempEnrollmentFeeNursery(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2.5 outline-none font-bold text-slate-800 font-mono text-center focus:border-indigo-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Book Fees (₦)</label>
+                          <input
+                            type="text"
+                            required
+                            value={tempBookFeeNursery}
+                            onChange={(e) => setTempBookFeeNursery(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2.5 outline-none font-bold text-slate-800 font-mono text-center focus:border-indigo-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Computed Total (₦)</label>
+                          <div className="w-full bg-indigo-50 border border-indigo-200 text-indigo-950 font-black text-center font-mono py-2.5 rounded-lg text-xs leading-none">
+                            {(() => {
+                              const parseNum = (v: string): number => {
+                                const cln = v.replace(/[^\d.]/g, '');
+                                const parsed = parseFloat(cln);
+                                return isNaN(parsed) ? 0 : parsed;
+                              };
+                              const total = parseNum(tempSchoolFeeNursery) + parseNum(tempPartyFeeNursery) + parseNum(tempEnrollmentFeeNursery) + parseNum(tempBookFeeNursery);
+                              return `₦${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Primary Section Fees card */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-3xl p-5 shadow-3xs">
+                      <span className="text-[9px] bg-emerald-50 border border-emerald-200 text-emerald-700 font-extrabold tracking-wider uppercase px-2.5 py-1 rounded select-none">
+                        🎒 Primary Section Fees schedule (Basic 1 to 6)
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3.5 mt-3 text-xs">
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">School Fees (₦)</label>
+                          <input
+                            type="text"
+                            required
+                            value={tempSchoolFeePrimary}
+                            onChange={(e) => setTempSchoolFeePrimary(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2.5 outline-none font-bold text-slate-800 font-mono text-center focus:border-emerald-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Party Fee (₦)</label>
+                          <input
+                            type="text"
+                            required
+                            value={tempPartyFeePrimary}
+                            onChange={(e) => setTempPartyFeePrimary(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2.5 outline-none font-bold text-slate-800 font-mono text-center focus:border-emerald-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Enrollment Fee (₦)</label>
+                          <input
+                            type="text"
+                            required
+                            value={tempEnrollmentFeePrimary}
+                            onChange={(e) => setTempEnrollmentFeePrimary(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2.5 outline-none font-bold text-slate-800 font-mono text-center focus:border-emerald-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Book Fees (₦)</label>
+                          <input
+                            type="text"
+                            required
+                            value={tempBookFeePrimary}
+                            onChange={(e) => setTempBookFeePrimary(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2.5 outline-none font-bold text-slate-800 font-mono text-center focus:border-emerald-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Computed Total (₦)</label>
+                          <div className="w-full bg-emerald-50 border border-emerald-200 text-emerald-950 font-black text-center font-mono py-2.5 rounded-lg text-xs leading-none">
+                            {(() => {
+                              const parseNum = (v: string): number => {
+                                const cln = v.replace(/[^\d.]/g, '');
+                                const parsed = parseFloat(cln);
+                                return isNaN(parsed) ? 0 : parsed;
+                              };
+                              const total = parseNum(tempSchoolFeePrimary) + parseNum(tempPartyFeePrimary) + parseNum(tempEnrollmentFeePrimary) + parseNum(tempBookFeePrimary);
+                              return `₦${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Junior Secondary Section Fees card */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-3xl p-5 shadow-3xs">
+                      <span className="text-[9px] bg-sky-50 border border-sky-200 text-sky-700 font-extrabold tracking-wider uppercase px-2.5 py-1 rounded select-none">
+                        📚 Junior Secondary Fees schedule (JSS1 to JSS3)
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3.5 mt-3 text-xs">
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">School Fees (₦)</label>
+                          <input
+                            type="text"
+                            required
+                            value={tempSchoolFeeJunior}
+                            onChange={(e) => setTempSchoolFeeJunior(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2.5 outline-none font-bold text-slate-800 font-mono text-center focus:border-sky-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Party Fee (₦)</label>
+                          <input
+                            type="text"
+                            required
+                            value={tempPartyFeeJunior}
+                            onChange={(e) => setTempPartyFeeJunior(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2.5 outline-none font-bold text-slate-800 font-mono text-center focus:border-sky-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Enrollment Fee (₦)</label>
+                          <input
+                            type="text"
+                            required
+                            value={tempEnrollmentFeeJunior}
+                            onChange={(e) => setTempEnrollmentFeeJunior(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2.5 outline-none font-bold text-slate-800 font-mono text-center focus:border-sky-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Book Fees (₦)</label>
+                          <input
+                            type="text"
+                            required
+                            value={tempBookFeeJunior}
+                            onChange={(e) => setTempBookFeeJunior(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2.5 outline-none font-bold text-slate-800 font-mono text-center focus:border-sky-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Computed Total (₦)</label>
+                          <div className="w-full bg-sky-50 border border-sky-200 text-sky-950 font-black text-center font-mono py-2.5 rounded-lg text-xs leading-none">
+                            {(() => {
+                              const parseNum = (v: string): number => {
+                                const cln = v.replace(/[^\d.]/g, '');
+                                const parsed = parseFloat(cln);
+                                return isNaN(parsed) ? 0 : parsed;
+                              };
+                              const total = parseNum(tempSchoolFeeJunior) + parseNum(tempPartyFeeJunior) + parseNum(tempEnrollmentFeeJunior) + parseNum(tempBookFeeJunior);
+                              return `₦${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Senior Secondary Section Fees card */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-3xl p-5 shadow-3xs">
+                      <span className="text-[9px] bg-rose-50 border border-rose-200 text-rose-700 font-extrabold tracking-wider uppercase px-2.5 py-1 rounded select-none">
+                        🎓 Senior Secondary Fees schedule (SS1 to SS3)
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3.5 mt-3 text-xs">
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">School Fees (₦)</label>
+                          <input
+                            type="text"
+                            required
+                            value={tempSchoolFeeSenior}
+                            onChange={(e) => setTempSchoolFeeSenior(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2.5 outline-none font-bold text-slate-800 font-mono text-center focus:border-rose-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Party Fee (₦)</label>
+                          <input
+                            type="text"
+                            required
+                            value={tempPartyFeeSenior}
+                            onChange={(e) => setTempPartyFeeSenior(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2.5 outline-none font-bold text-slate-800 font-mono text-center focus:border-rose-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Enrollment Fee (₦)</label>
+                          <input
+                            type="text"
+                            required
+                            value={tempEnrollmentFeeSenior}
+                            onChange={(e) => setTempEnrollmentFeeSenior(e.target.value)}
+                            className="w-full bg-[#FCFCFC] border border-slate-200 rounded-lg p-2.5 outline-none font-bold text-slate-800 font-mono text-center focus:border-rose-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Book Fees (₦)</label>
+                          <input
+                            type="text"
+                            required
+                            value={tempBookFeeSenior}
+                            onChange={(e) => setTempBookFeeSenior(e.target.value)}
+                            className="w-full bg-[#FCFCFC] border border-slate-200 rounded-lg p-2.5 outline-none font-bold text-slate-800 font-mono text-center focus:border-rose-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">Computed Total (₦)</label>
+                          <div className="w-full bg-rose-50 border border-rose-200 text-rose-950 font-black text-center font-mono py-2.5 rounded-lg text-xs leading-none">
+                            {(() => {
+                              const parseNum = (v: string): number => {
+                                const cln = v.replace(/[^\d.]/g, '');
+                                const parsed = parseFloat(cln);
+                                return isNaN(parsed) ? 0 : parsed;
+                              };
+                              const total = parseNum(tempSchoolFeeSenior) + parseNum(tempPartyFeeSenior) + parseNum(tempEnrollmentFeeSenior) + parseNum(tempBookFeeSenior);
+                              return `₦${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
               {/* Row C: Academic Governance Officers */}
               <div className="space-y-3.5 pt-4 border-t">
@@ -4144,7 +4488,7 @@ export default function TeacherDashboard({
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Updates take effect immediately</span>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 text-xs">
                   <div>
                     <label className="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Full Educator Name</label>
                     <input
@@ -4180,19 +4524,78 @@ export default function TeacherDashboard({
                   </div>
 
                   <div>
+                    <label className="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Designation / Role</label>
+                    <select
+                      value={
+                        editingFacultyRole.toLowerCase().includes('head principal') || editingFacultyRole.toLowerCase().includes('administrator') ? 'admin' :
+                        editingFacultyRole.toLowerCase().includes('head teacher') ? 'head' :
+                        editingFacultyRole.toLowerCase().includes('nursery section admin') ? 'nursery_admin' :
+                        editingFacultyRole.toLowerCase().includes('primary section admin') ? 'primary_admin' :
+                        editingFacultyRole.toLowerCase().includes('junior secondary admin') ? 'junior' :
+                        editingFacultyRole.toLowerCase().includes('senior secondary admin') ? 'senior' : 'form'
+                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === 'admin') {
+                          setEditingFacultyRole('Administrator (Head Principal)');
+                          setEditingFacultyClass('');
+                        } else if (val === 'head') {
+                          setEditingFacultyRole('Head Teacher (Pre-Kg to Basic 6)');
+                          setEditingFacultyClass('');
+                        } else if (val === 'nursery_admin') {
+                          setEditingFacultyRole('Nursery Section Admin (Pre-Kg to KG3)');
+                          setEditingFacultyClass('');
+                        } else if (val === 'primary_admin') {
+                          setEditingFacultyRole('Primary Section Admin (Basic 1 to 6)');
+                          setEditingFacultyClass('');
+                        } else if (val === 'junior') {
+                          setEditingFacultyRole('Junior Secondary Admin (JSS1 to JSS3)');
+                          setEditingFacultyClass('');
+                        } else if (val === 'senior') {
+                          setEditingFacultyRole('Senior Secondary Admin (SS1 to SS3)');
+                          setEditingFacultyClass('');
+                        } else {
+                          setEditingFacultyRole('Form Teacher - ');
+                        }
+                      }}
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-850 focus:border-emerald-600 font-extrabold outline-none"
+                    >
+                      <option value="form">Form Teacher (Select Class)</option>
+                      <option value="admin">Administrator (Head Principal)</option>
+                      <option value="head">Head Teacher (Pre-Kg to Basic 6)</option>
+                      <option value="nursery_admin">Nursery Section Admin (Pre-Kg to KG3)</option>
+                      <option value="primary_admin">Primary Section Admin (Basic 1 to 6)</option>
+                      <option value="junior">Junior Secondary Admin (JSS1-3)</option>
+                      <option value="senior">Senior Secondary Admin (SS1-3)</option>
+                    </select>
+                  </div>
+
+                  <div>
                     <label className="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Class Assigned</label>
                     <select
+                      disabled={
+                        editingFacultyRole.toLowerCase().includes('head principal') || 
+                        editingFacultyRole.toLowerCase().includes('administrator') || 
+                        editingFacultyRole.toLowerCase().includes('head teacher') || 
+                        editingFacultyRole.toLowerCase().includes('nursery section admin') || 
+                        editingFacultyRole.toLowerCase().includes('primary section admin') || 
+                        editingFacultyRole.toLowerCase().includes('junior secondary admin') || 
+                        editingFacultyRole.toLowerCase().includes('senior secondary admin')
+                      }
                       value={editingFacultyClass || ''}
-                      onChange={(e) => setEditingFacultyClass(e.target.value as ClassName | '')}
-                      className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-800 focus:border-emerald-600 font-black outline-none"
+                      onChange={(e) => {
+                        const cls = e.target.value as ClassName | '';
+                        setEditingFacultyClass(cls);
+                        if (cls) {
+                          setEditingFacultyRole(`Form Teacher - ${cls}`);
+                        }
+                      }}
+                      className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-850 focus:border-emerald-600 font-extrabold outline-none disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
                     >
-                      <option value="">No Class Assigned (Principal / Co-Admin / Spare)</option>
-                      <option value="JSS1">JSS1 (Junior Secondary 1)</option>
-                      <option value="JSS2">JSS2 (Junior Secondary 2)</option>
-                      <option value="JSS3">JSS3 (Junior Secondary 3)</option>
-                      <option value="SS1">SS1 (Senior Secondary 1)</option>
-                      <option value="SS2">SS2 (Senior Secondary 2)</option>
-                      <option value="SS3">SS3 (Senior Secondary 3)</option>
+                      <option value="">No Class Assigned</option>
+                      {ALL_CLASSES.map(cls => (
+                        <option key={cls} value={cls}>{cls}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -4311,8 +4714,9 @@ export default function TeacherDashboard({
                           setEditingFacultyId(p.id);
                           setEditingFacultyName(p.name);
                           setEditingFacultyEmail(p.email || `${p.id}@ezibeckacademy.edu.ng`);
-                          setEditingFacultyPassword(p.password || (p.id === 'ezekiel' ? 'Ezekiel@2026' : p.id === 'maroger' ? 'Maro@2026' : p.id === 'spare' ? 'Spare@2026' : 'Gladys@Jss1'));
+                          setEditingFacultyPassword(p.password || (p.id === 'ezekiel' ? 'Ezekiel@2026' : 'Gladys@Jss1'));
                           setEditingFacultyClass(p.assignedClass || '');
+                          setEditingFacultyRole(p.role || '');
                           setEditingFacultyAvatar(p.avatar || '👩‍🏫');
                           setFacultyPasswordError('');
                         }}
@@ -4651,13 +5055,10 @@ export default function TeacherDashboard({
                     onChange={(e) => setSelectedPassClass(e.target.value)}
                     className="bg-white border rounded-xl px-3.5 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-400 cursor-pointer"
                   >
-                    <option value="ALL">All 6 Classes</option>
-                    <option value="JSS1">JSS1</option>
-                    <option value="JSS2">JSS2</option>
-                    <option value="JSS3">JSS3</option>
-                    <option value="SS1">SS1</option>
-                    <option value="SS2">SS2</option>
-                    <option value="SS3">SS3</option>
+                    <option value="ALL">All {ALL_CLASSES.length} Classes</option>
+                    {ALL_CLASSES.map(cls => (
+                      <option key={cls} value={cls}>{cls}</option>
+                    ))}
                   </select>
                 </div>
                 
@@ -4671,8 +5072,8 @@ export default function TeacherDashboard({
             <div id="print-passcards-section" className="space-y-8 print:space-y-0 text-slate-800">
               {(() => {
                 const targetClasses = selectedPassClass === 'ALL' 
-                  ? ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'] 
-                  : [selectedPassClass];
+                  ? ALL_CLASSES 
+                  : [selectedPassClass as ClassName];
 
                 return targetClasses.map((cls, clsIdx) => {
                   const classStudents = students.filter(s => s.className === cls);
@@ -5070,8 +5471,8 @@ export default function TeacherDashboard({
               </div>
               <div className="bg-white border rounded-2xl p-4 flex items-center justify-between shadow-sm">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Average GPA Performance</span>
-                  <p className="text-xl font-bold font-mono text-slate-900">{averageGPAInClass} / 5.00 GPA</p>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Class Average Score</span>
+                  <p className="text-xl font-bold font-mono text-slate-900">{averageClassScorePercent}%</p>
                 </div>
                 <div className="bg-amber-50 text-amber-800 p-2.5 rounded-xl border-amber-100 border">
                   <GraduationCap className="w-5 h-5" />
@@ -5241,7 +5642,6 @@ export default function TeacherDashboard({
                         <th className="py-2.5 px-4 w-28">Student ID</th>
                         <th className="py-2.5 px-4">Student Name</th>
                         <th className="py-2.5 px-4 text-center">Sex</th>
-                        <th className="py-2.5 px-4 text-center font-bold">GPA</th>
                         <th className="py-2.5 px-4 text-center font-bold">Term Average Score</th>
                         <th className="py-2.5 px-4 text-right">Actions Panel</th>
                       </tr>
@@ -5261,7 +5661,6 @@ export default function TeacherDashboard({
                             <td className="py-3 px-4 font-mono text-slate-500 text-xs">{stud.id}</td>
                             <td className="py-3 px-4 font-extrabold text-slate-900">{stud.name}</td>
                             <td className="py-3 px-4 text-center text-slate-600 font-bold text-xs">{stud.sex}</td>
-                            <td className="py-3 px-4 text-center font-mono text-emerald-900 font-bold text-[13px]">{stats.gpa}</td>
                             <td className="py-3 px-4 text-center font-mono font-bold text-xs text-slate-600">{stats.avgScore.toFixed(1)}%</td>
                             <td className="py-3 px-4 text-right flex justify-end gap-1.5 flex-row">
                               <button

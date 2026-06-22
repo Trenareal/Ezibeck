@@ -7,7 +7,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, GraduationCap, Search, BookOpen, Eye, EyeOff, Layers, Printer, Star, Wifi, WifiOff, CloudLightning, Clock, Lock } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { Student, ClassName, Workspace15Template, DbStatus, AuditLogEntry } from '../types';
+import { Student, ClassName, Workspace15Template, DbStatus, AuditLogEntry, ALL_CLASSES } from '../types';
 import { SCHOOL_INFO, calculateStudentStats, getLetterAndRemark, calculateSubjectTotal, BEHAVIOUR_TRAITS, generateUnique6DigitPassword, getStudentPasscodesFromOtherTerms, loadStoredStudents, saveStudents, isStudentInTerm } from '../utils/academicUtils';
 import { logPasscodeEvent } from '../utils/auditLogger';
 import { isSupabaseConfigured, dbService, mapDbStudentToFrontend } from '../lib/supabase';
@@ -625,7 +625,7 @@ export default function StudentPortal({
             
             {/* Class Tabs Selector */}
             <div className="flex gap-1 bg-slate-50 p-1.5 rounded-2xl border border-slate-100/80 overflow-x-auto whitespace-nowrap scrollbar-none w-full lg:w-auto -mx-1 sm:mx-0">
-              {(['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'] as ClassName[]).map(cls => (
+              {ALL_CLASSES.map(cls => (
                 <button
                   key={cls}
                   onClick={() => {
@@ -834,6 +834,20 @@ export default function StudentPortal({
           {(() => {
             const stats = calculateStudentStats(selectedStudent);
             
+            // Parse first term students once
+            let firstTermStuds: Student[] = [];
+            if (viewingTerm === 'Second Term') {
+              try {
+                const firstTermData = typeof window !== 'undefined' ? localStorage.getItem('ezibeck_students_first_term') : null;
+                if (firstTermData) {
+                  firstTermStuds = JSON.parse(firstTermData);
+                }
+              } catch (e) {
+                console.error("Error parsing first term students in StudentPortal", e);
+              }
+            }
+            const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes(selectedStudent.className);
+
             if (viewTab === 'charts') {
               return (
                 <div className="bg-white rounded-3xl border border-slate-100 p-8 space-y-8 print:hidden shadow-sm animate-fade-in">
@@ -882,28 +896,30 @@ export default function StudentPortal({
                     </div>
                   </div>
 
-                  <div>
-                    <h3 className="text-slate-900 font-extrabold text-sm border-b pb-2 flex items-center gap-2">
-                      <Star className="w-5 h-5 text-amber-500" /> Behavioral Quality Profile
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-1">Conduct evaluation ratings mapped against standards 1 to 5 (5 is Excellent, 1 is Poor)</p>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6">
-                      {selectedStudent.behaviour.map(b => (
-                        <div key={b.name} className="bg-slate-50 border p-3 rounded-xl flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-700">{b.name}</span>
-                          <div className="flex gap-1">
-                            {[1, 2, 3, 4, 5].map(step => (
-                              <Star 
-                                key={step} 
-                                className={`w-4 h-4 ${step <= b.rating ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`} 
-                              />
-                            ))}
+                  {!isSecondaryClass && (
+                    <div>
+                      <h3 className="text-slate-900 font-extrabold text-sm border-b pb-2 flex items-center gap-2">
+                        <Star className="w-5 h-5 text-amber-500" /> Behavioral Quality Profile
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-1">Conduct evaluation ratings mapped against standards 1 to 5 (5 is Excellent, 1 is Poor)</p>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6">
+                        {selectedStudent.behaviour.map(b => (
+                          <div key={b.name} className="bg-slate-50 border p-3 rounded-xl flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-700">{b.name}</span>
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map(step => (
+                                <Star 
+                                  key={step} 
+                                  className={`w-4 h-4 ${step <= b.rating ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`} 
+                                />
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             }            // Otherwise, render full standard report sheet card (printable)
@@ -1035,12 +1051,70 @@ export default function StudentPortal({
                       <span className="font-extrabold text-emerald-700 text-right">{template.resumptionDate}</span>
                     </div>
 
-                    <div className="flex items-center justify-between lg:border-0 gap-2">
-                      <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 flex-shrink-0">
-                        <span>💰</span> Next Term Fees
-                      </span>
-                      <span className="font-extrabold text-emerald-700 text-right">{template.nextTermFee || '₦45,000'}</span>
-                    </div>
+                    {(() => {
+                      const parseNum = (v: string): number => {
+                        const cln = v.replace(/[^\d.]/g, '');
+                        const parsed = parseFloat(cln);
+                        return isNaN(parsed) ? 0 : parsed;
+                      };
+                      
+                      const cls = selectedStudent.className || '';
+                      let sFee = template.schoolFee || '₦100,000.00';
+                      let pFee = template.partyFee || '₦15,000.00';
+                      let eFee = template.enrollmentFee || '₦15,000.00';
+                      let bFee = template.bookFee || '₦20,000.00';
+                      
+                      if (cls === 'Pre-Kg' || cls === 'KG 1' || cls === 'KG 2' || cls === 'KG 3') {
+                        sFee = template.schoolFeeNursery || sFee;
+                        pFee = template.partyFeeNursery || pFee;
+                        eFee = template.enrollmentFeeNursery || eFee;
+                        bFee = template.bookFeeNursery || bFee;
+                      } else if (cls.startsWith('Basic')) {
+                        sFee = template.schoolFeePrimary || sFee;
+                        pFee = template.partyFeePrimary || pFee;
+                        eFee = template.enrollmentFeePrimary || eFee;
+                        bFee = template.bookFeePrimary || bFee;
+                      } else if (cls.startsWith('JSS')) {
+                        sFee = template.schoolFeeJunior || sFee;
+                        pFee = template.partyFeeJunior || pFee;
+                        eFee = template.enrollmentFeeJunior || eFee;
+                        bFee = template.bookFeeJunior || bFee;
+                      } else if (cls.startsWith('SS')) {
+                        sFee = template.schoolFeeSenior || sFee;
+                        pFee = template.partyFeeSenior || pFee;
+                        eFee = template.enrollmentFeeSenior || eFee;
+                        bFee = template.bookFeeSenior || bFee;
+                      }
+
+                      const totalVal = parseNum(sFee) + parseNum(pFee) + parseNum(eFee) + parseNum(bFee);
+                      const totalFormatted = `₦${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+                      return (
+                        <div className="space-y-1 border-t border-slate-200/40 pt-2 lg:border-0 lg:pt-0 w-full">
+                          <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block mb-1">Itemized Fees Breakdown ({cls})</span>
+                          <div className="flex justify-between text-[11px] gap-2 lg:gap-8">
+                            <span className="font-semibold text-slate-400">School Fees</span>
+                            <span className="font-bold text-slate-700 text-right">{sFee}</span>
+                          </div>
+                          <div className="flex justify-between text-[11px] gap-2 lg:gap-8">
+                            <span className="font-semibold text-slate-400">Party Fee</span>
+                            <span className="font-bold text-slate-700 text-right">{pFee}</span>
+                          </div>
+                          <div className="flex justify-between text-[11px] gap-2 lg:gap-8">
+                            <span className="font-semibold text-slate-400">Enrollment Fee</span>
+                            <span className="font-bold text-slate-700 text-right">{eFee}</span>
+                          </div>
+                          <div className="flex justify-between text-[11px] gap-2 lg:gap-8">
+                            <span className="font-semibold text-slate-400">Book Fees</span>
+                            <span className="font-bold text-slate-700 text-right">{bFee}</span>
+                          </div>
+                          <div className="flex justify-between border-t border-dashed border-emerald-300 pt-1 text-xs">
+                            <span className="font-extrabold text-emerald-800">Total fees</span>
+                            <span className="font-black text-emerald-850 font-mono text-right">{totalFormatted}</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -1072,6 +1146,11 @@ export default function StudentPortal({
                           <th className="py-2.5 px-3 border-r border-slate-300 text-center bg-emerald-100/40 w-24">
                             <span className="flex items-center justify-center gap-1 text-emerald-950">Σ TERM (100)</span>
                           </th>
+                          {viewingTerm === 'Second Term' && isSecondaryClass && (
+                            <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-24">
+                              <span className="flex items-center justify-center gap-1">1st Term Avg</span>
+                            </th>
+                          )}
                           {viewingTerm === 'Third Term' && (
                             <>
                               <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
@@ -1083,8 +1162,8 @@ export default function StudentPortal({
                               <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
                                 <span className="flex items-center justify-center gap-1"># 3RD TERM (60)</span>
                               </th>
-                              <th className="py-2.5 px-3 border-r border-slate-300 text-center bg-emerald-100/30 w-28 text-slate-950 font-black">
-                                <span className="flex items-center justify-center gap-1 text-slate-950 font-black">Σ SESSION AVE</span>
+                              <th className="py-2.5 px-3 border-r border-slate-300 text-center bg-emerald-100/30 w-28 text-slate-955 font-black">
+                                <span className="flex items-center justify-center gap-1 text-slate-955 font-black">Σ SESSION AVE</span>
                               </th>
                             </>
                           )}
@@ -1108,6 +1187,17 @@ export default function StudentPortal({
                           const secondTerm = subj.secondTermSummary !== undefined && subj.secondTermSummary !== 0 ? subj.secondTermSummary : Math.round(tot * 0.2);
                           const thirdTerm = subj.thirdTermSummary !== undefined && subj.thirdTermSummary !== 0 ? subj.thirdTermSummary : Math.round(tot * 0.6);
                           const sessionAvg = firstTerm + secondTerm + thirdTerm;
+
+                          // Find matching first term subject score if in 2nd term
+                          let firstTermAvgStr = "-";
+                          if (viewingTerm === 'Second Term' && isSecondaryClass) {
+                            const baseId = selectedStudent.id.split('_')[0];
+                            const matchMatch = firstTermStuds.find(s => s.id.startsWith(baseId));
+                            const matchSubj = matchMatch?.subjects.find(s => s.name.toLowerCase() === subj.name.toLowerCase());
+                            if (matchSubj) {
+                              firstTermAvgStr = String((matchSubj.testScore || 0) + (matchSubj.examScore || 0));
+                            }
+                          }
 
                           const { letter, remark, ratingClass } = getLetterAndRemark(
                             viewingTerm === 'Third Term' ? sessionAvg : tot
@@ -1160,6 +1250,9 @@ export default function StudentPortal({
                           <td className="py-2 px-3 text-center font-black text-emerald-705 bg-emerald-50/20">
                             Average: {stats.avgScore.toFixed(1)}%
                           </td>
+                          {viewingTerm === 'Second Term' && isSecondaryClass && (
+                            <td className="py-2 px-3 text-center bg-slate-50/20 text-slate-400 font-bold">-</td>
+                          )}
                           {viewingTerm === 'Third Term' && (
                             <>
                               <td className="py-2 px-3 text-center font-bold">
@@ -1271,13 +1364,6 @@ export default function StudentPortal({
                       </div>
                     </>
                   )}
-
-                  <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                    <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">GPA</span>
-                    <p className="font-extrabold text-emerald-750 text-[10.5px] sm:text-xs leading-none">
-                      {stats.gpa}<span className="text-[8px] text-slate-400 font-normal">/5.0</span>
-                    </p>
-                  </div>
 
                   <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
                     <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">Attendance</span>
@@ -1482,15 +1568,75 @@ export default function StudentPortal({
                       All outstanding and next term fees must be settled fully prior to resumption. Please present payment bank teller or invoice receipt to academic officer at entrance.
                     </p>
                   </div>
-                  <div className="flex flex-row sm:flex-col gap-4 sm:gap-1.5 justify-between bg-white border border-emerald-100/85 p-3 rounded-xl w-full sm:w-auto sm:min-w-[200px] text-xs shadow-3xs">
+                  <div className="flex flex-col gap-1.5 justify-between bg-white border border-emerald-100/85 p-3.5 rounded-xl w-full sm:w-80 text-xs shadow-3xs">
                     <div className="flex justify-between gap-4 w-full">
                       <span className="text-slate-400 font-bold uppercase text-[9px] tracking-wider select-none">Expected Resumption</span>
                       <span className="font-extrabold text-slate-800 text-right">{template.resumptionDate}</span>
                     </div>
-                    <div className="flex justify-between gap-4 w-full border-t border-slate-100 pt-1.5 sm:pt-1 sm:mt-1">
-                      <span className="text-slate-400 font-bold uppercase text-[9px] tracking-wider select-none">Required Fee</span>
-                      <span className="font-black text-emerald-700 text-xs text-right">{template.nextTermFee || '₦45,000'}</span>
-                    </div>
+                    {(() => {
+                      const parseNum = (v: string): number => {
+                        const cln = v.replace(/[^\d.]/g, '');
+                        const parsed = parseFloat(cln);
+                        return isNaN(parsed) ? 0 : parsed;
+                      };
+                      
+                      const cls = selectedStudent.className || '';
+                      let sFee = template.schoolFee || '₦100,000.00';
+                      let pFee = template.partyFee || '₦15,000.00';
+                      let eFee = template.enrollmentFee || '₦15,000.00';
+                      let bFee = template.bookFee || '₦20,000.00';
+                      
+                      if (cls === 'Pre-Kg' || cls === 'KG 1' || cls === 'KG 2' || cls === 'KG 3') {
+                        sFee = template.schoolFeeNursery || sFee;
+                        pFee = template.partyFeeNursery || pFee;
+                        eFee = template.enrollmentFeeNursery || eFee;
+                        bFee = template.bookFeeNursery || bFee;
+                      } else if (cls.startsWith('Basic')) {
+                        sFee = template.schoolFeePrimary || sFee;
+                        pFee = template.partyFeePrimary || pFee;
+                        eFee = template.enrollmentFeePrimary || eFee;
+                        bFee = template.bookFeePrimary || bFee;
+                      } else if (cls.startsWith('JSS')) {
+                        sFee = template.schoolFeeJunior || sFee;
+                        pFee = template.partyFeeJunior || pFee;
+                        eFee = template.enrollmentFeeJunior || eFee;
+                        bFee = template.bookFeeJunior || bFee;
+                      } else if (cls.startsWith('SS')) {
+                        sFee = template.schoolFeeSenior || sFee;
+                        pFee = template.partyFeeSenior || pFee;
+                        eFee = template.enrollmentFeeSenior || eFee;
+                        bFee = template.bookFeeSenior || bFee;
+                      }
+
+                      const totalVal = parseNum(sFee) + parseNum(pFee) + parseNum(eFee) + parseNum(bFee);
+                      const totalFormatted = `₦${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+                      return (
+                        <div className="border-t border-dashed border-slate-250 pt-2 mt-1 space-y-1">
+                          <span className="text-[8px] font-black uppercase text-slate-450 tracking-wider block mb-1">Itemized Fees Breakdown ({cls})</span>
+                          <div className="flex justify-between text-[11px]">
+                            <span className="text-slate-400 font-medium">School Fees</span>
+                            <span className="font-bold text-slate-700">{sFee}</span>
+                          </div>
+                          <div className="flex justify-between text-[11px]">
+                            <span className="text-slate-400 font-medium">Party Fee</span>
+                            <span className="font-bold text-slate-700">{pFee}</span>
+                          </div>
+                          <div className="flex justify-between text-[11px]">
+                            <span className="text-slate-400 font-medium">Enrollment Fee</span>
+                            <span className="font-bold text-slate-700">{eFee}</span>
+                          </div>
+                          <div className="flex justify-between text-[11px]">
+                            <span className="text-slate-400 font-medium">Book Fees</span>
+                            <span className="font-bold text-slate-700">{bFee}</span>
+                          </div>
+                          <div className="flex justify-between border-t border-emerald-200/80 pt-1.5 sm:pt-1 mt-1 font-bold text-xs">
+                            <span className="text-emerald-800">Total fees</span>
+                            <span className="font-black text-emerald-800 font-mono text-right">{totalFormatted}</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
