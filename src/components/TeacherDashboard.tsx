@@ -9,13 +9,16 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
 import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile, DbStatus, AuditLogEntry, ALL_CLASSES } from '../types';
-import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal, generateUnique6DigitPassword, getDeterministicPasscode, getStudentPasscodesFromOtherTerms } from '../utils/academicUtils';
+import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, NURSERY_SUBJECTS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal, generateUnique6DigitPassword, getDeterministicPasscode, getStudentPasscodesFromOtherTerms } from '../utils/academicUtils';
 import { logPasscodeEvent, getAuditLogs, clearAuditLogs } from '../utils/auditLogger';
 import { dbService, mapDbFacultyToFrontend, mapDbStudentToFrontend } from '../lib/supabase';
 import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
 import { ReportCardWatermark, ScratchCardWatermark } from './ReportCardWatermark';
 import GuidelinesComponent from './GuidelinesComponent';
 import AIAgentComponent from './AIAgentComponent';
+import { safeStorage } from '../utils/safeStorage';
+
+const localStorage = safeStorage;
 
 interface TeacherDashboardProps {
   students: Student[];
@@ -307,75 +310,30 @@ export default function TeacherDashboard({
       
       const imgData = canvas.toDataURL('image/png');
       
-      // Fit comfortably in portrait A4 width (210mm) with 10mm margins on both sides
-      const imgWidth = 190; 
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      const partBElement = element.querySelector('#pdf-partB-character-traits');
-      const rectEl = element.getBoundingClientRect();
-      const rectPartB = partBElement ? partBElement.getBoundingClientRect() : null;
-      const partBTop = rectPartB ? (rectPartB.top - rectEl.top) : 0;
-      const ratio = partBTop > 0 ? partBTop / rectEl.height : 0.61;
+      // Fit comfortably in portrait A4 width (210mm) with 3mm margins on all sides (compress into one page)
+      const maxPdfWidth = 204; // 210mm - 6mm margins (3mm on each side)
+      const maxPdfHeight = 291; // 297mm - 6mm margins (3mm on each side)
 
-      let pdf;
+      let drawWidth = maxPdfWidth;
+      let drawHeight = (canvas.height * drawWidth) / canvas.width;
 
-      if (imgHeight > 260 && partBTop > 0) {
-        // Option 1: Multi-page elegant separation. Fits exactly onto 2 full-sized A4 sheets divided nicely at Part B.
-        pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4'
-        });
-
-        const totalPdfHeight = imgHeight;
-        const ySplitPoint = totalPdfHeight * ratio;
-
-        // --- PAGE 1: Terminal Scores & Statistics (Part A) ---
-        pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, totalPdfHeight, undefined, 'NONE');
-        
-        // Solid white cover mask to cleanly hide anything that bleeds past the first page layout break
-        pdf.setFillColor(255, 255, 255);
-        pdf.rect(0, 10 + ySplitPoint, 210, 297 - (10 + ySplitPoint), 'F');
-
-        // --- PAGE 2: Behavior character, Grades index, and remarks (Part B) ---
-        pdf.addPage();
-        const yOffset2 = 10 - ySplitPoint;
-        pdf.addImage(imgData, 'PNG', 10, yOffset2, imgWidth, totalPdfHeight, undefined, 'NONE');
-
-        // Clean white header mask on Page 2
-        pdf.setFillColor(255, 255, 255);
-        pdf.rect(0, 0, 210, 10, 'F');
-      } else if (imgHeight <= 277) {
-        // Option 2: Fits comfortably within normal A4 printable height. Let's center it vertically.
-        pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4'
-        });
-        const yMargin = (297 - imgHeight) / 2;
-        pdf.addImage(imgData, 'PNG', 10, yMargin, imgWidth, imgHeight, undefined, 'NONE');
-      } else if (imgHeight <= 340) {
-        // Option 3: Slightly taller. Scale down gracefully so the entire report fits beautifully on a single A4 page.
-        const scaleFactor = 277 / imgHeight;
-        const adjustedWidth = imgWidth * scaleFactor;
-        const adjustedHeight = 277;
-        const xMargin = (210 - adjustedWidth) / 2;
-        
-        pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4'
-        });
-        pdf.addImage(imgData, 'PNG', xMargin, 10, adjustedWidth, adjustedHeight, undefined, 'NONE');
-      } else {
-        // Option 4: Extremely long template. Print as an elegant single-page PDF with custom height.
-        pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: [210, imgHeight + 20]
-        });
-        pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight, undefined, 'NONE');
+      // Proportional downscaling if height exceeds max printable height to compress everything into one page
+      if (drawHeight > maxPdfHeight) {
+        drawHeight = maxPdfHeight;
+        drawWidth = (canvas.width * drawHeight) / canvas.height;
       }
+
+      // Center the image horizontally and vertically
+      const xMargin = (210 - drawWidth) / 2;
+      const yMargin = (297 - drawHeight) / 2;
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      pdf.addImage(imgData, 'PNG', xMargin, yMargin, drawWidth, drawHeight, undefined, 'NONE');
       
       const filename = `${template.schoolName.replace(/\s+/g, '_')}_Report_Sheet_${viewingReportStudent.id}_${viewingReportStudent.name.replace(/\s+/g, '_')}.pdf`;
       pdf.save(filename);
@@ -1397,8 +1355,10 @@ export default function TeacherDashboard({
                 const firstTermData = typeof window !== 'undefined' ? localStorage.getItem(firstTermKey) : null;
                 const secondTermData = typeof window !== 'undefined' ? localStorage.getItem(secondTermKey) : null;
                 
-                const firstTermStuds: Student[] = firstTermData ? JSON.parse(firstTermData) : [];
-                const secondTermStuds: Student[] = secondTermData ? JSON.parse(secondTermData) : [];
+                const parsedFirst = firstTermData ? JSON.parse(firstTermData) : [];
+                const parsedSecond = secondTermData ? JSON.parse(secondTermData) : [];
+                const firstTermStuds: Student[] = Array.isArray(parsedFirst) ? parsedFirst : [];
+                const secondTermStuds: Student[] = Array.isArray(parsedSecond) ? parsedSecond : [];
                 
                 const matchingFirstStudent = firstTermStuds.find(s => s.id.startsWith(baseId));
                 const matchingSecondStudent = secondTermStuds.find(s => s.id.startsWith(baseId));
@@ -1780,8 +1740,10 @@ export default function TeacherDashboard({
         const firstTermData = typeof window !== 'undefined' ? localStorage.getItem(firstTermKey) : null;
         const secondTermData = typeof window !== 'undefined' ? localStorage.getItem(secondTermKey) : null;
         
-        const firstTermStuds: Student[] = firstTermData ? JSON.parse(firstTermData) : [];
-        const secondTermStuds: Student[] = secondTermData ? JSON.parse(secondTermData) : [];
+        const parsedFirst = firstTermData ? JSON.parse(firstTermData) : [];
+        const parsedSecond = secondTermData ? JSON.parse(secondTermData) : [];
+        const firstTermStuds: Student[] = Array.isArray(parsedFirst) ? parsedFirst : [];
+        const secondTermStuds: Student[] = Array.isArray(parsedSecond) ? parsedSecond : [];
         
         const matchingFirstStudent = firstTermStuds.find(s => s.id.startsWith(baseId));
         const matchingSecondStudent = secondTermStuds.find(s => s.id.startsWith(baseId));
@@ -2615,6 +2577,11 @@ export default function TeacherDashboard({
                             <th className="py-2.5 px-3 border-r border-slate-300 text-center bg-emerald-100/40 w-24">
                               <span className="flex items-center justify-center gap-1 text-emerald-950">Σ TERM (100)</span>
                             </th>
+                            {activeTermTab === 'Second Term' && ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes((viewingReportStudent?.className || '').replace(/\s+/g, '')) && (
+                              <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-24 bg-blue-50 text-blue-900 font-extrabold">
+                                <span className="flex items-center justify-center gap-1">1st Term Avg</span>
+                              </th>
+                            )}
                             {activeTermTab === 'Third Term' && (
                               <>
                                 <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
@@ -2662,6 +2629,32 @@ export default function TeacherDashboard({
                                 <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955">{subj.testScore}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955">{subj.examScore}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black font-mono text-emerald-955 bg-emerald-50/30">{tot}</td>
+                                {activeTermTab === 'Second Term' && ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes((viewingReportStudent?.className || '').replace(/\s+/g, '')) && (
+                                  <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955 bg-blue-50/10">
+                                    {(() => {
+                                      let firstTermAvgStr = "-";
+                                      const baseId = viewingReportStudent.id.split('_')[0];
+                                      try {
+                                        const firstTermKey = 'ezibeck_students_first_term';
+                                        const firstTermData = typeof window !== 'undefined' ? localStorage.getItem(firstTermKey) : null;
+                                        const parsedFirst = firstTermData ? JSON.parse(firstTermData) : [];
+                                        const firstTermStuds: Student[] = Array.isArray(parsedFirst) ? parsedFirst : [];
+                                        const matchMatch = firstTermStuds.find(s => s.id.startsWith(baseId));
+                                        const matchSubj = matchMatch?.subjects.find(s => s.name.toLowerCase() === subj.name.toLowerCase());
+                                        if (matchSubj) {
+                                          firstTermAvgStr = String((matchSubj.testScore || 0) + (matchSubj.examScore || 0)) + "%";
+                                        } else if (subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0) {
+                                          firstTermAvgStr = String(subj.firstTermSummary) + "%";
+                                        } else {
+                                          firstTermAvgStr = String(Math.round(tot * 0.75)) + "%";
+                                        }
+                                      } catch (e) {
+                                        console.error(e);
+                                      }
+                                      return firstTermAvgStr;
+                                    })()}
+                                  </td>
+                                )}
                                 {activeTermTab === 'Third Term' && (
                                   <>
                                     <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955">{firstTerm}</td>
@@ -2831,97 +2824,147 @@ export default function TeacherDashboard({
                   </div>
 
                   {/* Part B: Character Assessment */}
-                  <div id="pdf-partB-character-traits" className="grid grid-cols-1 md:grid-cols-10 print:grid-cols-10 gap-6 relative z-10 print-page-break">
-                    {/* Left Parameter Column: Conduct Evaluation - Width reduced to 40% (md:col-span-4) */}
-                    <div className="md:col-span-4 print:col-span-4 bg-[#FCFCFC]/60 border border-slate-150 p-5 rounded-2xl space-y-3.5 shadow-3xs">
-                      <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-emerald-600 pl-2 select-none">
-                        Part B: Character & Behavioral Conduct
-                      </h4>
+                  {(() => {
+                    const cleanClassName = (viewingReportStudent?.className || '').replace(/\s+/g, '');
+                    const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes(cleanClassName);
+                    return (
+                      <div id="pdf-partB-character-traits" className="grid grid-cols-1 md:grid-cols-10 print:grid-cols-10 gap-6 relative z-10 print-page-break">
+                        {/* Left Parameter Column: Conduct Evaluation - Width reduced to 40% (md:col-span-4) */}
+                        {!isSecondaryClass && (
+                          <div className="md:col-span-4 print:col-span-4 bg-[#FCFCFC]/60 border border-slate-150 p-5 rounded-2xl space-y-3.5 shadow-3xs">
+                            <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-emerald-600 pl-2 select-none">
+                              Part B: Character & Behavioral Conduct
+                            </h4>
 
-                      <div className="grid grid-cols-1 xs:grid-cols-2 gap-x-5 gap-y-2 text-xs text-slate-800">
-                        {viewingReportStudent.behaviour.map(b => (
-                          <div key={b.name} className="flex items-center justify-between py-1 border-b border-dashed border-slate-150">
-                            <span className="font-semibold text-slate-600 text-[10.5px]">{b.name}</span>
-                            <span className="font-mono font-black text-[10px] text-emerald-750 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
-                              {b.rating} / 5
-                            </span>
+                            <div className="grid grid-cols-1 xs:grid-cols-2 gap-x-5 gap-y-2 text-xs text-slate-800">
+                              {(() => {
+                                const isKgClass = viewingReportStudent.className === 'Pre-Kg' || viewingReportStudent.className.startsWith('KG');
+                                if (isKgClass) {
+                                  const behaviouralList = viewingReportStudent.behaviour.filter(b => 
+                                    ["Punctuality", "Neatness", "Assignment", "Concentration"].includes(b.name)
+                                  );
+                                  const skillList = viewingReportStudent.behaviour.filter(b => 
+                                    ["Hand-writing", "Fluency", "Attitude to Property"].includes(b.name)
+                                  );
+                                  return (
+                                    <div className="col-span-2 grid grid-cols-2 gap-x-4 gap-y-3">
+                                      <div className="space-y-1.5">
+                                        <h5 className="font-bold text-[10px] text-slate-400 uppercase tracking-wider border-b pb-0.5">Behavioural Ratings</h5>
+                                        {behaviouralList.length === 0 ? (
+                                          <p className="text-[9px] text-slate-400 italic">No ratings</p>
+                                        ) : behaviouralList.map(b => (
+                                          <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-150">
+                                            <span className="font-semibold text-slate-600 text-[10.5px]">{b.name}</span>
+                                            <span className="font-mono font-black text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
+                                              {b.rating} / 5
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <div className="space-y-1.5">
+                                        <h5 className="font-bold text-[10px] text-slate-400 uppercase tracking-wider border-b pb-0.5">Skill Ratings</h5>
+                                        {skillList.length === 0 ? (
+                                          <p className="text-[9px] text-slate-400 italic">No ratings</p>
+                                        ) : skillList.map(b => (
+                                          <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-150">
+                                            <span className="font-semibold text-slate-600 text-[10.5px]">{b.name}</span>
+                                            <span className="font-mono font-black text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
+                                              {b.rating} / 5
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  );
+                                } else {
+                                  return viewingReportStudent.behaviour.map(b => (
+                                    <div key={b.name} className="flex items-center justify-between py-1 border-b border-dashed border-slate-150">
+                                      <span className="font-semibold text-slate-600 text-[10.5px]">{b.name}</span>
+                                      <span className="font-mono font-black text-[10px] text-emerald-750 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
+                                        {b.rating} / 5
+                                      </span>
+                                    </div>
+                                  ));
+                                }
+                              })()}
+                            </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
+                        )}
 
-                    {/* Grades Index - Immediately to the right of the ratings */}
-                    <div className="md:col-span-4 print:col-span-4 bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5 text-slate-800">
-                      <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 select-none">
-                        Grades Index
-                      </h4>
-                      <div className="border border-slate-150 rounded-xl overflow-hidden shadow-3xs">
-                        <table className="w-full text-[9px] text-left border-collapse text-slate-600">
-                          <thead>
-                            <tr className="bg-[#FAF9F9] border-b border-slate-150 font-bold select-none text-slate-500">
-                              <th className="py-1 px-1.5 border-r border-slate-150 w-8">Grade</th>
-                              <th className="py-1 px-1.5">Details</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100 font-semibold">
-                            <tr className="hover:bg-slate-50/50">
-                              <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-emerald-700 bg-emerald-50 text-[9px]">A+</td>
-                              <td className="py-0.5 px-1.5">90 - 100</td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/50">
-                              <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-green-700 bg-green-50 text-[9px]">A</td>
-                              <td className="py-0.5 px-1.5">80 - 89</td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/50">
-                              <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-sky-700 bg-sky-50 text-[9px]">B</td>
-                              <td className="py-0.5 px-1.5">70 - 79</td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/50">
-                              <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-amber-500 bg-amber-50 text-[9px]">C</td>
-                              <td className="py-0.5 px-1.5">60 - 69</td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/50">
-                              <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-orange-600 bg-orange-50 text-[9px]">D</td>
-                              <td className="py-0.5 px-1.5">50 - 59</td>
-                            </tr>
-                            <tr className="hover:bg-slate-50/50">
-                              <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-red-500 bg-red-50 text-[9px]">F</td>
-                              <td className="py-0.5 px-1.5">Below 50</td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
+                        {/* Grades Index - Immediately to the right of the ratings */}
+                        <div className={`${isSecondaryClass ? 'md:col-span-6 print:col-span-6' : 'md:col-span-4 print:col-span-4'} bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5 text-slate-800`}>
+                          <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 select-none">
+                            Grades Index
+                          </h4>
+                          <div className="border border-slate-155 rounded-xl overflow-hidden shadow-3xs">
+                            <table className="w-full text-[9px] text-left border-collapse text-slate-600">
+                              <thead>
+                                <tr className="bg-[#FAF9F9] border-b border-slate-150 font-bold select-none text-slate-500">
+                                  <th className="py-1 px-1.5 border-r border-slate-150 w-8">Grade</th>
+                                  <th className="py-1 px-1.5">Details</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100 font-semibold">
+                                <tr className="hover:bg-slate-50/50">
+                                  <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-emerald-700 bg-emerald-50 text-[9px]">A+</td>
+                                  <td className="py-0.5 px-1.5">90 - 100</td>
+                                </tr>
+                                <tr className="hover:bg-slate-50/50">
+                                  <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-green-700 bg-green-50 text-[9px]">A</td>
+                                  <td className="py-0.5 px-1.5">80 - 89</td>
+                                </tr>
+                                <tr className="hover:bg-slate-50/50">
+                                  <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-sky-700 bg-sky-50 text-[9px]">B</td>
+                                  <td className="py-0.5 px-1.5">70 - 79</td>
+                                </tr>
+                                <tr className="hover:bg-slate-50/50">
+                                  <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-amber-500 bg-amber-50 text-[9px]">C</td>
+                                  <td className="py-0.5 px-1.5">60 - 69</td>
+                                </tr>
+                                <tr className="hover:bg-slate-50/50">
+                                  <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-orange-600 bg-orange-50 text-[9px]">D</td>
+                                  <td className="py-0.5 px-1.5">50 - 59</td>
+                                </tr>
+                                <tr className="hover:bg-slate-50/50">
+                                  <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-red-500 bg-red-50 text-[9px]">F</td>
+                                  <td className="py-0.5 px-1.5">Below 50</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
 
-                    {/* Conduct Scale - Rightmost scale */}
-                    <div className="md:col-span-2 print:col-span-2 bg-white border border-slate-200 rounded-2xl p-4 space-y-2 text-slate-850 animate-fade-in">
-                      <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 select-none">
-                        Conduct Scale
-                      </h4>
-                      <ul className="text-[10px] text-slate-500 space-y-1 font-bold pt-1">
-                        <li className="flex items-center gap-1.5">
-                          <span className="w-4 h-4 rounded-md bg-emerald-50 text-emerald-700 text-[9px] flex items-center justify-center font-mono font-black">5</span>
-                          <span>Excellent</span>
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                          <span className="w-4 h-4 rounded-md bg-green-50 text-green-700 text-[9px] flex items-center justify-center font-mono font-black">4</span>
-                          <span>Very Good</span>
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                          <span className="w-4 h-4 rounded-md bg-sky-50 text-sky-700 text-[9px] flex items-center justify-center font-mono font-black">3</span>
-                          <span>Good</span>
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                          <span className="w-4 h-4 rounded-md bg-amber-50 text-amber-600 text-[9px] flex items-center justify-center font-mono font-black">2</span>
-                          <span>Fair</span>
-                        </li>
-                        <li className="flex items-center gap-1.5">
-                          <span className="w-4 h-4 rounded-md bg-red-50 text-red-700 text-[9px] flex items-center justify-center font-mono font-black">1</span>
-                          <span>Needs Work</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
+                        {/* Conduct Scale - Rightmost scale */}
+                        <div className={`${isSecondaryClass ? 'md:col-span-4 print:col-span-4' : 'md:col-span-2 print:col-span-2'} bg-white border border-slate-200 rounded-2xl p-4 space-y-2 text-slate-850 animate-fade-in`}>
+                          <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 select-none">
+                            Conduct Scale
+                          </h4>
+                          <ul className="text-[10px] text-slate-500 space-y-1 font-bold pt-1">
+                            <li className="flex items-center gap-1.5">
+                              <span className="w-4 h-4 rounded-md bg-emerald-50 text-emerald-700 text-[9px] flex items-center justify-center font-mono font-black">5</span>
+                              <span>Excellent</span>
+                            </li>
+                            <li className="flex items-center gap-1.5">
+                              <span className="w-4 h-4 rounded-md bg-green-50 text-green-700 text-[9px] flex items-center justify-center font-mono font-black">4</span>
+                              <span>Very Good</span>
+                            </li>
+                            <li className="flex items-center gap-1.5">
+                              <span className="w-4 h-4 rounded-md bg-sky-50 text-sky-700 text-[9px] flex items-center justify-center font-mono font-black">3</span>
+                              <span>Good</span>
+                            </li>
+                            <li className="flex items-center gap-1.5">
+                              <span className="w-4 h-4 rounded-md bg-amber-50 text-amber-600 text-[9px] flex items-center justify-center font-mono font-black">2</span>
+                              <span>Fair</span>
+                            </li>
+                            <li className="flex items-center gap-1.5">
+                              <span className="w-4 h-4 rounded-md bg-red-50 text-red-700 text-[9px] flex items-center justify-center font-mono font-black">1</span>
+                              <span>Needs Work</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Part C: Remarks & Signatures Segment */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10 pt-6 border-t border-dashed border-slate-200">
@@ -3168,15 +3211,21 @@ export default function TeacherDashboard({
                       return (
                         <div key={subj.id} className="p-3 grid grid-cols-12 items-center text-xs font-semibold text-slate-800 hover:bg-slate-50">
                           <div className={activeTermTab === 'Third Term' ? "col-span-3 flex items-center pr-2" : "col-span-4 flex items-center pr-2"}>
-                            <input
-                              type="text"
-                              required
-                              disabled={isTermReadOnly}
-                              value={subj.name}
-                              onChange={(e) => handleSubjectNameChange(subj.id, e.target.value)}
-                              placeholder="e.g. Mathematics"
-                              className="w-full bg-slate-50 border border-slate-200 py-1 px-1.5 rounded text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100 transition-all font-sans disabled:opacity-75 disabled:cursor-not-allowed"
-                            />
+                            {(() => {
+                              const isKgClass = editingStudent && (editingStudent.className === 'KG 1' || editingStudent.className === 'KG 2' || editingStudent.className === 'KG 3');
+                              const isPermanentKgSubject = !!(isKgClass && NURSERY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase()));
+                              return (
+                                <input
+                                  type="text"
+                                  required
+                                  disabled={isTermReadOnly || isPermanentKgSubject}
+                                  value={subj.name}
+                                  onChange={(e) => handleSubjectNameChange(subj.id, e.target.value)}
+                                  placeholder="e.g. Mathematics"
+                                  className="w-full bg-slate-50 border border-slate-200 py-1 px-1.5 rounded text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100 transition-all font-sans disabled:opacity-75 disabled:cursor-not-allowed"
+                                />
+                              );
+                            })()}
                           </div>
                           <span className={activeTermTab === 'Third Term' ? "col-span-1 flex justify-center px-1" : "col-span-2 flex justify-center px-1"}>
                             <input
@@ -3266,18 +3315,27 @@ export default function TeacherDashboard({
 
                           {/* Action Button */}
                           <div className="col-span-1 flex justify-center">
-                            {!isTermReadOnly ? (
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteSubject(subj.id, subj.name)}
-                                title={`Delete ${subj.name}`}
-                                className="p-1.5 text-slate-450 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all cursor-pointer flex-shrink-0"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            ) : (
-                              <span className="text-slate-350 select-none text-[10px]">🔒 Locked</span>
-                            )}
+                            {(() => {
+                              const isKgClass = editingStudent && (editingStudent.className === 'KG 1' || editingStudent.className === 'KG 2' || editingStudent.className === 'KG 3');
+                              const isPermanentKgSubject = !!(isKgClass && NURSERY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase()));
+                              
+                              if (isPermanentKgSubject) {
+                                return <span className="text-slate-450 select-none text-[10px]">📌 Fixed</span>;
+                              }
+                              
+                              return !isTermReadOnly ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteSubject(subj.id, subj.name)}
+                                  title={`Delete ${subj.name}`}
+                                  className="p-1.5 text-slate-450 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all cursor-pointer flex-shrink-0"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              ) : (
+                                <span className="text-slate-350 select-none text-[10px]">🔒 Locked</span>
+                              );
+                            })()}
                           </div>
                         </div>
                       );
@@ -3313,23 +3371,86 @@ export default function TeacherDashboard({
                     <span className="text-[10px] text-slate-400 capitalize">Guide: 1 to 5</span>
                   </h4>
 
-                  <div className="space-y-2 max-h-56 overflow-y-auto border p-3 rounded-2xl bg-slate-50/50">
-                    {editBehaviour.map(b => (
-                      <div key={b.name} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200 py-1.5 last:border-none">
-                        <span className="font-bold text-slate-700 text-[11px]">{b.name}</span>
-                        <select
-                          disabled={isTermReadOnly}
-                          value={b.rating}
-                          onChange={(e) => handleBehaviourChange(b.name, parseInt(e.target.value))}
-                          className="bg-white border rounded text-xs px-1.5 py-0.5 outline-none font-bold text-emerald-900 disabled:opacity-75 disabled:cursor-not-allowed"
-                        >
-                          {[1, 2, 3, 4, 5].map(v => (
-                            <option key={v} value={v}>{v}</option>
+                  {(() => {
+                    const isKg = editingStudent && (editingStudent.className === 'Pre-Kg' || editingStudent.className.startsWith('KG'));
+                    if (isKg) {
+                      const behaviouralList = editBehaviour.filter(b => 
+                        ["Punctuality", "Neatness", "Assignment", "Concentration"].includes(b.name)
+                      );
+                      const skillList = editBehaviour.filter(b => 
+                        ["Hand-writing", "Fluency", "Attitude to Property"].includes(b.name)
+                      );
+                      return (
+                        <div className="space-y-4 max-h-[300px] overflow-y-auto">
+                          <div className="space-y-2">
+                            <h5 className="font-extrabold text-[#047857] text-[10px] uppercase tracking-wider">Behavioural Ratings</h5>
+                            <div className="space-y-2 border p-3 rounded-2xl bg-white shadow-3xs">
+                              {behaviouralList.length === 0 ? (
+                                <p className="text-[9px] text-slate-400 italic">No ratings</p>
+                              ) : behaviouralList.map(b => (
+                                <div key={b.name} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200 py-1.5 last:border-none">
+                                  <span className="font-bold text-slate-700 text-[11px]">{b.name}</span>
+                                  <select
+                                    disabled={isTermReadOnly}
+                                    value={b.rating}
+                                    onChange={(e) => handleBehaviourChange(b.name, parseInt(e.target.value))}
+                                    className="bg-white border rounded text-xs px-1.5 py-0.5 outline-none font-bold text-emerald-950 disabled:opacity-75 disabled:cursor-not-allowed"
+                                  >
+                                    {[1, 2, 3, 4, 5].map(v => (
+                                      <option key={v} value={v}>{v}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <h5 className="font-extrabold text-[#047857] text-[10px] uppercase tracking-wider">Skill Ratings</h5>
+                            <div className="space-y-2 border p-3 rounded-2xl bg-white shadow-3xs">
+                              {skillList.length === 0 ? (
+                                <p className="text-[9px] text-slate-400 italic">No ratings</p>
+                              ) : skillList.map(b => (
+                                <div key={b.name} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200 py-1.5 last:border-none">
+                                  <span className="font-bold text-slate-700 text-[11px]">{b.name}</span>
+                                  <select
+                                    disabled={isTermReadOnly}
+                                    value={b.rating}
+                                    onChange={(e) => handleBehaviourChange(b.name, parseInt(e.target.value))}
+                                    className="bg-white border rounded text-xs px-1.5 py-0.5 outline-none font-bold text-emerald-950 disabled:opacity-75 disabled:cursor-not-allowed"
+                                  >
+                                    {[1, 2, 3, 4, 5].map(v => (
+                                      <option key={v} value={v}>{v}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="space-y-2 max-h-56 overflow-y-auto border p-3 rounded-2xl bg-slate-50/50">
+                          {editBehaviour.map(b => (
+                            <div key={b.name} className="flex justify-between items-center text-xs border-b border-dashed border-slate-200 py-1.5 last:border-none">
+                              <span className="font-bold text-slate-700 text-[11px]">{b.name}</span>
+                              <select
+                                disabled={isTermReadOnly}
+                                value={b.rating}
+                                onChange={(e) => handleBehaviourChange(b.name, parseInt(e.target.value))}
+                                className="bg-white border rounded text-xs px-1.5 py-0.5 outline-none font-bold text-emerald-950 disabled:opacity-75 disabled:cursor-not-allowed"
+                              >
+                                {[1, 2, 3, 4, 5].map(v => (
+                                  <option key={v} value={v}>{v}</option>
+                                ))}
+                              </select>
+                            </div>
                           ))}
-                        </select>
-                      </div>
-                    ))}
-                  </div>
+                        </div>
+                      );
+                    }
+                  })()}
                 </div>
 
                 <div className="space-y-4 pt-2">
@@ -3580,6 +3701,11 @@ export default function TeacherDashboard({
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center w-24"># TEST (30)</th>
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center w-24"># EXAM (70)</th>
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/10 w-24 text-emerald-750">Σ TERM (100)</th>
+                              {activeTermTab === 'Second Term' && ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes((previewStudent?.className || '').replace(/\s+/g, '')) && (
+                                <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-24 bg-blue-50 text-blue-900 font-extrabold">
+                                  1st Term Avg
+                                </th>
+                              )}
                               {activeTermTab === 'Third Term' && (
                                 <>
                                   <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-20"># 1ST TERM</th>
@@ -3612,6 +3738,32 @@ export default function TeacherDashboard({
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-550">{subj.testScore}</td>
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-550">{subj.examScore}</td>
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-750 bg-emerald-50/10">{tot}</td>
+                                  {activeTermTab === 'Second Term' && ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes((previewStudent?.className || '').replace(/\s+/g, '')) && (
+                                    <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono font-bold text-slate-950 bg-blue-50/10">
+                                      {(() => {
+                                        let firstTermAvgStr = "-";
+                                        const baseId = previewStudent.id.split('_')[0];
+                                        try {
+                                          const firstTermKey = 'ezibeck_students_first_term';
+                                          const firstTermData = typeof window !== 'undefined' ? localStorage.getItem(firstTermKey) : null;
+                                          const parsedFirst = firstTermData ? JSON.parse(firstTermData) : [];
+                                          const firstTermStuds: Student[] = Array.isArray(parsedFirst) ? parsedFirst : [];
+                                          const matchMatch = firstTermStuds.find(s => s.id.startsWith(baseId));
+                                          const matchSubj = matchMatch?.subjects.find(s => s.name.toLowerCase() === subj.name.toLowerCase());
+                                          if (matchSubj) {
+                                            firstTermAvgStr = String((matchSubj.testScore || 0) + (matchSubj.examScore || 0)) + "%";
+                                          } else if (subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0) {
+                                            firstTermAvgStr = String(subj.firstTermSummary) + "%";
+                                          } else {
+                                            firstTermAvgStr = String(Math.round(tot * 0.75)) + "%";
+                                          }
+                                        } catch (e) {
+                                          console.error(e);
+                                        }
+                                        return firstTermAvgStr;
+                                      })()}
+                                    </td>
+                                  )}
                                   {activeTermTab === 'Third Term' && (
                                     <>
                                       <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-450">{firstTerm}</td>
@@ -3780,24 +3932,73 @@ export default function TeacherDashboard({
                     </div>
 
                     {/* Behavioral & Conduct assessment Part B */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10 print-page-break">
-                      <div className="lg:col-span-12 bg-[#FCFCFC]/60 border border-slate-150 p-5 rounded-2xl space-y-3.5 shadow-3xs">
-                        <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-emerald-600 pl-2">
-                          Part B: Character & Behavioral Conduct Ratings
-                        </h4>
+                    {(() => {
+                      const cleanClassName = (previewStudent?.className || '').replace(/\s+/g, '');
+                      const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes(cleanClassName);
+                      if (isSecondaryClass) return null;
+                      return (
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10 print-page-break">
+                          <div className="lg:col-span-12 bg-[#FCFCFC]/60 border border-slate-150 p-5 rounded-2xl space-y-3.5 shadow-3xs">
+                            <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-emerald-600 pl-2">
+                              Part B: Character & Behavioral Conduct Ratings
+                            </h4>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-5 gap-y-2 text-xs text-slate-800">
-                          {previewStudent.behaviour.map(b => (
-                            <div key={b.name} className="flex items-center justify-between py-1 border-b border-dashed border-slate-150">
-                              <span className="font-semibold text-slate-600 text-left truncate max-w-[200px]">{b.name}</span>
-                              <span className="font-mono font-black text-[10px] text-emerald-750 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
-                                {b.rating} / 5
-                              </span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-5 gap-y-2 text-xs text-slate-800">
+                              {(() => {
+                                const isKgClass = previewStudent.className === 'Pre-Kg' || previewStudent.className.startsWith('KG');
+                                if (isKgClass) {
+                                  const behaviouralList = previewStudent.behaviour.filter(b => 
+                                    ["Punctuality", "Neatness", "Assignment", "Concentration"].includes(b.name)
+                                  );
+                                  const skillList = previewStudent.behaviour.filter(b => 
+                                    ["Hand-writing", "Fluency", "Attitude to Property"].includes(b.name)
+                                  );
+                                  return (
+                                    <div className="col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                      <div className="space-y-1.5">
+                                        <h5 className="font-bold text-[10.5px] text-slate-400 uppercase tracking-wider border-b pb-0.5">Behavioural Ratings</h5>
+                                        {behaviouralList.length === 0 ? (
+                                          <p className="text-[9px] text-slate-400 italic">No ratings</p>
+                                        ) : behaviouralList.map(b => (
+                                          <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-150">
+                                            <span className="font-semibold text-slate-600 text-[10.5px]">{b.name}</span>
+                                            <span className="font-mono font-black text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
+                                              {b.rating} / 5
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                      <div className="space-y-1.5">
+                                        <h5 className="font-bold text-[10.5px] text-slate-400 uppercase tracking-wider border-b pb-0.5">Skill Ratings</h5>
+                                        {skillList.length === 0 ? (
+                                          <p className="text-[9px] text-slate-400 italic">No ratings</p>
+                                        ) : skillList.map(b => (
+                                          <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-150">
+                                            <span className="font-semibold text-slate-600 text-[10.5px]">{b.name}</span>
+                                            <span className="font-mono font-black text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
+                                              {b.rating} / 5
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  );
+                                } else {
+                                  return previewStudent.behaviour.map(b => (
+                                    <div key={b.name} className="flex items-center justify-between py-1 border-b border-dashed border-slate-150">
+                                      <span className="font-semibold text-slate-600 text-left truncate max-w-[200px]">{b.name}</span>
+                                      <span className="font-mono font-black text-[10px] text-emerald-755 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
+                                        {b.rating} / 5
+                                      </span>
+                                    </div>
+                                  ));
+                                }
+                              })()}
                             </div>
-                          ))}
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                      );
+                    })()}
 
                     {/* Part C: Appraisals and Signatures */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10 pt-6 border-t border-dashed border-slate-200">

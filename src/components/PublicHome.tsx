@@ -13,6 +13,7 @@ import { Workspace15Template } from '../types';
 import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
 import GuidelinesComponent from './GuidelinesComponent';
 import { dbService } from '../lib/supabase';
+import { safeStorage } from '../utils/safeStorage';
 
 interface PublicHomeProps {
   onEnterPortal: (role: 'student' | 'teacher') => void;
@@ -203,7 +204,7 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
 
   const [openInNewTab, setOpenInNewTab] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('ezibeck_open_new_tab') === 'true';
+      return safeStorage.getItem('ezibeck_open_new_tab') === 'true';
     }
     return false;
   });
@@ -245,7 +246,7 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
   const handleToggleNewTab = (val: boolean) => {
     setOpenInNewTab(val);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('ezibeck_open_new_tab', String(val));
+      safeStorage.setItem('ezibeck_open_new_tab', String(val));
     }
   };
 

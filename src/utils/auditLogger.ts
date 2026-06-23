@@ -1,8 +1,9 @@
 import { AuditLogEntry } from '../types';
+import { safeStorage } from './safeStorage';
 
 export function getAuditLogs(): AuditLogEntry[] {
   if (typeof window === 'undefined') return [];
-  const saved = localStorage.getItem('ezibeck_passcode_audit_logs');
+  const saved = safeStorage.getItem('ezibeck_passcode_audit_logs');
   if (saved) {
     try {
       return JSON.parse(saved);
@@ -15,7 +16,7 @@ export function getAuditLogs(): AuditLogEntry[] {
 
 export function saveAuditLogs(logs: AuditLogEntry[]) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem('ezibeck_passcode_audit_logs', JSON.stringify(logs));
+  safeStorage.setItem('ezibeck_passcode_audit_logs', JSON.stringify(logs));
 }
 
 export function logPasscodeEvent(params: {
@@ -48,5 +49,5 @@ export function logPasscodeEvent(params: {
 
 export function clearAuditLogs() {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem('ezibeck_passcode_audit_logs');
+  safeStorage.removeItem('ezibeck_passcode_audit_logs');
 }

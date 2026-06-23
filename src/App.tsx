@@ -9,6 +9,7 @@ import StudentPortal from './components/StudentPortal';
 import TeacherDashboard from './components/TeacherDashboard';
 import { Student, Workspace15Template, DbStatus } from './types';
 import { loadStoredStudents, saveStudents, getInitialStudents, isStudentInTerm } from './utils/academicUtils';
+import { safeStorage } from './utils/safeStorage';
 import { 
   isSupabaseConfigured, 
   dbService, 
@@ -72,18 +73,19 @@ export default function App() {
       const params = new URLSearchParams(window.location.search);
       const viewParam = params.get('view');
       if (viewParam === 'student' || viewParam === 'teacher' || viewParam === 'home') {
-        localStorage.setItem('ezibeck_current_view', viewParam);
+        safeStorage.setItem('ezibeck_current_view', viewParam);
         return viewParam;
       }
 
       // 2. Check if the page is being reloaded/refreshed
       let isReload = false;
       try {
-        const navEntries = performance.getEntriesByType('navigation');
+        const perf = typeof window !== 'undefined' ? window.performance : null;
+        const navEntries = perf?.getEntriesByType?.('navigation') || [];
         if (navEntries.length > 0) {
           isReload = (navEntries[0] as PerformanceNavigationTiming).type === 'reload';
         } else {
-          isReload = (window.performance as any)?.navigation?.type === 1;
+          isReload = (perf as any)?.navigation?.type === 1;
         }
       } catch (e) {
         console.warn('Navigation timing check failed or unsupported:', e);
@@ -91,12 +93,12 @@ export default function App() {
 
       // 3. If it is a reload, retrieve the saved view state; otherwise, reset to homepage
       if (isReload) {
-        const savedView = localStorage.getItem('ezibeck_current_view');
+        const savedView = safeStorage.getItem('ezibeck_current_view');
         if (savedView === 'student' || savedView === 'teacher' || savedView === 'home') {
           return savedView;
         }
       } else {
-        localStorage.removeItem('ezibeck_current_view');
+        safeStorage.removeItem('ezibeck_current_view');
       }
     }
     return 'home';
@@ -105,7 +107,7 @@ export default function App() {
   // Track page state changes to survive browser reloads
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('ezibeck_current_view', currentView);
+      safeStorage.setItem('ezibeck_current_view', currentView);
     }
   }, [currentView]);
 
@@ -144,7 +146,7 @@ export default function App() {
 
   const [template, setTemplate] = useState<Workspace15Template>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('ezibeck_workspace15');
+      const saved = safeStorage.getItem('ezibeck_workspace15');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -249,7 +251,7 @@ export default function App() {
         };
         setTemplate(nextTpl);
         if (typeof window !== 'undefined') {
-          localStorage.setItem('ezibeck_workspace15', JSON.stringify(nextTpl));
+          safeStorage.setItem('ezibeck_workspace15', JSON.stringify(nextTpl));
         }
       }
 
@@ -542,7 +544,7 @@ export default function App() {
     isLocalSavingRef.current = true;
     setTemplate(newTemplate);
     if (typeof window !== 'undefined') {
-      localStorage.setItem('ezibeck_workspace15', JSON.stringify(newTemplate));
+      safeStorage.setItem('ezibeck_workspace15', JSON.stringify(newTemplate));
     }
 
     if (isSupabaseConfigured) {

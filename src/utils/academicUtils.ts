@@ -1,4 +1,5 @@
 import { Student, SubjectGrade, BehaviourRating, ClassName, SchoolInfo } from '../types';
+import { safeStorage } from './safeStorage';
 
 export const SCHOOL_INFO: SchoolInfo = {
   name: "Ezibeck Core International College",
@@ -35,23 +36,37 @@ export const SS_SUBJECTS = [
 ];
 
 export const NURSERY_SUBJECTS = [
-  "Numeracy (Maths)",
-  "Literacy (English)",
-  "Sensory & Creative Arts",
-  "Health & Physical Play",
-  "Cognitive & Pre-Science",
-  "Social & Emotional Dev"
+  "Numeracy",
+  "Literacy",
+  "Health Science",
+  "Social Habit",
+  "C.R.S",
+  "Natural Science",
+  "Creative Art",
+  "Computer Science",
+  "Hand Writing",
+  "Quantitative Reasoning",
+  "Verbal Reasoning",
+  "Rhymes",
+  "Spelling Drill",
+  "Speech Development",
+  "Current Affair"
 ];
 
 export const PRIMARY_SUBJECTS = [
   "Mathematics",
-  "English Language",
-  "Primary Science & Tech",
-  "Social Studies",
-  "Computer Studies (ICT)",
-  "Cultural & Creative Arts",
-  "Civic Education",
-  "Home Economics / Agri"
+  "English Studies",
+  "Basic Science and Technology",
+  "National Value",
+  "Religion Value",
+  "Cultural and Creative Art",
+  "Current Affair",
+  "Local Language",
+  "Speech Development",
+  "Verbal Reasoning",
+  "Quantitative Reasoning",
+  "History",
+  "Prevocational studies"
 ];
 
 export const BEHAVIOUR_TRAITS = [
@@ -64,6 +79,19 @@ export const BEHAVIOUR_TRAITS = [
   "Obedience & Compliance",
   "Cooperation & Teamwork",
   "Self-reliance"
+];
+
+export const KG_BEHAVIOUR_TRAITS = [
+  "Punctuality",
+  "Neatness",
+  "Assignment",
+  "Concentration"
+];
+
+export const KG_SKILL_TRAITS = [
+  "Hand-writing",
+  "Fluency",
+  "Attitude to Property"
 ];
 
 export function compareSubjects(aName: string, bName: string): number {
@@ -309,8 +337,19 @@ export function generateRandomGrades(subjects: string[], term?: string, studentI
   });
 }
 
-// Generate default behavior ratings
-export function generateDefaultBehaviour(): BehaviourRating[] {
+// Generate default behavior ratings depending on class name
+export function generateDefaultBehaviour(className?: ClassName): BehaviourRating[] {
+  const isKg = className === 'Pre-Kg' || (className && className.startsWith('KG'));
+  if (isKg) {
+    const list = [...KG_BEHAVIOUR_TRAITS, ...KG_SKILL_TRAITS];
+    return list.map(trait => {
+      const score = Math.floor(Math.random() * 3) + 3;
+      return {
+        name: trait,
+        rating: Math.min(5, score)
+      };
+    });
+  }
   return BEHAVIOUR_TRAITS.map(trait => {
     // Most get 3-5
     const score = Math.floor(Math.random() * 3) + 3;
@@ -319,6 +358,44 @@ export function generateDefaultBehaviour(): BehaviourRating[] {
       rating: Math.min(5, score)
     };
   });
+}
+
+// Adjust behaviour array for older/legacy student models or wrong class formats dynamically
+export function adjustBehaviourIfRequired(behaviour: BehaviourRating[], className: ClassName): BehaviourRating[] {
+  const isKg = className === 'Pre-Kg' || className.startsWith('KG');
+  if (isKg) {
+    const requiredBehaviour = ["Punctuality", "Neatness", "Assignment", "Concentration"];
+    const requiredSkills = ["Hand-writing", "Fluency", "Attitude to Property"];
+    const allRequired = [...requiredBehaviour, ...requiredSkills];
+    
+    // Create map of existing
+    const existingMap = new Map<string, number>();
+    (behaviour || []).forEach(b => {
+      existingMap.set(b.name, b.rating);
+    });
+    
+    return allRequired.map(name => {
+      const existingRating = existingMap.get(name);
+      if (existingRating !== undefined) {
+        return { name, rating: existingRating };
+      }
+      return { name, rating: Math.floor(Math.random() * 3) + 3 };
+    });
+  } else {
+    // Create map of existing
+    const existingMap = new Map<string, number>();
+    (behaviour || []).forEach(b => {
+      existingMap.set(b.name, b.rating);
+    });
+    
+    return BEHAVIOUR_TRAITS.map(name => {
+      const existingRating = existingMap.get(name);
+      if (existingRating !== undefined) {
+        return { name, rating: existingRating };
+      }
+      return { name, rating: Math.floor(Math.random() * 3) + 3 };
+    });
+  }
 }
 
 const FIRST_NAMES = ["Tobi", "Chinedu", "Amina", "Divine", "Emeka", "Zainab", "Olumide", "Favor", "Bassey", "Somtochukwu", "Eseoghene", "Fatima", "Chibuike", "Tega", "Kelechi", "Olamide", "Ejiro", "Blessing", "Samuel", "Tunde", "Uche", "Nkechi", "Seyi", "Funke", "Chidi", "Yinka", "Ifeoma", "Yusuf", "Ozo", "Efe"];
@@ -343,7 +420,7 @@ export function getStudentPasscodesFromOtherTerms(studentNameOrId: string): stri
 
   terms.forEach(t => {
     try {
-      const val = localStorage.getItem(`ezibeck_students_${t}`);
+      const val = safeStorage.getItem(`ezibeck_students_${t}`);
       if (val) {
         const studentsList: Student[] = JSON.parse(val);
         studentsList.forEach(s => {
@@ -503,7 +580,7 @@ export function createStudent(name: string, className: ClassName, idx: number, t
     attendancePresent: attendancePresentVal,
     attendanceTotal: attendanceTotalVal,
     subjects: generateRandomGrades(subjectsList, activeTerm, idx),
-    behaviour: generateDefaultBehaviour(),
+    behaviour: generateDefaultBehaviour(className),
     formTeacherRemark: remarks[remarkIdx],
     formTeacherName,
     principalName: "Dr. Ezekiel Beck",
@@ -550,16 +627,29 @@ export function loadStoredStudents(term?: string): Student[] {
   if (typeof window === 'undefined') return getInitialStudents(activeTerm);
   const termKey = `ezibeck_students_${activeTerm.toLowerCase().replace(/\s+/g, '_')}`;
   try {
-    const val = localStorage.getItem(termKey);
+    const val = safeStorage.getItem(termKey);
     if (val) {
-      return JSON.parse(val);
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) {
+        const migrated = parsed.map(std => ({
+          ...std,
+          behaviour: adjustBehaviourIfRequired(std.behaviour, std.className)
+        }));
+        return migrated;
+      }
     }
     // Fallback: migrate from legacy key if available, so they don't lose progress
-    const legacyVal = localStorage.getItem('ezibeck_students');
+    const legacyVal = safeStorage.getItem('ezibeck_students');
     if (legacyVal && activeTerm === 'Third Term') {
       const parsed = JSON.parse(legacyVal);
-      saveStudents(parsed, activeTerm);
-      return parsed;
+      if (Array.isArray(parsed)) {
+        const migrated = parsed.map(std => ({
+          ...std,
+          behaviour: adjustBehaviourIfRequired(std.behaviour, std.className)
+        }));
+        saveStudents(migrated, activeTerm);
+        return migrated;
+      }
     }
   } catch (e) {
     console.error(`Error loading students for ${activeTerm} from localStorage`, e);
@@ -574,7 +664,7 @@ export function saveStudents(students: Student[], term?: string) {
   const activeTerm = term || 'Third Term';
   const termKey = `ezibeck_students_${activeTerm.toLowerCase().replace(/\s+/g, '_')}`;
   try {
-    localStorage.setItem(termKey, JSON.stringify(students));
+    safeStorage.setItem(termKey, JSON.stringify(students));
   } catch (e) {
     console.error(`Failed to save students for ${activeTerm} to localStorage`, e);
   }

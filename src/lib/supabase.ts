@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Student, Workspace15Template, ClassName, FacultyProfile } from '../types';
 import { compareSubjects } from '../utils/academicUtils';
+import { safeStorage } from '../utils/safeStorage';
 
 const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
 const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
@@ -18,10 +19,16 @@ if (!isSupabaseConfigured) {
   );
 }
 
-// Create a singleton instance of the client
+// Create a singleton instance of the client with a safe storage wrapper to avoid SecurityErrors in iframes
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder-url.supabase.co',
-  supabaseAnonKey || 'placeholder-anon-key'
+  supabaseAnonKey || 'placeholder-anon-key',
+  {
+    auth: {
+      persistSession: false,
+      storage: safeStorage
+    }
+  }
 );
 
 export const mapDbStudentToFrontend = (dbStudent: any): Student => {

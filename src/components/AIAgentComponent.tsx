@@ -36,16 +36,17 @@ function renderFormattedMessage(text: string) {
     // Bullet point list item
     if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
       const cleanText = line.trim().substring(2);
-      // Re-run bold matching on the clean bullet item
+      // Re-run bold matching on the clean bullet item using a fresh regex instance
+      const bulletBoldRegex = /\*\*(.*?)\*\*/g;
       const bParts = [];
       let bLast = 0;
       let bMatch;
-      while ((bMatch = boldRegex.exec(cleanText)) !== null) {
+      while ((bMatch = bulletBoldRegex.exec(cleanText)) !== null) {
         if (bMatch.index > bLast) {
           bParts.push(cleanText.substring(bLast, bMatch.index));
         }
         bParts.push(<strong key={bMatch.index} className="font-extrabold text-slate-900">{bMatch[1]}</strong>);
-        bLast = boldRegex.lastIndex;
+        bLast = bulletBoldRegex.lastIndex;
       }
       if (bLast < cleanText.length) {
         bParts.push(cleanText.substring(bLast));
@@ -64,12 +65,13 @@ function renderFormattedMessage(text: string) {
       const bParts = [];
       let bLast = 0;
       let bMatch;
-      while ((bMatch = boldRegex.exec(cleanText)) !== null) {
+      const numBoldRegex = /\*\*(.*?)\*\*/g;
+      while ((bMatch = numBoldRegex.exec(cleanText)) !== null) {
         if (bMatch.index > bLast) {
           bParts.push(cleanText.substring(bLast, bMatch.index));
         }
         bParts.push(<strong key={bMatch.index} className="font-extrabold text-slate-900">{bMatch[1]}</strong>);
-        bLast = boldRegex.lastIndex;
+        bLast = numBoldRegex.lastIndex;
       }
       if (bLast < cleanText.length) {
         bParts.push(cleanText.substring(bLast));

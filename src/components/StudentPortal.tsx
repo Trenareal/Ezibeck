@@ -14,6 +14,7 @@ import { isSupabaseConfigured, dbService, mapDbStudentToFrontend } from '../lib/
 import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
 import { ReportCardWatermark } from './ReportCardWatermark';
 import GuidelinesComponent from './GuidelinesComponent';
+import { safeStorage } from '../utils/safeStorage';
 
 interface StudentPortalProps {
   students: Student[];
@@ -207,75 +208,30 @@ export default function StudentPortal({
       
       const imgData = canvas.toDataURL('image/png');
       
-      // Fit comfortably in portrait A4 width (210mm) with 10mm margins on both sides
-      const imgWidth = 190; 
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
-      const partBElement = element.querySelector('#pdf-partB-character-traits');
-      const rectEl = element.getBoundingClientRect();
-      const rectPartB = partBElement ? partBElement.getBoundingClientRect() : null;
-      const partBTop = rectPartB ? (rectPartB.top - rectEl.top) : 0;
-      const ratio = partBTop > 0 ? partBTop / rectEl.height : 0.61;
+      // Fit comfortably in portrait A4 width (210mm) with 3mm margins on all sides (compress into one page)
+      const maxPdfWidth = 204; // 210mm - 6mm margins (3mm on each side)
+      const maxPdfHeight = 291; // 297mm - 6mm margins (3mm on each side)
 
-      let pdf;
+      let drawWidth = maxPdfWidth;
+      let drawHeight = (canvas.height * drawWidth) / canvas.width;
 
-      if (imgHeight > 260 && partBTop > 0) {
-        // Option 1: Multi-page elegant separation. Fits exactly onto 2 full-sized A4 sheets divided nicely at Part B.
-        pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4'
-        });
-
-        const totalPdfHeight = imgHeight;
-        const ySplitPoint = totalPdfHeight * ratio;
-
-        // --- PAGE 1: Terminal Scores & Statistics (Part A) ---
-        pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, totalPdfHeight, undefined, 'NONE');
-        
-        // Solid white cover mask to cleanly hide anything that bleeds past the first page layout break
-        pdf.setFillColor(255, 255, 255);
-        pdf.rect(0, 10 + ySplitPoint, 210, 297 - (10 + ySplitPoint), 'F');
-
-        // --- PAGE 2: Behavior character, Grades index, and remarks (Part B) ---
-        pdf.addPage();
-        const yOffset2 = 10 - ySplitPoint;
-        pdf.addImage(imgData, 'PNG', 10, yOffset2, imgWidth, totalPdfHeight, undefined, 'NONE');
-
-        // Clean white header mask on Page 2
-        pdf.setFillColor(255, 255, 255);
-        pdf.rect(0, 0, 210, 10, 'F');
-      } else if (imgHeight <= 277) {
-        // Option 2: Fits comfortably within normal A4 printable height. Let's center it vertically.
-        pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4'
-        });
-        const yMargin = (297 - imgHeight) / 2;
-        pdf.addImage(imgData, 'PNG', 10, yMargin, imgWidth, imgHeight, undefined, 'NONE');
-      } else if (imgHeight <= 340) {
-        // Option 3: Slightly taller. Scale down gracefully so the entire report fits beautifully on a single A4 page.
-        const scaleFactor = 277 / imgHeight;
-        const adjustedWidth = imgWidth * scaleFactor;
-        const adjustedHeight = 277;
-        const xMargin = (210 - adjustedWidth) / 2;
-        
-        pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4'
-        });
-        pdf.addImage(imgData, 'PNG', xMargin, 10, adjustedWidth, adjustedHeight, undefined, 'NONE');
-      } else {
-        // Option 4: Extremely long template. Print as an elegant single-page PDF with custom height.
-        pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: [210, imgHeight + 20]
-        });
-        pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight, undefined, 'NONE');
+      // Proportional downscaling if height exceeds max printable height to compress everything into one page
+      if (drawHeight > maxPdfHeight) {
+        drawHeight = maxPdfHeight;
+        drawWidth = (canvas.width * drawHeight) / canvas.height;
       }
+
+      // Center the image horizontally and vertically
+      const xMargin = (210 - drawWidth) / 2;
+      const yMargin = (297 - drawHeight) / 2;
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      pdf.addImage(imgData, 'PNG', xMargin, yMargin, drawWidth, drawHeight, undefined, 'NONE');
       
       const filename = `${template.schoolName.replace(/\s+/g, '_')}_Report_Sheet_${selectedStudent.id}_${selectedStudent.name.replace(/\s+/g, '_')}.pdf`;
       pdf.save(filename);
@@ -838,15 +794,19 @@ export default function StudentPortal({
             let firstTermStuds: Student[] = [];
             if (viewingTerm === 'Second Term') {
               try {
-                const firstTermData = typeof window !== 'undefined' ? localStorage.getItem('ezibeck_students_first_term') : null;
+                const firstTermData = typeof window !== 'undefined' ? safeStorage.getItem('ezibeck_students_first_term') : null;
                 if (firstTermData) {
-                  firstTermStuds = JSON.parse(firstTermData);
+                  const parsed = JSON.parse(firstTermData);
+                  if (Array.isArray(parsed)) {
+                    firstTermStuds = parsed;
+                  }
                 }
               } catch (e) {
                 console.error("Error parsing first term students in StudentPortal", e);
               }
             }
-            const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes(selectedStudent.className);
+            const cleanClassName = selectedStudent.className.replace(/\s+/g, '');
+            const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes(cleanClassName);
 
             if (viewTab === 'charts') {
               return (
@@ -896,30 +856,86 @@ export default function StudentPortal({
                     </div>
                   </div>
 
-                  {!isSecondaryClass && (
-                    <div>
-                      <h3 className="text-slate-900 font-extrabold text-sm border-b pb-2 flex items-center gap-2">
-                        <Star className="w-5 h-5 text-amber-500" /> Behavioral Quality Profile
-                      </h3>
-                      <p className="text-xs text-slate-400 mt-1">Conduct evaluation ratings mapped against standards 1 to 5 (5 is Excellent, 1 is Poor)</p>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6">
-                        {selectedStudent.behaviour.map(b => (
-                          <div key={b.name} className="bg-slate-50 border p-3 rounded-xl flex items-center justify-between">
-                            <span className="text-xs font-bold text-slate-700">{b.name}</span>
-                            <div className="flex gap-1">
-                              {[1, 2, 3, 4, 5].map(step => (
-                                <Star 
-                                  key={step} 
-                                  className={`w-4 h-4 ${step <= b.rating ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`} 
-                                />
-                              ))}
+                  <div>
+                    <h3 className="text-slate-900 font-extrabold text-sm border-b pb-2 flex items-center gap-2">
+                      <Star className="w-5 h-5 text-amber-500" /> Behavioral Quality Profile
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1">Conduct evaluation ratings mapped against standards 1 to 5 (5 is Excellent, 1 is Poor)</p>
+                    
+                    {(() => {
+                      const isKgClass = selectedStudent.className === 'Pre-Kg' || selectedStudent.className.startsWith('KG');
+                      if (isKgClass) {
+                        const behaviouralList = selectedStudent.behaviour.filter(b => 
+                          ["Punctuality", "Neatness", "Assignment", "Concentration"].includes(b.name)
+                        );
+                        const skillList = selectedStudent.behaviour.filter(b => 
+                          ["Hand-writing", "Fluency", "Attitude to Property"].includes(b.name)
+                        );
+                        return (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+                            <div className="space-y-3.5">
+                              <h4 className="text-xs font-extrabold text-[#047857] uppercase tracking-wider">Behavioural Ratings</h4>
+                              <div className="space-y-2">
+                                {behaviouralList.length === 0 ? (
+                                  <p className="text-[11px] text-slate-400 italic">No ratings</p>
+                                ) : behaviouralList.map(b => (
+                                  <div key={b.name} className="bg-slate-50 border p-3 rounded-xl flex items-center justify-between">
+                                    <span className="text-xs font-bold text-slate-700">{b.name}</span>
+                                    <div className="flex gap-1">
+                                      {[1, 2, 3, 4, 5].map(step => (
+                                        <Star 
+                                          key={step} 
+                                          className={`w-4 h-4 ${step <= b.rating ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`} 
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="space-y-3.5">
+                              <h4 className="text-xs font-extrabold text-[#047857] uppercase tracking-wider">Skill Ratings</h4>
+                              <div className="space-y-2">
+                                {skillList.length === 0 ? (
+                                  <p className="text-[11px] text-slate-400 italic">No ratings</p>
+                                ) : skillList.map(b => (
+                                  <div key={b.name} className="bg-slate-50 border p-3 rounded-xl flex items-center justify-between">
+                                    <span className="text-xs font-bold text-slate-700">{b.name}</span>
+                                    <div className="flex gap-1">
+                                      {[1, 2, 3, 4, 5].map(step => (
+                                        <Star 
+                                          key={step} 
+                                          className={`w-4 h-4 ${step <= b.rating ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`} 
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                        );
+                      } else {
+                        return (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6">
+                            {selectedStudent.behaviour.map(b => (
+                              <div key={b.name} className="bg-slate-50 border p-3 rounded-xl flex items-center justify-between">
+                                <span className="text-xs font-bold text-slate-700">{b.name}</span>
+                                <div className="flex gap-1">
+                                  {[1, 2, 3, 4, 5].map(step => (
+                                    <Star 
+                                      key={step} 
+                                      className={`w-4 h-4 ${step <= b.rating ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`} 
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+                    })()}
+                  </div>
                 </div>
               );
             }            // Otherwise, render full standard report sheet card (printable)
@@ -1209,6 +1225,11 @@ export default function StudentPortal({
                               <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{subj.testScore}</td>
                               <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{subj.examScore}</td>
                               <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black font-mono text-emerald-950 bg-emerald-50/30">{tot}</td>
+                              {viewingTerm === 'Second Term' && isSecondaryClass && (
+                                <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950 bg-blue-50/10">
+                                  {firstTermAvgStr}%
+                                </td>
+                              )}
                               {viewingTerm === 'Third Term' && (
                                 <>
                                   <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{firstTerm}</td>
@@ -1398,25 +1419,69 @@ export default function StudentPortal({
                 {/* Part B: Character Assessment, Grades Scale, and Behaviour Guide Grid */}
                 <div id="pdf-partB-character-traits" className="grid grid-cols-1 lg:grid-cols-10 print:grid-cols-10 gap-6 lg:gap-8 relative z-10 print-page-break">
                   {/* Left Parameter Column: Conduct Evaluation - Width reduced to 40% (lg:col-span-4) */}
-                  <div className="lg:col-span-4 print:col-span-4 bg-[#FCFCFC]/60 border border-slate-155 p-4 sm:p-5 rounded-2xl space-y-3.5 shadow-3xs">
-                    <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-emerald-600 pl-2 select-none flex justify-between items-center">
-                      <span>Part B: Character & Conduct</span>
-                    </h4>
+                  {!isSecondaryClass && (
+                    <div className="lg:col-span-4 print:col-span-4 bg-[#FCFCFC]/60 border border-slate-155 p-4 sm:p-5 rounded-2xl space-y-3.5 shadow-3xs">
+                      <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-emerald-600 pl-2 select-none flex justify-between items-center">
+                        <span>Part B: Character & Conduct</span>
+                      </h4>
 
-                    <div className="grid grid-cols-1 xs:grid-cols-2 gap-x-5 gap-y-2 text-xs text-slate-800">
-                      {selectedStudent.behaviour.map(b => (
-                        <div key={b.name} className="flex items-center justify-between py-1 border-b border-dashed border-slate-150">
-                          <span className="font-semibold text-slate-600 text-[10.5px]">{b.name}</span>
-                          <span className="font-mono font-black text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
-                            {b.rating} / 5
-                          </span>
-                        </div>
-                      ))}
+                      <div className="grid grid-cols-1 xs:grid-cols-2 gap-x-5 gap-y-2 text-xs text-slate-800">
+                        {(() => {
+                          const isKg = selectedStudent.className === 'Pre-Kg' || selectedStudent.className.startsWith('KG');
+                          if (isKg) {
+                            const behaviouralList = selectedStudent.behaviour.filter(b => 
+                              ["Punctuality", "Neatness", "Assignment", "Concentration"].includes(b.name)
+                            );
+                            const skillList = selectedStudent.behaviour.filter(b => 
+                              ["Hand-writing", "Fluency", "Attitude to Property"].includes(b.name)
+                            );
+                            return (
+                              <div className="col-span-2 grid grid-cols-2 gap-x-4">
+                                <div className="space-y-1.5">
+                                  <h5 className="font-bold text-[10px] text-slate-400 uppercase tracking-wider border-b pb-0.5">Behavioural Ratings</h5>
+                                  {behaviouralList.length === 0 ? (
+                                    <p className="text-[9px] text-slate-400 italic">No ratings</p>
+                                  ) : behaviouralList.map(b => (
+                                    <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-150">
+                                      <span className="font-semibold text-slate-600 text-[10.5px]">{b.name}</span>
+                                      <span className="font-mono font-black text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
+                                        {b.rating} / 5
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="space-y-1.5">
+                                  <h5 className="font-bold text-[10px] text-slate-400 uppercase tracking-wider border-b pb-0.5">Skill Ratings</h5>
+                                  {skillList.length === 0 ? (
+                                    <p className="text-[9px] text-slate-400 italic">No ratings</p>
+                                  ) : skillList.map(b => (
+                                    <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-150">
+                                      <span className="font-semibold text-slate-600 text-[10.5px]">{b.name}</span>
+                                      <span className="font-mono font-black text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
+                                        {b.rating} / 5
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          } else {
+                            return selectedStudent.behaviour.map(b => (
+                              <div key={b.name} className="flex items-center justify-between py-1 border-b border-dashed border-slate-150">
+                                <span className="font-semibold text-slate-600 text-[10.5px]">{b.name}</span>
+                                <span className="font-mono font-black text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
+                                  {b.rating} / 5
+                                </span>
+                              </div>
+                            ));
+                          }
+                        })()}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Grades Scale Box - Placed immediately to the right of behavioural ratings */}
-                  <div className="lg:col-span-4 print:col-span-4 bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                  <div className={`${isSecondaryClass ? 'lg:col-span-6 print:col-span-6' : 'lg:col-span-4 print:col-span-4'} bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5`}>
                     <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-slate-900 pl-2 select-none">
                       Grades Index Card
                     </h4>
@@ -1459,7 +1524,7 @@ export default function StudentPortal({
                   </div>
 
                   {/* Behavior Evaluation Guideline - Placed on the far right */}
-                  <div className="lg:col-span-2 print:col-span-2 bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                  <div className={`${isSecondaryClass ? 'lg:col-span-4 print:col-span-4' : 'lg:col-span-2 print:col-span-2'} bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5`}>
                     <h4 className="font-extrabold text-slate-900 text-[11px] uppercase tracking-widest border-l-4 border-slate-900 pl-2 select-none">
                       Conduct scale
                     </h4>

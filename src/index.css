@@ -133,3 +133,32 @@
   font-weight: 800 !important;
 }
 
+/* Force PDF document elements to use 13px font-size for ultimate clarity */
+.pdf-force-light {
+  font-size: 13px !important;
+}
+
+.pdf-force-light td,
+.pdf-force-light th,
+.pdf-force-light p,
+.pdf-force-light span,
+.pdf-force-light div {
+  font-size: 13px !important;
+}
+
+/* Specific styling to elevate key header text sizes slightly */
+.pdf-force-light .text-[11px],
+.pdf-force-light .text-[10px],
+.pdf-force-light .text-xs,
+.pdf-force-light .text-sm {
+  font-size: 13px !important;
+}
+
+/* Force Ezibeck Academy heading on the PDF document to be significantly larger */
+.pdf-force-light h1 {
+  font-size: 42px !important;
+  font-weight: 950 !important;
+  color: #0f172a !important;
+  line-height: normal !important;
+}
+
