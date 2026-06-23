@@ -514,9 +514,13 @@ export default function TeacherDashboard({
     // 6. Subjects Grade Performance Grid Table
     const tableY = 75;
     const isThirdTerm = activeTerm === 'Third Term';
+    const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes((student.className || '').replace(/\s+/g, ''));
+    const isSecondarySecondTerm = activeTerm === 'Second Term' && isSecondaryClass;
 
     const w = isThirdTerm ? {
       name: 50, test: 12, exam: 12, total: 12, t1: 11, t2: 11, t3: 11, avg: 13, grade: 11, rank: 11, remark: 36
+    } : isSecondarySecondTerm ? {
+      name: 54, test: 14, exam: 14, total: 14, t1: 16, t2: 0, t3: 0, avg: 0, grade: 13, rank: 13, remark: 52
     } : {
       name: 56, test: 18, exam: 18, total: 18, t1: 0, t2: 0, t3: 0, avg: 0, grade: 15, rank: 15, remark: 50
     };
@@ -544,6 +548,8 @@ export default function TeacherDashboard({
       drawTableHeaderText("2ND T", w.t2);
       drawTableHeaderText("3RD T", w.t3);
       drawTableHeaderText("SESS AVG", w.avg);
+    } else if (isSecondarySecondTerm) {
+      drawTableHeaderText("1ST T AVG", w.t1);
     }
     drawTableHeaderText("GRADE", w.grade);
     drawTableHeaderText("RANK", w.rank);
@@ -559,8 +565,8 @@ export default function TeacherDashboard({
 
     student.subjects.forEach((subj, idx) => {
       if (idx % 2 === 1) {
-        doc.setFillColor(252, 253, 253);
-        doc.rect(10, rowY, 190, rowHeight, 'F');
+         doc.setFillColor(252, 253, 253);
+         doc.rect(10, rowY, 190, rowHeight, 'F');
       }
 
       const tot = (subj.testScore || 0) + (subj.examScore || 0);
@@ -589,6 +595,10 @@ export default function TeacherDashboard({
         writeCellText(String(sTermVal), w.t2);
         writeCellText(String(tTermVal), w.t3);
         writeCellText(String(annualSum), w.avg, 'center', true);
+      } else if (isSecondarySecondTerm) {
+        // Fetch or render first term average
+        const fSummaryVal = subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0 ? subj.firstTermSummary : Math.round(tot * 0.75);
+        writeCellText(String(fSummaryVal) + "%", w.t1, 'center', true);
       }
 
       writeCellText(letter, w.grade, 'center', true);
@@ -2641,12 +2651,16 @@ export default function TeacherDashboard({
                                         const firstTermStuds: Student[] = Array.isArray(parsedFirst) ? parsedFirst : [];
                                         const matchMatch = firstTermStuds.find(s => s.id.startsWith(baseId));
                                         const matchSubj = matchMatch?.subjects.find(s => s.name.toLowerCase() === subj.name.toLowerCase());
-                                        if (matchSubj) {
-                                          firstTermAvgStr = String((matchSubj.testScore || 0) + (matchSubj.examScore || 0)) + "%";
-                                        } else if (subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0) {
+                                        if (subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0) {
                                           firstTermAvgStr = String(subj.firstTermSummary) + "%";
                                         } else {
-                                          firstTermAvgStr = String(Math.round(tot * 0.75)) + "%";
+                                          const matchMatch = firstTermStuds.find(s => s.id.startsWith(baseId));
+                                          const matchSubj = matchMatch?.subjects.find(s => s.name.toLowerCase() === subj.name.toLowerCase());
+                                          if (matchSubj) {
+                                            firstTermAvgStr = String((matchSubj.testScore || 0) + (matchSubj.examScore || 0)) + "%";
+                                          } else {
+                                            firstTermAvgStr = String(Math.round(tot * 0.75)) + "%";
+                                          }
                                         }
                                       } catch (e) {
                                         console.error(e);
@@ -3218,11 +3232,11 @@ export default function TeacherDashboard({
                                 <input
                                   type="text"
                                   required
-                                  disabled={isTermReadOnly || isPermanentKgSubject}
+                                  disabled={true}
                                   value={subj.name}
                                   onChange={(e) => handleSubjectNameChange(subj.id, e.target.value)}
                                   placeholder="e.g. Mathematics"
-                                  className="w-full bg-slate-50 border border-slate-200 py-1 px-1.5 rounded text-xs font-bold text-slate-800 outline-none focus:bg-white focus:border-emerald-600 focus:ring-1 focus:ring-emerald-100 transition-all font-sans disabled:opacity-75 disabled:cursor-not-allowed"
+                                  className="w-full bg-slate-100 border border-slate-200 py-1 px-1.5 rounded text-xs font-bold text-slate-500 outline-none transition-all font-sans cursor-not-allowed"
                                 />
                               );
                             })()}

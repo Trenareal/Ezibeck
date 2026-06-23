@@ -1207,11 +1207,15 @@ export default function StudentPortal({
                           // Find matching first term subject score if in 2nd term
                           let firstTermAvgStr = "-";
                           if (viewingTerm === 'Second Term' && isSecondaryClass) {
-                            const baseId = selectedStudent.id.split('_')[0];
-                            const matchMatch = firstTermStuds.find(s => s.id.startsWith(baseId));
-                            const matchSubj = matchMatch?.subjects.find(s => s.name.toLowerCase() === subj.name.toLowerCase());
-                            if (matchSubj) {
-                              firstTermAvgStr = String((matchSubj.testScore || 0) + (matchSubj.examScore || 0));
+                            if (subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0) {
+                              firstTermAvgStr = String(subj.firstTermSummary);
+                            } else {
+                              const baseId = selectedStudent.id.split('_')[0];
+                              const matchMatch = firstTermStuds.find(s => s.id.startsWith(baseId));
+                              const matchSubj = matchMatch?.subjects.find(s => s.name.toLowerCase() === subj.name.toLowerCase());
+                              if (matchSubj) {
+                                firstTermAvgStr = String((matchSubj.testScore || 0) + (matchSubj.examScore || 0));
+                              }
                             }
                           }
 
@@ -1227,7 +1231,7 @@ export default function StudentPortal({
                               <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black font-mono text-emerald-950 bg-emerald-50/30">{tot}</td>
                               {viewingTerm === 'Second Term' && isSecondaryClass && (
                                 <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950 bg-blue-50/10">
-                                  {firstTermAvgStr}%
+                                  {firstTermAvgStr !== "-" ? `${firstTermAvgStr}%` : "-"}
                                 </td>
                               )}
                               {viewingTerm === 'Third Term' && (

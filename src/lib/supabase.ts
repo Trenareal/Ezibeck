@@ -192,7 +192,20 @@ export function mapFrontendIdToUuid(id: string): string {
     florence: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df6",
     david: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df7",
     maroger: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df8",
-    spare: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df9"
+    spare: "ea4d6a45-0015-4b1a-b5bd-6f23006e2df9",
+    evelyn: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e01",
+    rose: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e02",
+    kelvin: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e03",
+    mercy: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e04",
+    samuel: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e05",
+    blessing: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e06",
+    patrick: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e07",
+    victoria: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e08",
+    emmanuel: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e09",
+    juliet: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e10",
+    nancy: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e11",
+    justina: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e12",
+    samson: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e13"
   };
   if (mappings[id.toLowerCase()]) {
     return mappings[id.toLowerCase()];
@@ -217,7 +230,20 @@ export function mapUuidToFrontendId(uuid: string): string {
     "ea4d6a45-0015-4b1a-b5bd-6f23006e2df6": "florence",
     "ea4d6a45-0015-4b1a-b5bd-6f23006e2df7": "david",
     "ea4d6a45-0015-4b1a-b5bd-6f23006e2df8": "maroger",
-    "ea4d6a45-0015-4b1a-b5bd-6f23006e2df9": "spare"
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2df9": "spare",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2e01": "evelyn",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2e02": "rose",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2e03": "kelvin",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2e04": "mercy",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2e05": "samuel",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2e06": "blessing",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2e07": "patrick",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2e08": "victoria",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2e09": "emmanuel",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2e10": "juliet",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2e11": "nancy",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2e12": "justina",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2e13": "samson"
   };
   const lowered = uuid.toLowerCase();
   if (reverseMappings[lowered]) {
