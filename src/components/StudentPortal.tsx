@@ -16,6 +16,24 @@ import { ReportCardWatermark } from './ReportCardWatermark';
 import GuidelinesComponent from './GuidelinesComponent';
 import { safeStorage } from '../utils/safeStorage';
 
+const getOverallAverageForTerm = (studId: string | undefined | null, termKey: 'ezibeck_students_first_term' | 'ezibeck_students_second_term'): number | null => {
+  try {
+    if (!studId || typeof studId !== 'string') return null;
+    const data = typeof window !== 'undefined' ? safeStorage.getItem(termKey) : null;
+    if (!data) return null;
+    const parsed = JSON.parse(data);
+    if (!Array.isArray(parsed)) return null;
+    const baseId = studId.split('_')[0];
+    const matchedStud = parsed.find((s: any) => s && s.id && typeof s.id === 'string' && s.id.split('_')[0] === baseId);
+    if (!matchedStud || !Array.isArray(matchedStud.subjects) || matchedStud.subjects.length === 0) return null;
+    const sum = matchedStud.subjects.reduce((acc: number, sub: any) => acc + (sub.testScore || 0) + (sub.examScore || 0), 0);
+    return sum / matchedStud.subjects.length;
+  } catch (e) {
+    console.error(`Error calculating average for ${termKey}`, e);
+    return null;
+  }
+};
+
 interface StudentPortalProps {
   students: Student[];
   template: Workspace15Template;
@@ -208,9 +226,9 @@ export default function StudentPortal({
       
       const imgData = canvas.toDataURL('image/png');
       
-      // Fit comfortably in portrait A4 width (210mm) with 3mm margins on all sides (compress into one page)
-      const maxPdfWidth = 204; // 210mm - 6mm margins (3mm on each side)
-      const maxPdfHeight = 291; // 297mm - 6mm margins (3mm on each side)
+      // Fit comfortably in portrait A4 width (210mm) with 0.6mm margins on all sides (80% margin reduction)
+      const maxPdfWidth = 208.8; // 210mm - 1.2mm margins (0.6mm on each side)
+      const maxPdfHeight = 295.8; // 297mm - 1.2mm margins (0.6mm on each side)
 
       let drawWidth = maxPdfWidth;
       let drawHeight = (canvas.height * drawWidth) / canvas.width;
@@ -280,9 +298,15 @@ export default function StudentPortal({
 
   const handleSelectStudent = (stud: Student) => {
     if (typeof window !== 'undefined') {
-      const curState = window.history.state;
-      if (!curState || curState.studentId !== stud.id || curState.view !== 'student') {
-        window.history.pushState({ view: 'student', studentId: stud.id }, '');
+      try {
+        if (window.history) {
+          const curState = window.history.state;
+          if (!curState || curState.studentId !== stud.id || curState.view !== 'student') {
+            window.history.pushState({ view: 'student', studentId: stud.id }, '');
+          }
+        }
+      } catch (e) {
+        console.warn('History pushState blocked:', e);
       }
     }
     setSelectedStudent(stud);
@@ -301,9 +325,16 @@ export default function StudentPortal({
 
   const handleDeselectStudent = () => {
     setRollNotification(null);
-    if (typeof window !== 'undefined' && window.history.state && window.history.state.studentId) {
-      window.history.back();
-    } else {
+    let hasState = false;
+    try {
+      if (typeof window !== 'undefined' && window.history && window.history.state && window.history.state.studentId) {
+        hasState = true;
+        window.history.back();
+      }
+    } catch (e) {
+      console.warn('History back failed or blocked:', e);
+    }
+    if (!hasState) {
       setSelectedStudent(null);
       setIsUnlocked(false);
       setPasswordInput('');
@@ -580,7 +611,7 @@ export default function StudentPortal({
             </div>
             
             {/* Class Tabs Selector */}
-            <div className="flex gap-1 bg-slate-50 p-1.5 rounded-2xl border border-slate-100/80 overflow-x-auto whitespace-nowrap scrollbar-none w-full lg:w-auto -mx-1 sm:mx-0">
+            <div className="flex flex-wrap gap-1.5 bg-slate-50 p-2 rounded-2xl border border-slate-100/80 w-full justify-start">
               {ALL_CLASSES.map(cls => (
                 <button
                   key={cls}
@@ -590,7 +621,7 @@ export default function StudentPortal({
                     setSelectedStudent(null);
                     setIsUnlocked(false);
                   }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex-1 sm:flex-initial text-center ${selectedClass === cls ? 'bg-emerald-700 text-white shadow-md shadow-emerald-100' : 'text-slate-600 hover:bg-slate-100'}`}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${selectedClass === cls ? 'bg-emerald-700 text-white shadow-md shadow-emerald-100' : 'text-slate-600 hover:bg-slate-100'}`}
                 >
                   {cls}
                 </button>
@@ -790,20 +821,31 @@ export default function StudentPortal({
           {(() => {
             const stats = calculateStudentStats(selectedStudent);
             
-            // Parse first term students once
+            // Parse first term and second term students once
             let firstTermStuds: Student[] = [];
-            if (viewingTerm === 'Second Term') {
-              try {
-                const firstTermData = typeof window !== 'undefined' ? safeStorage.getItem('ezibeck_students_first_term') : null;
-                if (firstTermData) {
-                  const parsed = JSON.parse(firstTermData);
-                  if (Array.isArray(parsed)) {
-                    firstTermStuds = parsed;
-                  }
+            try {
+              const firstTermData = typeof window !== 'undefined' ? safeStorage.getItem('ezibeck_students_first_term') : null;
+              if (firstTermData) {
+                const parsed = JSON.parse(firstTermData);
+                if (Array.isArray(parsed)) {
+                  firstTermStuds = parsed;
                 }
-              } catch (e) {
-                console.error("Error parsing first term students in StudentPortal", e);
               }
+            } catch (e) {
+              console.error("Error parsing first term students in StudentPortal", e);
+            }
+
+            let secondTermStuds: Student[] = [];
+            try {
+              const secondTermData = typeof window !== 'undefined' ? safeStorage.getItem('ezibeck_students_second_term') : null;
+              if (secondTermData) {
+                const parsed = JSON.parse(secondTermData);
+                if (Array.isArray(parsed)) {
+                  secondTermStuds = parsed;
+                }
+              }
+            } catch (e) {
+              console.error("Error parsing second term students in StudentPortal", e);
             }
             const cleanClassName = selectedStudent.className.replace(/\s+/g, '');
             const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes(cleanClassName);
@@ -1353,10 +1395,45 @@ export default function StudentPortal({
                     </p>
                   </div>
 
+                  {viewingTerm === 'Second Term' && (
+                    <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                      <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term Avg</span>
+                      <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
+                        {(() => {
+                          const avg = getOverallAverageForTerm(selectedStudent.id, 'ezibeck_students_first_term');
+                          return avg !== null ? `${avg.toFixed(1)}%` : "N/A";
+                        })()}
+                      </p>
+                    </div>
+                  )}
+
                   {viewingTerm === 'Third Term' && (
                     <>
                       <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term</span>
+                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term Avg</span>
+                        <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
+                          {(() => {
+                            const avg = getOverallAverageForTerm(selectedStudent.id, 'ezibeck_students_first_term');
+                            return avg !== null ? `${avg.toFixed(1)}%` : "N/A";
+                          })()}
+                        </p>
+                      </div>
+                      <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">2nd Term Avg</span>
+                        <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
+                          {(() => {
+                            const avg = getOverallAverageForTerm(selectedStudent.id, 'ezibeck_students_second_term');
+                            return avg !== null ? `${avg.toFixed(1)}%` : "N/A";
+                          })()}
+                        </p>
+                      </div>
+                    </>
+                  )}
+
+                  {viewingTerm === 'Third Term' && (
+                    <>
+                      <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term (20%)</span>
                         <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                           {(() => {
                             const tCount = selectedStudent.subjects.length || 1;
@@ -1367,7 +1444,7 @@ export default function StudentPortal({
                       </div>
 
                       <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">2nd Term</span>
+                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">2nd Term (20%)</span>
                         <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                           {(() => {
                             const tCount = selectedStudent.subjects.length || 1;
@@ -1378,7 +1455,7 @@ export default function StudentPortal({
                       </div>
 
                       <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">3rd Term</span>
+                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">3rd Term (60%)</span>
                         <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                           {(() => {
                             const tCount = selectedStudent.subjects.length || 1;
@@ -1421,7 +1498,7 @@ export default function StudentPortal({
                 </div>
 
                 {/* Part B: Character Assessment, Grades Scale, and Behaviour Guide Grid */}
-                <div id="pdf-partB-character-traits" className="grid grid-cols-1 lg:grid-cols-10 print:grid-cols-10 gap-6 lg:gap-8 relative z-10 print-page-break">
+                <div id="pdf-partB-character-traits" className="grid grid-cols-1 lg:grid-cols-10 print:grid-cols-10 gap-6 lg:gap-8 relative z-10">
                   {/* Left Parameter Column: Conduct Evaluation - Width reduced to 40% (lg:col-span-4) */}
                   {!isSecondaryClass && (
                     <div className="lg:col-span-4 print:col-span-4 bg-[#FCFCFC]/60 border border-slate-155 p-4 sm:p-5 rounded-2xl space-y-3.5 shadow-3xs">
@@ -1558,7 +1635,7 @@ export default function StudentPortal({
                 </div>
 
                 {/* Part C: Remarks & Signatures Segment */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10 pt-6 border-t border-dashed border-slate-200">
+                <div className="grid grid-cols-2 print:grid-cols-2 gap-4 md:gap-6 relative z-10 pt-6 border-t border-dashed border-slate-200">
                   {/* Form Teacher Remark Callout */}
                   {(() => {
                     const displayTeacherName = selectedStudent.formTeacherName || (selectedStudent.className.startsWith('JSS') ? template.formTeacherJunior : template.formTeacherSenior);

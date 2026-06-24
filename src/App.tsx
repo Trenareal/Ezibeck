@@ -116,8 +116,12 @@ export default function App() {
     if (typeof window === 'undefined') return;
 
     // Set initial window history state if missing, ensuring clean go-back targets
-    if (!window.history.state || !window.history.state.view) {
-      window.history.replaceState({ view: currentView }, '');
+    try {
+      if (window.history && (!window.history.state || !window.history.state.view)) {
+        window.history.replaceState({ view: currentView }, '');
+      }
+    } catch (e) {
+      console.warn('History replaceState blocked:', e);
     }
 
     const handlePopState = (event: PopStateEvent) => {
@@ -136,9 +140,15 @@ export default function App() {
 
   const handleNavigate = (view: 'home' | 'student' | 'teacher') => {
     if (typeof window !== 'undefined') {
-      const curState = window.history.state;
-      if (!curState || curState.view !== view) {
-        window.history.pushState({ view }, '');
+      try {
+        if (window.history) {
+          const curState = window.history.state;
+          if (!curState || curState.view !== view) {
+            window.history.pushState({ view }, '');
+          }
+        }
+      } catch (e) {
+        console.warn('History pushState blocked:', e);
       }
     }
     setCurrentView(view);

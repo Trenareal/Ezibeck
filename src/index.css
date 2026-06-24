@@ -10,7 +10,7 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm 10mm 8mm 10mm;
+    margin: 1.6mm 2mm 1.6mm 2mm;
   }
   body {
     -webkit-print-color-adjust: exact !important;
@@ -50,10 +50,10 @@
     table-layout: auto !important;
   }
 
-  /* Ensure clean page separation of key sections */
+  /* Disable page splits to force everything on a single page as requested */
   .print-page-break {
-    page-break-before: always !important;
-    break-before: page !important;
+    page-break-before: auto !important;
+    break-before: auto !important;
   }
 }
 

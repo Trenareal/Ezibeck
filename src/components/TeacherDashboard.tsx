@@ -20,6 +20,33 @@ import { safeStorage } from '../utils/safeStorage';
 
 const localStorage = safeStorage;
 
+const safeConfirm = (message: string): boolean => {
+  try {
+    return window.confirm(message);
+  } catch (e) {
+    console.warn('window.confirm blocked by sandbox, defaulting to true:', e);
+    return true;
+  }
+};
+
+const getOverallAverageForTerm = (studId: string | undefined | null, termKey: 'ezibeck_students_first_term' | 'ezibeck_students_second_term'): number | null => {
+  try {
+    if (!studId || typeof studId !== 'string') return null;
+    const data = typeof window !== 'undefined' ? safeStorage.getItem(termKey) : null;
+    if (!data) return null;
+    const parsed = JSON.parse(data);
+    if (!Array.isArray(parsed)) return null;
+    const baseId = studId.split('_')[0];
+    const matchedStud = parsed.find((s: any) => s && s.id && typeof s.id === 'string' && s.id.split('_')[0] === baseId);
+    if (!matchedStud || !Array.isArray(matchedStud.subjects) || matchedStud.subjects.length === 0) return null;
+    const sum = matchedStud.subjects.reduce((acc: number, sub: any) => acc + (sub.testScore || 0) + (sub.examScore || 0), 0);
+    return sum / matchedStud.subjects.length;
+  } catch (e) {
+    console.error(`Error calculating average for ${termKey}`, e);
+    return null;
+  }
+};
+
 interface TeacherDashboardProps {
   students: Student[];
   template: Workspace15Template;
@@ -320,9 +347,9 @@ export default function TeacherDashboard({
       
       const imgData = canvas.toDataURL('image/png');
       
-      // Fit comfortably in portrait A4 width (210mm) with 3mm margins on all sides (compress into one page)
-      const maxPdfWidth = 204; // 210mm - 6mm margins (3mm on each side)
-      const maxPdfHeight = 291; // 297mm - 6mm margins (3mm on each side)
+      // Fit comfortably in portrait A4 width (210mm) with 0.6mm margins on all sides (80% margin reduction)
+      const maxPdfWidth = 208.8; // 210mm - 1.2mm margins (0.6mm on each side)
+      const maxPdfHeight = 295.8; // 297mm - 1.2mm margins (0.6mm on each side)
 
       let drawWidth = maxPdfWidth;
       let drawHeight = (canvas.height * drawWidth) / canvas.width;
@@ -1054,17 +1081,23 @@ export default function TeacherDashboard({
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const sub = viewingReportStudent ? 'view' : (editingStudent ? 'edit' : null);
-    const studentId = viewingReportStudent ? viewingReportStudent.id : (editingStudent ? editingStudent.id : null);
+    try {
+      if (window.history) {
+        const sub = viewingReportStudent ? 'view' : (editingStudent ? 'edit' : null);
+        const studentId = viewingReportStudent ? viewingReportStudent.id : (editingStudent ? editingStudent.id : null);
 
-    const curState = window.history.state;
-    const isMatched = curState && 
-                      curState.view === 'teacher' && 
-                      curState.sub === sub && 
-                      curState.studentId === studentId;
+        const curState = window.history.state;
+        const isMatched = curState && 
+                          curState.view === 'teacher' && 
+                          curState.sub === sub && 
+                          curState.studentId === studentId;
 
-    if (!isMatched) {
-      window.history.pushState({ view: 'teacher', sub, studentId }, '');
+        if (!isMatched) {
+          window.history.pushState({ view: 'teacher', sub, studentId }, '');
+        }
+      }
+    } catch (e) {
+      console.warn('TeacherDashboard history state check or pushState blocked:', e);
     }
   }, [viewingReportStudent, editingStudent]);
 
@@ -1117,7 +1150,7 @@ export default function TeacherDashboard({
   const [auditSearch, setAuditSearch] = useState('');
   const [selectedPassClass, setSelectedPassClass] = useState('ALL');
   const handleClearAuditLogs = () => {
-    if (window.confirm("Are you sure you want to permanently clear all security passcode audit logs? This action is irreversible.")) {
+    if (safeConfirm("Are you sure you want to permanently clear all security passcode audit logs? This action is irreversible.")) {
       clearAuditLogs();
       setAuditLogs([]);
       triggerSuccess("🛡️ Security master audit ledger cleared successfully!");
@@ -2780,10 +2813,45 @@ export default function TeacherDashboard({
                       </p>
                     </div>
 
+                    {activeTermTab === 'Second Term' && (
+                      <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term Avg</span>
+                        <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
+                          {(() => {
+                            const avg = getOverallAverageForTerm(viewingReportStudent.id, 'ezibeck_students_first_term');
+                            return avg !== null ? `${avg.toFixed(1)}%` : "N/A";
+                          })()}
+                        </p>
+                      </div>
+                    )}
+
                     {activeTermTab === 'Third Term' && (
                       <>
                         <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term</span>
+                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term Avg</span>
+                          <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
+                            {(() => {
+                              const avg = getOverallAverageForTerm(viewingReportStudent.id, 'ezibeck_students_first_term');
+                              return avg !== null ? `${avg.toFixed(1)}%` : "N/A";
+                            })()}
+                          </p>
+                        </div>
+                        <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">2nd Term Avg</span>
+                          <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
+                            {(() => {
+                              const avg = getOverallAverageForTerm(viewingReportStudent.id, 'ezibeck_students_second_term');
+                              return avg !== null ? `${avg.toFixed(1)}%` : "N/A";
+                            })()}
+                          </p>
+                        </div>
+                      </>
+                    )}
+
+                    {activeTermTab === 'Third Term' && (
+                      <>
+                        <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term (20%)</span>
                           <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                             {(() => {
                               const tCount = viewingReportStudent.subjects.length || 1;
@@ -2794,7 +2862,7 @@ export default function TeacherDashboard({
                         </div>
 
                         <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">2nd Term</span>
+                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">2nd Term (20%)</span>
                           <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                             {(() => {
                               const tCount = viewingReportStudent.subjects.length || 1;
@@ -2805,7 +2873,7 @@ export default function TeacherDashboard({
                         </div>
 
                         <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">3rd Term</span>
+                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">3rd Term (60%)</span>
                           <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                             {(() => {
                               const tCount = viewingReportStudent.subjects.length || 1;
@@ -2852,7 +2920,7 @@ export default function TeacherDashboard({
                     const cleanClassName = (viewingReportStudent?.className || '').replace(/\s+/g, '');
                     const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes(cleanClassName);
                     return (
-                      <div id="pdf-partB-character-traits" className="grid grid-cols-1 md:grid-cols-10 print:grid-cols-10 gap-6 relative z-10 print-page-break">
+                      <div id="pdf-partB-character-traits" className="grid grid-cols-1 md:grid-cols-10 print:grid-cols-10 gap-6 relative z-10">
                         {/* Left Parameter Column: Conduct Evaluation - Width reduced to 40% (md:col-span-4) */}
                         {!isSecondaryClass && (
                           <div className="md:col-span-4 print:col-span-4 bg-[#FCFCFC]/60 border border-slate-150 p-5 rounded-2xl space-y-3.5 shadow-3xs">
@@ -2991,7 +3059,7 @@ export default function TeacherDashboard({
                   })()}
 
                   {/* Part C: Remarks & Signatures Segment */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10 pt-6 border-t border-dashed border-slate-200">
+                  <div className="grid grid-cols-2 print:grid-cols-2 gap-4 md:gap-6 relative z-10 pt-6 border-t border-dashed border-slate-200">
                     {/* Form Teacher Remark Callout */}
                     {(() => {
                       const displayTeacherName = viewingReportStudent.formTeacherName || (viewingReportStudent.className.startsWith('JSS') ? template.formTeacherJunior : template.formTeacherSenior);
@@ -3113,7 +3181,7 @@ export default function TeacherDashboard({
                   onChange={(e) => setEditAge(parseInt(e.target.value))}
                   className="bg-white border rounded p-1.5 w-full font-bold text-slate-700 outline-none"
                 >
-                  {[8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map(y => (
+                  {Array.from({ length: 22 }, (_, i) => i + 1).map(y => (
                     <option key={y} value={y}>{y} Years</option>
                   ))}
                 </select>
@@ -3888,10 +3956,45 @@ export default function TeacherDashboard({
                         </p>
                       </div>
 
+                      {activeTermTab === 'Second Term' && (
+                        <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term Avg</span>
+                          <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
+                            {(() => {
+                              const avg = getOverallAverageForTerm(previewStudent.id, 'ezibeck_students_first_term');
+                              return avg !== null ? `${avg.toFixed(1)}%` : "N/A";
+                            })()}
+                          </p>
+                        </div>
+                      )}
+
                       {activeTermTab === 'Third Term' && (
                         <>
                           <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                            <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term</span>
+                            <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term Avg</span>
+                            <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
+                              {(() => {
+                                const avg = getOverallAverageForTerm(previewStudent.id, 'ezibeck_students_first_term');
+                                return avg !== null ? `${avg.toFixed(1)}%` : "N/A";
+                              })()}
+                            </p>
+                          </div>
+                          <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                            <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">2nd Term Avg</span>
+                            <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
+                              {(() => {
+                                const avg = getOverallAverageForTerm(previewStudent.id, 'ezibeck_students_second_term');
+                                return avg !== null ? `${avg.toFixed(1)}%` : "N/A";
+                              })()}
+                            </p>
+                          </div>
+                        </>
+                      )}
+
+                      {activeTermTab === 'Third Term' && (
+                        <>
+                          <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
+                            <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term (20%)</span>
                             <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                               {(() => {
                                 const tCount = previewStudent.subjects.length || 1;
@@ -3902,7 +4005,7 @@ export default function TeacherDashboard({
                           </div>
 
                           <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                            <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">2nd Term</span>
+                            <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">2nd Term (20%)</span>
                             <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                               {(() => {
                                 const tCount = previewStudent.subjects.length || 1;
@@ -3913,7 +4016,7 @@ export default function TeacherDashboard({
                           </div>
 
                           <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                            <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">3rd Term</span>
+                            <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">3rd Term (60%)</span>
                             <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                               {(() => {
                                 const tCount = previewStudent.subjects.length || 1;
@@ -3961,7 +4064,7 @@ export default function TeacherDashboard({
                       const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes(cleanClassName);
                       if (isSecondaryClass) return null;
                       return (
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10 print-page-break">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
                           <div className="lg:col-span-12 bg-[#FCFCFC]/60 border border-slate-150 p-5 rounded-2xl space-y-3.5 shadow-3xs">
                             <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-emerald-600 pl-2">
                               Part B: Character & Behavioral Conduct Ratings
@@ -4025,7 +4128,7 @@ export default function TeacherDashboard({
                     })()}
 
                     {/* Part C: Appraisals and Signatures */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10 pt-6 border-t border-dashed border-slate-200">
+                    <div className="grid grid-cols-2 print:grid-cols-2 gap-4 md:gap-6 relative z-10 pt-6 border-t border-dashed border-slate-200">
                       {/* Form Teacher Remark Callout */}
                       <div className="bg-[#FAF9F9] border border-slate-200 p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-3xs text-slate-800 text-xs text-left">
                         <div>
@@ -5875,7 +5978,7 @@ export default function TeacherDashboard({
                         onChange={(e) => setNewStudentAge(parseInt(e.target.value))}
                         className="w-full bg-white border p-2 text-xs rounded-lg outline-none font-bold text-slate-700"
                       >
-                        {[8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map(y => (
+                        {Array.from({ length: 22 }, (_, i) => i + 1).map(y => (
                           <option key={y} value={y}>{y} Years Old</option>
                         ))}
                       </select>

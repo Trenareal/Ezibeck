@@ -98,10 +98,62 @@ export function compareSubjects(aName: string, bName: string): number {
   if (aName === bName) return 0;
   const aLower = aName.toLowerCase();
   const bLower = bName.toLowerCase();
-  if (aLower === "mathematics") return -1;
-  if (bLower === "mathematics") return 1;
-  if (aLower === "english language" || aLower === "english") return -1;
-  if (bLower === "english language" || bLower === "english") return 1;
+  
+  // Standard non-alphabetical curriculum subject order
+  const refOrder = [
+    "mathematics",
+    "english language",
+    "english studies",
+    "english",
+    "basic science",
+    "basic science and technology",
+    "social studies",
+    "business studies",
+    "civic education",
+    "computer studies (ict)",
+    "computer studies",
+    "computer science",
+    "agricultural science",
+    "home economics",
+    "creative arts & crafts",
+    "biology",
+    "chemistry",
+    "physics",
+    "economics",
+    "geography",
+    "information technology",
+    "numeracy",
+    "literacy",
+    "health science",
+    "social habit",
+    "c.r.s",
+    "natural science",
+    "creative art",
+    "hand writing",
+    "quantitative reasoning",
+    "verbal reasoning",
+    "rhymes",
+    "spelling drill",
+    "speech development",
+    "current affair",
+    "national value",
+    "religion value",
+    "cultural and creative art",
+    "local language",
+    "history",
+    "prevocational studies"
+  ];
+
+  const aIndex = refOrder.indexOf(aLower);
+  const bIndex = refOrder.indexOf(bLower);
+
+  if (aIndex !== -1 && bIndex !== -1) {
+    return aIndex - bIndex;
+  }
+  if (aIndex !== -1) return -1;
+  if (bIndex !== -1) return 1;
+
+  // Fallback to alphabetical only for completely custom subjects not in the reference list
   return aName.localeCompare(bName);
 }
 
@@ -138,16 +190,28 @@ export interface StudentStats {
 }
 
 export function calculateStudentStats(s: Student): StudentStats {
-  const totalScore = s.subjects.reduce((sum, g) => sum + calculateSubjectTotal(g), 0);
-  const subjectCount = s.subjects.length || 1;
+  if (!s) {
+    return {
+      gpa: "0.00",
+      avgScore: 0,
+      totalScore: 0,
+      maxPossibleScore: 0,
+      creditsAndAbove: 0,
+      passes: 0,
+      failures: 0
+    };
+  }
+  const subjects = Array.isArray(s.subjects) ? s.subjects : [];
+  const totalScore = subjects.reduce((sum, g) => sum + calculateSubjectTotal(g), 0);
+  const subjectCount = subjects.length || 1;
   const avgScore = totalScore / subjectCount;
-  const maxPossibleScore = s.subjects.length * 100;
+  const maxPossibleScore = subjects.length * 100;
   
   let creditsAndAbove = 0;
   let passes = 0;
   let failures = 0;
   
-  s.subjects.forEach(g => {
+  subjects.forEach(g => {
     const tot = calculateSubjectTotal(g);
     if (tot >= 60) {
       creditsAndAbove++;
@@ -160,7 +224,7 @@ export function calculateStudentStats(s: Student): StudentStats {
 
   // Simple GPA representation out of 5.0
   // A+/A = 5, B = 4, C = 3, D = 2, F = 0
-  const totalGpaPoints = s.subjects.reduce((sum, g) => {
+  const totalGpaPoints = subjects.reduce((sum, g) => {
     const tot = calculateSubjectTotal(g);
     if (tot >= 80) return sum + 5;
     if (tot >= 70) return sum + 4;
@@ -169,7 +233,7 @@ export function calculateStudentStats(s: Student): StudentStats {
     return sum;
   }, 0);
   
-  const gpa = s.subjects.length > 0 ? (totalGpaPoints / s.subjects.length).toFixed(2) : "0.00";
+  const gpa = subjects.length > 0 ? (totalGpaPoints / subjects.length).toFixed(2) : "0.00";
 
   return {
     gpa,
@@ -183,8 +247,20 @@ export function calculateStudentStats(s: Student): StudentStats {
 }
 
 export function calculateStudentStatsForTerm(s: Student, term: string): StudentStats {
+  if (!s) {
+    return {
+      gpa: "0.00",
+      avgScore: 0,
+      totalScore: 0,
+      maxPossibleScore: 0,
+      creditsAndAbove: 0,
+      passes: 0,
+      failures: 0
+    };
+  }
+  const subjects = Array.isArray(s.subjects) ? s.subjects : [];
   const isThirdTerm = term === 'Third Term';
-  const totalScore = s.subjects.reduce((sum, g) => {
+  const totalScore = subjects.reduce((sum, g) => {
     if (isThirdTerm) {
       const tot = (g.testScore || 0) + (g.examScore || 0);
       const first = g.firstTermSummary !== undefined && g.firstTermSummary !== 0 ? g.firstTermSummary : Math.round(tot * 0.2);
@@ -196,15 +272,15 @@ export function calculateStudentStatsForTerm(s: Student, term: string): StudentS
     }
   }, 0);
 
-  const subjectCount = s.subjects.length || 1;
+  const subjectCount = subjects.length || 1;
   const avgScore = totalScore / subjectCount;
-  const maxPossibleScore = s.subjects.length * 100;
+  const maxPossibleScore = subjects.length * 100;
   
   let creditsAndAbove = 0;
   let passes = 0;
   let failures = 0;
   
-  s.subjects.forEach(g => {
+  subjects.forEach(g => {
     let tot = 0;
     if (isThirdTerm) {
       const subjTot = (g.testScore || 0) + (g.examScore || 0);
@@ -225,7 +301,7 @@ export function calculateStudentStatsForTerm(s: Student, term: string): StudentS
     }
   });
 
-  const totalGpaPoints = s.subjects.reduce((sum, g) => {
+  const totalGpaPoints = subjects.reduce((sum, g) => {
     let tot = 0;
     if (isThirdTerm) {
       const subjTot = (g.testScore || 0) + (g.examScore || 0);
@@ -244,7 +320,7 @@ export function calculateStudentStatsForTerm(s: Student, term: string): StudentS
     return sum;
   }, 0);
   
-  const gpa = s.subjects.length > 0 ? (totalGpaPoints / s.subjects.length).toFixed(2) : "0.00";
+  const gpa = subjects.length > 0 ? (totalGpaPoints / subjects.length).toFixed(2) : "0.00";
 
   return {
     gpa,
@@ -258,11 +334,12 @@ export function calculateStudentStatsForTerm(s: Student, term: string): StudentS
 }
 
 export function calculateClassPositions(students: Student[], className?: ClassName, term?: string): Student[] {
+  if (!Array.isArray(students)) return [];
   const activeTerm = term || 'Third Term';
   // Group students by class if className not specified (or filter first)
   const groupedList = className 
-    ? students.filter(s => s.className === className)
-    : students;
+    ? students.filter(s => s && s.className === className)
+    : students.filter(s => !!s);
 
   // Calculate average scores and sort using the term-specific stats helper
   const scoredStudents = groupedList.map(s => {
@@ -274,13 +351,14 @@ export function calculateClassPositions(students: Student[], className?: ClassNa
 
   // Set position inside subjects or class positioning
   const positioned = scoredStudents.map((item, idx) => {
-    // We update each subject position if wanted, or just keep class rank
+    const sSubjects = Array.isArray(item.student?.subjects) ? item.student.subjects : [];
     const updatedStudent = {
       ...item.student,
-      subjects: item.student.subjects.map(subj => {
+      subjects: sSubjects.map(subj => {
         // Find subject rank across matching class students using term-specific subject score
         const allScoresForSubj = groupedList.map(otherStud => {
-          const matchSubj = otherStud.subjects.find(os => os.name === subj.name);
+          const oSubjects = Array.isArray(otherStud?.subjects) ? otherStud.subjects : [];
+          const matchSubj = oSubjects.find(os => os && os.name === subj.name);
           let matchTotal = 0;
           if (matchSubj) {
             if (activeTerm === 'Third Term') {
@@ -312,7 +390,7 @@ export function calculateClassPositions(students: Student[], className?: ClassNa
 
   // If we filtered a specific class, merge them back with other classes in main list
   if (className) {
-    const untouched = students.filter(s => s.className !== className);
+    const untouched = students.filter(s => s && s.className !== className);
     return [...positioned, ...untouched];
   }
 
