@@ -863,7 +863,7 @@ export default function StudentPortal({
                     <p className="text-xs text-slate-400 mt-1">Conduct evaluation ratings mapped against standards 1 to 5 (5 is Excellent, 1 is Poor)</p>
                     
                     {(() => {
-                      const isKgClass = selectedStudent.className === 'Pre-Kg' || selectedStudent.className.startsWith('KG');
+                      const isKgClass = selectedStudent.className === 'Pre-Nursery' || selectedStudent.className.startsWith('Nursery');
                       if (isKgClass) {
                         const behaviouralList = selectedStudent.behaviour.filter(b => 
                           ["Punctuality", "Neatness", "Assignment", "Concentration"].includes(b.name)
@@ -1080,7 +1080,7 @@ export default function StudentPortal({
                       let eFee = template.enrollmentFee || '₦15,000.00';
                       let bFee = template.bookFee || '₦20,000.00';
                       
-                      if (cls === 'Pre-Kg' || cls === 'KG 1' || cls === 'KG 2' || cls === 'KG 3') {
+                      if (cls === 'Pre-Nursery' || cls === 'Nursery 1' || cls === 'Nursery 2' || cls === 'Nursery 3') {
                         sFee = template.schoolFeeNursery || sFee;
                         pFee = template.partyFeeNursery || pFee;
                         eFee = template.enrollmentFeeNursery || eFee;
@@ -1187,7 +1187,7 @@ export default function StudentPortal({
                             <span className="flex items-center justify-center gap-1">Σ GRADE</span>
                           </th>
                           <th className="py-2.5 px-3 border-r border-slate-300 text-center w-16">
-                            <span className="flex items-center justify-center gap-1"># RANK</span>
+                            <span className="flex items-center justify-center gap-1"># POSITION</span>
                           </th>
                           <th className="py-2.5 px-4 font-black text-slate-950">
                             <span className="flex items-center gap-1.5">💬 TEACHER'S REMARK</span>
@@ -1431,7 +1431,7 @@ export default function StudentPortal({
 
                       <div className="grid grid-cols-1 xs:grid-cols-2 gap-x-5 gap-y-2 text-xs text-slate-800">
                         {(() => {
-                          const isKg = selectedStudent.className === 'Pre-Kg' || selectedStudent.className.startsWith('KG');
+                          const isKg = selectedStudent.className === 'Pre-Nursery' || selectedStudent.className.startsWith('Nursery');
                           if (isKg) {
                             const behaviouralList = selectedStudent.behaviour.filter(b => 
                               ["Punctuality", "Neatness", "Assignment", "Concentration"].includes(b.name)
@@ -1655,7 +1655,7 @@ export default function StudentPortal({
                       let eFee = template.enrollmentFee || '₦15,000.00';
                       let bFee = template.bookFee || '₦20,000.00';
                       
-                      if (cls === 'Pre-Kg' || cls === 'KG 1' || cls === 'KG 2' || cls === 'KG 3') {
+                      if (cls === 'Pre-Nursery' || cls === 'Nursery 1' || cls === 'Nursery 2' || cls === 'Nursery 3') {
                         sFee = template.schoolFeeNursery || sFee;
                         pFee = template.partyFeeNursery || pFee;
                         eFee = template.enrollmentFeeNursery || eFee;

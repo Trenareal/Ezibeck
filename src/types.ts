@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type ClassName = 'Pre-Kg' | 'KG 1' | 'KG 2' | 'KG 3' | 'Basic 1' | 'Basic 2' | 'Basic 3' | 'Basic 4' | 'Basic 5' | 'Basic 6' | 'JSS1' | 'JSS2' | 'JSS3' | 'SS1' | 'SS2' | 'SS3';
+export type ClassName = 'Pre-Nursery' | 'Nursery 1' | 'Nursery 2' | 'Nursery 3' | 'Basic 1' | 'Basic 2' | 'Basic 3' | 'Basic 4' | 'Basic 5' | 'Basic 6' | 'JSS1' | 'JSS2' | 'JSS3' | 'SS1' | 'SS2' | 'SS3';
 
 export const ALL_CLASSES: ClassName[] = [
-  'Pre-Kg', 'KG 1', 'KG 2', 'KG 3', 
+  'Pre-Nursery', 'Nursery 1', 'Nursery 2', 'Nursery 3', 
   'Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6', 
   'JSS1', 'JSS2', 'JSS3', 
   'SS1', 'SS2', 'SS3'

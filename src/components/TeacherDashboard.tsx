@@ -44,11 +44,11 @@ export function isPasswordStandardCompliant(password: string): boolean {
 const DEFAULT_FACULTY: FacultyProfile[] = [
   { id: "ezekiel", name: "Dr. Ezekiel Beck", role: "Administrator (Head Principal)", avatar: "👨‍🏫", password: "Ezekiel@2026", email: "ezekiel@ezibeckacademy.edu.ng" },
   
-  // 10 classes: Pre-Kg, KG 1-3, Basic 1-6
-  { id: "evelyn", name: "Mrs. Evelyn Ndu", role: "Form Teacher - Pre-Kg", avatar: "👩‍🏫", password: "Evelyn@PreKg", email: "evelyn@ezibeckacademy.edu.ng", assignedClass: "Pre-Kg" },
-  { id: "rose", name: "Mrs. Rose Mary", role: "Form Teacher - KG 1", avatar: "👩‍🏫", password: "Rose@Kg1", email: "rose@ezibeckacademy.edu.ng", assignedClass: "KG 1" },
-  { id: "kelvin", name: "Mr. Kelvin Joe", role: "Form Teacher - KG 2", avatar: "👨‍🏫", password: "Kelvin@Kg2", email: "kelvin@ezibeckacademy.edu.ng", assignedClass: "KG 2" },
-  { id: "mercy", name: "Mrs. Mercy Joy", role: "Form Teacher - KG 3", avatar: "👩‍🏫", password: "Mercy@Kg3", email: "mercy@ezibeckacademy.edu.ng", assignedClass: "KG 3" },
+  // 10 classes: Pre-Nursery, Nursery 1-3, Basic 1-6
+  { id: "evelyn", name: "Mrs. Evelyn Ndu", role: "Form Teacher - Pre-Nursery", avatar: "👩‍🏫", password: "Evelyn@PreNursery", email: "evelyn@ezibeckacademy.edu.ng", assignedClass: "Pre-Nursery" },
+  { id: "rose", name: "Mrs. Rose Mary", role: "Form Teacher - Nursery 1", avatar: "👩‍🏫", password: "Rose@Nursery1", email: "rose@ezibeckacademy.edu.ng", assignedClass: "Nursery 1" },
+  { id: "kelvin", name: "Mr. Kelvin Joe", role: "Form Teacher - Nursery 2", avatar: "👨‍🏫", password: "Kelvin@Nursery2", email: "kelvin@ezibeckacademy.edu.ng", assignedClass: "Nursery 2" },
+  { id: "mercy", name: "Mrs. Mercy Joy", role: "Form Teacher - Nursery 3", avatar: "👩‍🏫", password: "Mercy@Nursery3", email: "mercy@ezibeckacademy.edu.ng", assignedClass: "Nursery 3" },
   { id: "samuel", name: "Mr. Samuel Adele", role: "Form Teacher - Basic 1", avatar: "👨‍🏫", password: "Samuel@Basic1", email: "samuel@ezibeckacademy.edu.ng", assignedClass: "Basic 1" },
   { id: "blessing", name: "Mrs. Blessing Praise", role: "Form Teacher - Basic 2", avatar: "👩‍🏫", password: "Blessing@Basic2", email: "blessing@ezibeckacademy.edu.ng", assignedClass: "Basic 2" },
   { id: "patrick", name: "Mr. Patrick Obi", role: "Form Teacher - Basic 3", avatar: "👨‍💻", password: "Patrick@Basic3", email: "patrick@ezibeckacademy.edu.ng", assignedClass: "Basic 3" },
@@ -65,7 +65,7 @@ const DEFAULT_FACULTY: FacultyProfile[] = [
   { id: "david", name: "Mr. David Ibrahim", role: "Form Teacher - SS3", avatar: "👨‍💻", password: "David@Ss3", email: "david@ezibeckacademy.edu.ng", assignedClass: "SS3" },
 
   // 3 Section Admins (besides Principal)
-  { id: "nancy", name: "Mrs. Nancy Yusuf", role: "Head Teacher (Pre-Kg to Basic 6)", avatar: "🏫", password: "Nancy@HeadTeacher", email: "nancy.head@ezibeckacademy.edu.ng" },
+  { id: "nancy", name: "Mrs. Nancy Yusuf", role: "Head Teacher (Pre-Nursery to Basic 6)", avatar: "🏫", password: "Nancy@HeadTeacher", email: "nancy.head@ezibeckacademy.edu.ng" },
   { id: "justina", name: "Mrs. Justina Cole", role: "Junior Secondary Admin (JSS1 to JSS3)", avatar: "🏫", password: "Justina@Junior", email: "justina.junior@ezibeckacademy.edu.ng" },
   { id: "samson", name: "Mr. Samson Duke", role: "Senior Secondary Admin (SS1 to SS3)", avatar: "🏫", password: "Samson@Senior", email: "samson.senior@ezibeckacademy.edu.ng" }
 ];
@@ -79,10 +79,10 @@ function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
     "teacher4": "Benson@Ss1",
     "teacher5": "Florence@Ss2",
     "teacher6": "David@Ss3",
-    "evelyn": "Evelyn@PreKg",
-    "rose": "Rose@Kg1",
-    "kelvin": "Kelvin@Kg2",
-    "mercy": "Mercy@Kg3",
+    "evelyn": "Evelyn@PreNursery",
+    "rose": "Rose@Nursery1",
+    "kelvin": "Kelvin@Nursery2",
+    "mercy": "Mercy@Nursery3",
     "samuel": "Samuel@Basic1",
     "blessing": "Blessing@Basic2",
     "patrick": "Patrick@Basic3",
@@ -98,10 +98,10 @@ function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
     { key: 'Admin', check: (f: FacultyProfile) => f.id === 'ezekiel' || f.name.toLowerCase().includes('ezekiel'), def: DEFAULT_FACULTY[0] },
     
     // 10 primary classes
-    { key: 'Pre-Kg', check: (f: FacultyProfile) => f.assignedClass === 'Pre-Kg', def: DEFAULT_FACULTY[1] },
-    { key: 'KG 1', check: (f: FacultyProfile) => f.assignedClass === 'KG 1', def: DEFAULT_FACULTY[2] },
-    { key: 'KG 2', check: (f: FacultyProfile) => f.assignedClass === 'KG 2', def: DEFAULT_FACULTY[3] },
-    { key: 'KG 3', check: (f: FacultyProfile) => f.assignedClass === 'KG 3', def: DEFAULT_FACULTY[4] },
+    { key: 'Pre-Nursery', check: (f: FacultyProfile) => f.assignedClass === 'Pre-Nursery', def: DEFAULT_FACULTY[1] },
+    { key: 'Nursery 1', check: (f: FacultyProfile) => f.assignedClass === 'Nursery 1', def: DEFAULT_FACULTY[2] },
+    { key: 'Nursery 2', check: (f: FacultyProfile) => f.assignedClass === 'Nursery 2', def: DEFAULT_FACULTY[3] },
+    { key: 'Nursery 3', check: (f: FacultyProfile) => f.assignedClass === 'Nursery 3', def: DEFAULT_FACULTY[4] },
     { key: 'Basic 1', check: (f: FacultyProfile) => f.assignedClass === 'Basic 1', def: DEFAULT_FACULTY[5] },
     { key: 'Basic 2', check: (f: FacultyProfile) => f.assignedClass === 'Basic 2', def: DEFAULT_FACULTY[6] },
     { key: 'Basic 3', check: (f: FacultyProfile) => f.assignedClass === 'Basic 3', def: DEFAULT_FACULTY[7] },
@@ -244,11 +244,21 @@ export default function TeacherDashboard({
     currentUser.role.toLowerCase().includes('co-') ||
     currentUser.role.toLowerCase().includes('coadmin')
   ));
-  const [selectedClass, setSelectedClass] = useState<ClassName>('Pre-Kg');
+  const [selectedClass, setSelectedClass] = useState<ClassName>('Pre-Nursery');
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [viewingReportStudent, setViewingReportStudent] = useState<Student | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [resetConfirmState, setResetConfirmState] = useState<'idle' | 'confirming'>('idle');
   const teacherPrintAreaRef = useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (resetConfirmState === 'confirming') {
+      const timer = setTimeout(() => {
+        setResetConfirmState('idle');
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [resetConfirmState]);
 
   const downloadTeacherPdf = async () => {
     if (isGeneratingPdf || !teacherPrintAreaRef.current || !viewingReportStudent) return;
@@ -552,7 +562,7 @@ export default function TeacherDashboard({
       drawTableHeaderText("1ST T AVG", w.t1);
     }
     drawTableHeaderText("GRADE", w.grade);
-    drawTableHeaderText("RANK", w.rank);
+    drawTableHeaderText("POSITION", w.rank);
     drawTableHeaderText("TEACHER REMARK", w.remark, 'left');
 
     doc.setFontSize(7.5);
@@ -755,7 +765,7 @@ export default function TeacherDashboard({
       const classes = ALL_CLASSES;
       
       // Global CSV report content
-      let schoolWideCsv = "Class,Rank,Student ID,Student Name,Gender,Cumulative Total,Average Score\n";
+      let schoolWideCsv = "Class,Position,Student ID,Student Name,Gender,Cumulative Total,Average Score\n";
       let totalPdfsGenerated = 0;
 
       for (const cls of classes) {
@@ -778,7 +788,7 @@ export default function TeacherDashboard({
         if (!classFolder) continue;
 
         // Populate CSV results data for this class
-        let classCsv = "Rank,Student ID,Student Name,Gender,Cumulative Total,Average Score\n";
+        let classCsv = "Position,Student ID,Student Name,Gender,Cumulative Total,Average Score\n";
 
         // Generate student sheets sequentially
         for (let i = 0; i < sortedRoster.length; i++) {
@@ -805,7 +815,7 @@ export default function TeacherDashboard({
         }
 
         // Add class roster index report CSV safely inside class folder
-        classFolder.file(`${cls}_Students_Roster_Rankings.csv`, classCsv);
+        classFolder.file(`${cls}_Students_Roster_Positions.csv`, classCsv);
       }
 
       if (totalPdfsGenerated === 0) {
@@ -817,7 +827,7 @@ export default function TeacherDashboard({
 
       setZipProgress("Finalizing ZIP folder archive structure...");
       // Add general master school index CSV at the ZIP root envelope
-      zip.file(`School_Wide_Students_Rankings_Index_${activeTermTab.replace(/\s+/g, '_')}.csv`, schoolWideCsv);
+      zip.file(`School_Wide_Students_Positions_Index_${activeTermTab.replace(/\s+/g, '_')}.csv`, schoolWideCsv);
       
       const content = await zip.generateAsync({ type: 'blob' });
       
@@ -1201,7 +1211,7 @@ export default function TeacherDashboard({
   const [tempEnrollmentFee, setTempEnrollmentFee] = useState(template.enrollmentFee || "₦15,000.00");
   const [tempBookFee, setTempBookFee] = useState(template.bookFee || "₦20,000.00");
 
-  // Nursery section fees (Pre-KG to KG3)
+  // Nursery section fees (Pre-Nursery to Nursery 3)
   const [tempSchoolFeeNursery, setTempSchoolFeeNursery] = useState(template.schoolFeeNursery || template.schoolFee || "₦100,000.00");
   const [tempPartyFeeNursery, setTempPartyFeeNursery] = useState(template.partyFeeNursery || template.partyFee || "₦15,000.00");
   const [tempEnrollmentFeeNursery, setTempEnrollmentFeeNursery] = useState(template.enrollmentFeeNursery || template.enrollmentFee || "₦15,000.00");
@@ -1653,10 +1663,10 @@ export default function TeacherDashboard({
     const roleStr = ((matchProfile?.role || currentUser.role) || '').toLowerCase();
 
     if (currentUser.id === 'nancy' || roleStr.includes('head teacher')) {
-      return ['Pre-Kg', 'KG 1', 'KG 2', 'KG 3', 'Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6'];
+      return ['Pre-Nursery', 'Nursery 1', 'Nursery 2', 'Nursery 3', 'Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6'];
     }
     if (roleStr.includes('nursery section admin') || roleStr.includes('nursery admin')) {
-      return ['Pre-Kg', 'KG 1', 'KG 2', 'KG 3'];
+      return ['Pre-Nursery', 'Nursery 1', 'Nursery 2', 'Nursery 3'];
     }
     if (roleStr.includes('primary section admin') || roleStr.includes('primary admin')) {
       return ['Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6'];
@@ -2612,7 +2622,7 @@ export default function TeacherDashboard({
                               <span className="flex items-center justify-center gap-1">Σ GRADE</span>
                             </th>
                             <th className="py-2.5 px-3 border-r border-slate-300 text-center w-16">
-                              <span className="flex items-center justify-center gap-1"># RANK</span>
+                              <span className="flex items-center justify-center gap-1"># POSITION</span>
                             </th>
                             <th className="py-2.5 px-4 font-black text-slate-950">
                               <span className="flex items-center gap-1.5">💬 TEACHER'S REMARK</span>
@@ -2852,7 +2862,7 @@ export default function TeacherDashboard({
 
                             <div className="grid grid-cols-1 xs:grid-cols-2 gap-x-5 gap-y-2 text-xs text-slate-800">
                               {(() => {
-                                const isKgClass = viewingReportStudent.className === 'Pre-Kg' || viewingReportStudent.className.startsWith('KG');
+                                const isKgClass = viewingReportStudent.className === 'Pre-Nursery' || viewingReportStudent.className.startsWith('Nursery');
                                 if (isKgClass) {
                                   const behaviouralList = viewingReportStudent.behaviour.filter(b => 
                                     ["Punctuality", "Neatness", "Assignment", "Concentration"].includes(b.name)
@@ -3211,7 +3221,7 @@ export default function TeacherDashboard({
                       </>
                     )}
                     <span className="col-span-2 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300" title="Automatically calculated from Student grades list ranking">
-                      Subject Rank (Auto)
+                      Subject Position (Auto)
                     </span>
                     <span className="col-span-1 text-center font-bold text-slate-400">Action</span>
                   </div>
@@ -3226,7 +3236,7 @@ export default function TeacherDashboard({
                         <div key={subj.id} className="p-3 grid grid-cols-12 items-center text-xs font-semibold text-slate-800 hover:bg-slate-50">
                           <div className={activeTermTab === 'Third Term' ? "col-span-3 flex items-center pr-2" : "col-span-4 flex items-center pr-2"}>
                             {(() => {
-                              const isKgClass = editingStudent && (editingStudent.className === 'KG 1' || editingStudent.className === 'KG 2' || editingStudent.className === 'KG 3');
+                              const isKgClass = editingStudent && (editingStudent.className === 'Nursery 1' || editingStudent.className === 'Nursery 2' || editingStudent.className === 'Nursery 3');
                               const isPermanentKgSubject = !!(isKgClass && NURSERY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase()));
                               return (
                                 <input
@@ -3330,7 +3340,7 @@ export default function TeacherDashboard({
                           {/* Action Button */}
                           <div className="col-span-1 flex justify-center">
                             {(() => {
-                              const isKgClass = editingStudent && (editingStudent.className === 'KG 1' || editingStudent.className === 'KG 2' || editingStudent.className === 'KG 3');
+                              const isKgClass = editingStudent && (editingStudent.className === 'Nursery 1' || editingStudent.className === 'Nursery 2' || editingStudent.className === 'Nursery 3');
                               const isPermanentKgSubject = !!(isKgClass && NURSERY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase()));
                               
                               if (isPermanentKgSubject) {
@@ -3386,7 +3396,7 @@ export default function TeacherDashboard({
                   </h4>
 
                   {(() => {
-                    const isKg = editingStudent && (editingStudent.className === 'Pre-Kg' || editingStudent.className.startsWith('KG'));
+                    const isKg = editingStudent && (editingStudent.className === 'Pre-Nursery' || editingStudent.className.startsWith('Nursery'));
                     if (isKg) {
                       const behaviouralList = editBehaviour.filter(b => 
                         ["Punctuality", "Neatness", "Assignment", "Concentration"].includes(b.name)
@@ -3729,7 +3739,7 @@ export default function TeacherDashboard({
                                 </>
                               )}
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center w-20">Σ GRADE</th>
-                              <th className="py-2.5 px-3 border-r border-slate-200 text-center w-16"># RANK</th>
+                              <th className="py-2.5 px-3 border-r border-slate-200 text-center w-16"># POSITION</th>
                               <th className="py-2.5 px-4 font-bold text-slate-500">💬 TEACHER'S REMARK</th>
                             </tr>
                           </thead>
@@ -3959,7 +3969,7 @@ export default function TeacherDashboard({
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-5 gap-y-2 text-xs text-slate-800">
                               {(() => {
-                                const isKgClass = previewStudent.className === 'Pre-Kg' || previewStudent.className.startsWith('KG');
+                                const isKgClass = previewStudent.className === 'Pre-Nursery' || previewStudent.className.startsWith('Nursery');
                                 if (isKgClass) {
                                   const behaviouralList = previewStudent.behaviour.filter(b => 
                                     ["Punctuality", "Neatness", "Assignment", "Concentration"].includes(b.name)
@@ -4293,7 +4303,7 @@ export default function TeacherDashboard({
                     {/* Nursery Section Fees card */}
                     <div className="bg-slate-50 border border-slate-200 rounded-3xl p-5 shadow-3xs">
                       <span className="text-[9px] bg-indigo-50 border border-indigo-200 text-indigo-700 font-extrabold tracking-wider uppercase px-2.5 py-1 rounded select-none">
-                        👶 Nursery Section Fees schedule (Pre-KG to KG3)
+                        👶 Nursery Section Fees schedule (Pre-Nursery to Nursery 3)
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3.5 mt-3 text-xs">
                         <div>
@@ -4675,6 +4685,70 @@ export default function TeacherDashboard({
               </div>
             </form>
 
+            {/* Main Admin Only: Reset All Student Results Button */}
+            {isAdmin && !isCoAdmin && (() => {
+              const isAugust = new Date().getMonth() === 7;
+              const isThirdTerm = template.currentTerm === 'Third Term';
+              const isResetActive = isThirdTerm && isAugust;
+
+              return (
+                <div className="mt-8 pt-6 border-t border-red-100 bg-red-50/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="space-y-1 text-left">
+                    <h4 className="text-red-950 font-extrabold text-[11px] uppercase tracking-wide flex items-center gap-1.5">
+                      <span>⚠️</span> Session Cleanup & Rollover Control
+                    </h4>
+                    <p className="text-[10px] text-slate-500 max-w-lg leading-relaxed font-medium">
+                      This action deletes all student terminal results (test scores, exam scores, term summaries, and remarks) across all class grade-levels to prepare records for the next yearly academic session. 
+                      <strong className="block text-red-800 mt-1 font-bold">
+                        Only available during Third Term in the month of August.
+                      </strong>
+                    </p>
+                  </div>
+                  
+                  <button
+                    type="button"
+                    disabled={!isResetActive}
+                    onClick={() => {
+                      if (resetConfirmState === 'idle') {
+                        setResetConfirmState('confirming');
+                      } else {
+                        // Perform reset!
+                        const resetList = students.map(student => ({
+                          ...student,
+                          attendancePresent: 0,
+                          attendanceTotal: 0,
+                          formTeacherRemark: '',
+                          principalRemark: '',
+                          subjects: student.subjects.map(subj => ({
+                            ...subj,
+                            testScore: 0,
+                            examScore: 0,
+                            firstTermSummary: 0,
+                            secondTermSummary: 0,
+                            thirdTermSummary: 0,
+                            position: 1
+                          }))
+                        }));
+                        onUpdateStudents(resetList);
+                        triggerSuccess('Successfully deleted all student terminal results & reset academic records across all classes for the next yearly session!');
+                        setResetConfirmState('idle');
+                      }
+                    }}
+                    className={`px-5 py-3 font-extrabold text-[10px] tracking-wider uppercase rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5 ${
+                      !isResetActive
+                        ? 'bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed select-none'
+                        : resetConfirmState === 'confirming'
+                          ? 'bg-red-700 hover:bg-red-850 text-white animate-pulse'
+                          : 'bg-red-50 hover:bg-red-100 text-red-700 border border-red-200'
+                    }`}
+                  >
+                    <span>🗑️</span>
+                    {resetConfirmState === 'confirming' ? 'Click again to confirm Reset' : 'Delete Reset All Classes'}
+                  </button>
+                </div>
+              );
+            })()}
+
 
           </div>
         ) : activeSubTab === 'staff' && isAdmin && !isCoAdmin ? (
@@ -4755,10 +4829,10 @@ export default function TeacherDashboard({
                           setEditingFacultyRole('Administrator (Head Principal)');
                           setEditingFacultyClass('');
                         } else if (val === 'head') {
-                          setEditingFacultyRole('Head Teacher (Pre-Kg to Basic 6)');
+                          setEditingFacultyRole('Head Teacher (Pre-Nursery to Basic 6)');
                           setEditingFacultyClass('');
                         } else if (val === 'nursery_admin') {
-                          setEditingFacultyRole('Nursery Section Admin (Pre-Kg to KG3)');
+                          setEditingFacultyRole('Nursery Section Admin (Pre-Nursery to Nursery 3)');
                           setEditingFacultyClass('');
                         } else if (val === 'primary_admin') {
                           setEditingFacultyRole('Primary Section Admin (Basic 1 to 6)');
@@ -4777,8 +4851,8 @@ export default function TeacherDashboard({
                     >
                       <option value="form">Form Teacher (Select Class)</option>
                       <option value="admin">Administrator (Head Principal)</option>
-                      <option value="head">Head Teacher (Pre-Kg to Basic 6)</option>
-                      <option value="nursery_admin">Nursery Section Admin (Pre-Kg to KG3)</option>
+                      <option value="head">Head Teacher (Pre-Nursery to Basic 6)</option>
+                      <option value="nursery_admin">Nursery Section Admin (Pre-Nursery to Nursery 3)</option>
                       <option value="primary_admin">Primary Section Admin (Basic 1 to 6)</option>
                       <option value="junior">Junior Secondary Admin (JSS1-3)</option>
                       <option value="senior">Senior Secondary Admin (SS1-3)</option>
@@ -5853,7 +5927,7 @@ export default function TeacherDashboard({
                   <table className="w-full border-collapse text-left text-xs text-slate-800">
                     <thead>
                       <tr className="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider text-[10px] border-b">
-                        <th className="py-2.5 px-4 text-center w-14">Rank</th>
+                        <th className="py-2.5 px-4 text-center w-14">Position</th>
                         <th className="py-2.5 px-4 w-28">Student ID</th>
                         <th className="py-2.5 px-4">Student Name</th>
                         <th className="py-2.5 px-4 text-center">Sex</th>

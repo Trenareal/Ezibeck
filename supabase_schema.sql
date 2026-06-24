@@ -242,13 +242,13 @@ BEGIN
     END IF;
 
     -- Class list constraint
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint 
-        WHERE conname = 'students_class_name_check' 
-          AND conrelid = 'public.students'::regclass
-    ) THEN
-        ALTER TABLE public.students ADD CONSTRAINT students_class_name_check CHECK (class_name IN ('JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'));
-    END IF;
+    -- Drop the legacy constraint first so it gets updated transparently
+    ALTER TABLE public.students DROP CONSTRAINT IF EXISTS students_class_name_check;
+    ALTER TABLE public.students ADD CONSTRAINT students_class_name_check CHECK (class_name IN (
+        'Pre-Nursery', 'Nursery 1', 'Nursery 2', 'Nursery 3', 
+        'Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6', 
+        'JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'
+    ));
 
     -- Test Score boundary constraints
     IF NOT EXISTS (

@@ -339,7 +339,7 @@ export function generateRandomGrades(subjects: string[], term?: string, studentI
 
 // Generate default behavior ratings depending on class name
 export function generateDefaultBehaviour(className?: ClassName): BehaviourRating[] {
-  const isKg = className === 'Pre-Kg' || (className && className.startsWith('KG'));
+  const isKg = className === 'Pre-Nursery' || (className && className.startsWith('Nursery'));
   if (isKg) {
     const list = [...KG_BEHAVIOUR_TRAITS, ...KG_SKILL_TRAITS];
     return list.map(trait => {
@@ -362,7 +362,7 @@ export function generateDefaultBehaviour(className?: ClassName): BehaviourRating
 
 // Adjust behaviour array for older/legacy student models or wrong class formats dynamically
 export function adjustBehaviourIfRequired(behaviour: BehaviourRating[], className: ClassName): BehaviourRating[] {
-  const isKg = className === 'Pre-Kg' || className.startsWith('KG');
+  const isKg = className === 'Pre-Nursery' || className.startsWith('Nursery');
   if (isKg) {
     const requiredBehaviour = ["Punctuality", "Neatness", "Assignment", "Concentration"];
     const requiredSkills = ["Hand-writing", "Fluency", "Attitude to Property"];
@@ -459,7 +459,7 @@ export function createStudent(name: string, className: ClassName, idx: number, t
   const activeTerm = term || 'Third Term';
   
   let subjectsList = JSS_SUBJECTS;
-  if (className === 'Pre-Kg' || className.startsWith('KG')) {
+  if (className === 'Pre-Nursery' || className.startsWith('Nursery')) {
     subjectsList = NURSERY_SUBJECTS;
   } else if (className.startsWith('Basic')) {
     subjectsList = PRIMARY_SUBJECTS;
@@ -468,11 +468,11 @@ export function createStudent(name: string, className: ClassName, idx: number, t
   }
   
   let age = 15;
-  if (className === 'Pre-Kg') {
+  if (className === 'Pre-Nursery') {
     age = 2;
-  } else if (className.startsWith('KG')) {
-    if (className === 'KG 1') age = 3;
-    else if (className === 'KG 2') age = 4;
+  } else if (className.startsWith('Nursery')) {
+    if (className === 'Nursery 1') age = 3;
+    else if (className === 'Nursery 2') age = 4;
     else age = 5;
   } else if (className.startsWith('Basic')) {
     const num = parseInt(className.replace('Basic ', ''));
@@ -552,10 +552,10 @@ export function createStudent(name: string, className: ClassName, idx: number, t
   const termSlug = activeTerm.toLowerCase().replace(/\s+/g, '_');
 
   let formTeacherName = "Mrs. Gladys Alabi";
-  if (className === 'Pre-Kg') formTeacherName = "Mrs. Evelyn Ndu";
-  else if (className === 'KG 1') formTeacherName = "Mrs. Rose Mary";
-  else if (className === 'KG 2') formTeacherName = "Mr. Kelvin Joe";
-  else if (className === 'KG 3') formTeacherName = "Mrs. Mercy Joy";
+  if (className === 'Pre-Nursery') formTeacherName = "Mrs. Evelyn Ndu";
+  else if (className === 'Nursery 1') formTeacherName = "Mrs. Rose Mary";
+  else if (className === 'Nursery 2') formTeacherName = "Mr. Kelvin Joe";
+  else if (className === 'Nursery 3') formTeacherName = "Mrs. Mercy Joy";
   else if (className === 'Basic 1') formTeacherName = "Mr. Samuel Adele";
   else if (className === 'Basic 2') formTeacherName = "Mrs. Blessing Praise";
   else if (className === 'Basic 3') formTeacherName = "Mr. Patrick Obi";
@@ -602,7 +602,7 @@ export function isStudentInTerm(studentId: string, termName: string): boolean {
 
 export function getInitialStudents(term?: string): Student[] {
   const activeTerm = term || 'Third Term';
-  const classes: ClassName[] = ['Pre-Kg', 'KG 1', 'KG 2', 'KG 3', 'Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6', 'JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
+  const classes: ClassName[] = ['Pre-Nursery', 'Nursery 1', 'Nursery 2', 'Nursery 3', 'Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6', 'JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
   let students: Student[] = [];
 
   // Generate 4 students per class
