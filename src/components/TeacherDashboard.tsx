@@ -284,6 +284,14 @@ export default function TeacherDashboard({
     currentUser.role.toLowerCase().includes('co-') ||
     currentUser.role.toLowerCase().includes('coadmin')
   ));
+  const canAccessWorkspaceConfig = !!(currentUser && (
+    isAdmin ||
+    isCoAdmin ||
+    currentUser.id === 'nancy' ||
+    currentUser.role.toLowerCase().includes('headteacher') ||
+    currentUser.role.toLowerCase().includes('head teacher') ||
+    currentUser.role.toLowerCase().includes('headmistress')
+  ));
   const [selectedClass, setSelectedClass] = useState<ClassName>('Pre-Nursery');
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [viewingReportStudent, setViewingReportStudent] = useState<Student | null>(null);
@@ -952,6 +960,13 @@ export default function TeacherDashboard({
       setActiveSubTab('roster');
     }
   }, [currentUser, activeSubTab]);
+
+  // Prevent unauthorized staff from hanging on the forbidden workspace tab
+  React.useEffect(() => {
+    if (activeSubTab === 'workspace' && !canAccessWorkspaceConfig) {
+      setActiveSubTab('roster');
+    }
+  }, [currentUser, activeSubTab, canAccessWorkspaceConfig]);
 
   const [activeTermTab, setActiveTermTab] = useState<'First Term' | 'Second Term' | 'Third Term'>(() => {
     if (template.currentTerm === 'First Term' || template.currentTerm === 'Second Term' || template.currentTerm === 'Third Term') {
@@ -2411,12 +2426,14 @@ export default function TeacherDashboard({
           >
             📂 Students Registry Roster
           </button>
-          <button
-            onClick={() => setActiveSubTab('workspace')}
-            className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${activeSubTab === 'workspace' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-650'}`}
-          >
-            ⚙️ Workspace Config Template (15 properties)
-          </button>
+          {canAccessWorkspaceConfig && (
+            <button
+              onClick={() => setActiveSubTab('workspace')}
+              className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${activeSubTab === 'workspace' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-650'}`}
+            >
+              ⚙️ Workspace Configuration
+            </button>
+          )}
           {currentUser && currentUser.id === 'ezekiel' && (
             <button
               id="subtab-manage-staff-restrict"
@@ -4281,7 +4298,7 @@ export default function TeacherDashboard({
           <div className="max-w-6xl mx-auto animate-fade-in">
             <GuidelinesComponent inlineOnly={true} />
           </div>
-        ) : activeSubTab === 'workspace' ? (
+        ) : (activeSubTab === 'workspace' && canAccessWorkspaceConfig) ? (
           /* VIEW 3: WORKSPACE 15 PROPERTIES EDITABLE TEMPLATE FOR TEACHERS */
           <div className="bg-white border rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm animate-fade-in text-slate-800">
             <div className="border-b pb-4">
@@ -4299,7 +4316,7 @@ export default function TeacherDashboard({
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                if (!isAdmin) return;
+                if (!canAccessWorkspaceConfig) return;
                 const nurseryFee = `${tempSchoolFeeNursery.trim()}|${tempPartyFeeNursery.trim()}|${tempEnrollmentFeeNursery.trim()}|${tempBookFeeNursery.trim()}`;
                 const primaryFee = `${tempSchoolFeePrimary.trim()}|${tempPartyFeePrimary.trim()}|${tempEnrollmentFeePrimary.trim()}|${tempBookFeePrimary.trim()}`;
                 const juniorFee = `${tempSchoolFeeJunior.trim()}|${tempPartyFeeJunior.trim()}|${tempEnrollmentFeeJunior.trim()}|${tempBookFeeJunior.trim()}`;
@@ -4347,19 +4364,19 @@ export default function TeacherDashboard({
               }}
               className="space-y-6 text-xs"
             >
-              {!isAdmin && (
+              {!canAccessWorkspaceConfig && (
                 <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl p-4 text-[11px] font-semibold flex items-start gap-3 shadow-xs">
                   <span className="text-sm select-none">🔒</span>
                   <div>
                     <span className="font-extrabold text-slate-950 uppercase tracking-wide">Read-Only Workspace Configuration</span>
                     <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
-                      You are logged in as <strong className="text-slate-900 font-bold">{currentUser?.name}</strong> ({currentUser?.role}). Only School Administrators have permission to customize these 15 core template settings. However, all active configurations are synchronized and fully reflected on your students' records.
+                      You are logged in as <strong className="text-slate-900 font-bold">{currentUser?.name}</strong> ({currentUser?.role}). Only School Administrators, Co-Administrators, and the Headmistress have permission to customize these 15 core template settings. However, all active configurations are synchronized and fully reflected on your students' records.
                     </p>
                   </div>
                 </div>
               )}
 
-              <fieldset disabled={!isAdmin} className="space-y-6 disabled:opacity-90">
+              <fieldset disabled={!canAccessWorkspaceConfig} className="space-y-6 disabled:opacity-90">
                 {/* Row A: General Scholastic Metadata */}
                 <div className="space-y-3.5">
                   <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-l-4 border-slate-900 pl-2">
@@ -4860,7 +4877,7 @@ export default function TeacherDashboard({
 
               {/* Form submit/save button */}
               <div className="pt-4 border-t flex justify-end">
-                {isAdmin ? (
+                {canAccessWorkspaceConfig ? (
                   <button
                     type="submit"
                     className="bg-emerald-800 hover:bg-emerald-950 text-white font-extrabold text-[10px] tracking-wider uppercase px-6 py-3 rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-1.5"
