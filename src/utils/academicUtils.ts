@@ -558,7 +558,7 @@ export function createStudent(name: string, className: ClassName, idx: number, t
   } else if (className.startsWith('JSS')) {
     age = className === 'JSS1' ? 11 : className === 'JSS2' ? 12 : 13;
   } else {
-    age = className === 'SS1' ? 14 : className === 'SS2' ? 15 : 16;
+    age = className === 'SS1' ? 14 : (className === 'SS2A' || className === 'SS2B') ? 15 : 16;
   }
     
   const sex = idx % 2 === 0 ? 'Male' : 'Female';
@@ -644,8 +644,10 @@ export function createStudent(name: string, className: ClassName, idx: number, t
   else if (className === 'JSS2') formTeacherName = "Mr. Anthony Okon";
   else if (className === 'JSS3') formTeacherName = "Mrs. Sarah John";
   else if (className === 'SS1') formTeacherName = "Mr. Benson Chidi";
-  else if (className === 'SS2') formTeacherName = "Mrs. Florence Musa";
-  else if (className === 'SS3') formTeacherName = "Mr. David Ibrahim";
+  else if (className === 'SS2A') formTeacherName = "Mrs. Florence Musa";
+  else if (className === 'SS2B') formTeacherName = "Mrs. Mabel Rogers";
+  else if (className === 'SS3A') formTeacherName = "Mr. David Ibrahim";
+  else if (className === 'SS3B') formTeacherName = "Mr. Julius Spare";
 
   return {
     id: `EZB-${className}-${101 + idx}_${termSlug}`,
@@ -680,7 +682,7 @@ export function isStudentInTerm(studentId: string, termName: string): boolean {
 
 export function getInitialStudents(term?: string): Student[] {
   const activeTerm = term || 'Third Term';
-  const classes: ClassName[] = ['Pre-Nursery', 'Nursery 1', 'Nursery 2', 'Nursery 3', 'Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6', 'JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
+  const classes: ClassName[] = ['Pre-Nursery', 'Nursery 1', 'Nursery 2', 'Nursery 3', 'Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6', 'JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'];
   let students: Student[] = [];
 
   // Generate 4 students per class

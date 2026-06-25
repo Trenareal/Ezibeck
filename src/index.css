@@ -165,6 +165,17 @@
 }
 
 /* Compress spacing for PDF to force single-page fit while rendering large text */
+.pdf-force-light p,
+.pdf-force-light blockquote,
+.pdf-force-light .markdown-body p,
+.report-card-printable p,
+.report-card-printable blockquote {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
 .pdf-force-light .space-y-6,
 .pdf-force-light .space-y-8,
 .pdf-force-light .space-y-4 {
@@ -174,19 +185,19 @@
 .pdf-force-light .py-6, .pdf-force-light .py-8, .pdf-force-light .py-12,
 .pdf-force-light .pb-6, .pdf-force-light .pb-8, .pdf-force-light .pb-12,
 .pdf-force-light .pt-6, .pdf-force-light .pt-8, .pdf-force-light .pt-12 {
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
 }
 .pdf-force-light .mt-4, .pdf-force-light .mt-6, .pdf-force-light .mt-8,
 .pdf-force-light .mb-4, .pdf-force-light .mb-6, .pdf-force-light .mb-8 {
-  margin-top: 4px !important;
-  margin-bottom: 4px !important;
+  margin-top: 2px !important;
+  margin-bottom: 2px !important;
 }
 .pdf-force-light table th,
 .pdf-force-light table td {
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
-  line-height: 1.2 !important;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+  line-height: 1.1 !important;
 }
 
 

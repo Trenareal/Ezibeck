@@ -55,7 +55,7 @@ export default function StudentPortal({
   onPullFromSupabase,
   onUpdateTemplate
 }: StudentPortalProps) {
-  const [selectedClass, setSelectedClass] = useState<ClassName>('JSS1');
+  const [selectedClass, setSelectedClass] = useState<ClassName>('Pre-Nursery');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [viewTab, setViewTab] = useState<'report' | 'charts'>('report');
@@ -547,25 +547,27 @@ export default function StudentPortal({
             
             {/* 3 Segmented Session Toggles */}
             <div className="w-full md:w-auto bg-slate-850 border border-slate-700/80 p-1 rounded-2xl flex gap-1 font-bold text-[11px]">
-              {(['First Term', 'Second Term', 'Third Term'] as const).map((term) => (
-                <button
-                  key={term}
-                  onClick={() => {
-                    setViewingTerm(term);
-                    setSelectedStudent(null);
-                    setIsUnlocked(false);
-                    setPasswordInput('');
-                    setLoginError('');
-                  }}
-                  className={`flex-1 md:flex-none uppercase tracking-wider text-[9px] font-extrabold py-2.5 px-4 rounded-xl transition-all cursor-pointer ${
-                    viewingTerm === term
-                      ? 'bg-amber-305 text-slate-900 shadow-md font-black scale-[1.01]'
-                      : 'text-slate-350 hover:bg-slate-800 hover:text-white'
-                  }`}
-                >
-                  {term}
-                </button>
-              ))}
+              {(['First Term', 'Second Term', 'Third Term'] as const)
+                .filter((term) => term === template.currentTerm)
+                .map((term) => (
+                  <button
+                    key={term}
+                    onClick={() => {
+                      setViewingTerm(term);
+                      setSelectedStudent(null);
+                      setIsUnlocked(false);
+                      setPasswordInput('');
+                      setLoginError('');
+                    }}
+                    className={`flex-1 md:flex-none uppercase tracking-wider text-[9px] font-extrabold py-2.5 px-4 rounded-xl transition-all cursor-pointer ${
+                      viewingTerm === term
+                        ? 'bg-amber-305 text-slate-900 shadow-md font-black scale-[1.01]'
+                        : 'text-slate-350 hover:bg-slate-800 hover:text-white'
+                    }`}
+                  >
+                    {term}
+                  </button>
+                ))}
             </div>
           </div>
         </div>
@@ -848,7 +850,7 @@ export default function StudentPortal({
               console.error("Error parsing second term students in StudentPortal", e);
             }
             const cleanClassName = selectedStudent.className.replace(/\s+/g, '');
-            const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes(cleanClassName);
+            const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes(cleanClassName);
 
             if (viewTab === 'charts') {
               return (
@@ -1638,8 +1640,40 @@ export default function StudentPortal({
                 <div className="grid grid-cols-2 print:grid-cols-2 gap-4 md:gap-6 relative z-10 pt-6 border-t border-dashed border-slate-200">
                   {/* Form Teacher Remark Callout */}
                   {(() => {
-                    const displayTeacherName = selectedStudent.formTeacherName || (selectedStudent.className.startsWith('JSS') ? template.formTeacherJunior : template.formTeacherSenior);
-                    const displayPrincipalName = template.principalName;
+                    const cleanClassName = (selectedStudent.className || '').replace(/\s+/g, '');
+                    const isNursery = ['Pre-Nursery', 'Nursery1', 'Nursery2', 'Nursery3'].includes(cleanClassName);
+                    const isBasic = ['Basic1', 'Basic2', 'Basic3', 'Basic4', 'Basic5', 'Basic6'].includes(cleanClassName);
+                    const isPreNurseryToBasic6 = isNursery || isBasic;
+
+                    let fallbackTeacher = '';
+                    if (isBasic) {
+                      fallbackTeacher = template.formTeacherJunior || "Headmistress";
+                    } else if (isNursery) {
+                      fallbackTeacher = template.formTeacherSenior || "Nursery Admin";
+                    } else {
+                      fallbackTeacher = template.principalName || "Principal";
+                    }
+
+                    const displayTeacherName = selectedStudent.formTeacherName || fallbackTeacher;
+
+                    let displaySignatoryName = template.principalName;
+                    let displayRole = "Principal";
+                    let assessmentHeading = "🏫 Headmistress's Performance Assessment";
+
+                    if (isBasic) {
+                      displaySignatoryName = template.formTeacherJunior || "Mrs. Nancy Yusuf";
+                      displayRole = "Headmistress";
+                      assessmentHeading = "🏫 Headmistress's Performance Assessment";
+                    } else if (isNursery) {
+                      displaySignatoryName = template.formTeacherSenior || "Nursery Admin";
+                      displayRole = "Nursery Admin";
+                      assessmentHeading = "🧸 Nursery Admin's Performance Assessment";
+                    } else {
+                      displaySignatoryName = template.principalName || "Principal";
+                      displayRole = "Principal";
+                      assessmentHeading = "🎓 Principal's Performance Assessment";
+                    }
+
                     return (
                       <>
                         <div className="bg-[#FAF9F9] border border-slate-200 p-4 sm:p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-3xs">
@@ -1666,11 +1700,11 @@ export default function StudentPortal({
                           </div>
                         </div>
 
-                        {/* Principal Assessment Callout */}
+                        {/* Signatory Assessment Callout */}
                         <div className="bg-[#FAF9F9] border border-slate-200 p-4 sm:p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-3xs">
                           <div>
                             <h4 className="font-black text-slate-900 text-xs uppercase tracking-widest border-b border-slate-200/50 pb-1.5 select-none flex items-center gap-1.5">
-                              <span>🎓 Principal's Performance Assessment</span>
+                              <span>{assessmentHeading}</span>
                             </h4>
                             <p className="text-xs italic text-slate-600 pt-3 leading-relaxed">
                               {selectedStudent.principalRemark
@@ -1685,12 +1719,12 @@ export default function StudentPortal({
 
                           <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
                             <div className="text-xs">
-                              <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold select-none">Authorized Principal</span>
-                              <p className="font-black text-slate-900 text-[11px] sm:text-xs">{displayPrincipalName}</p>
+                              <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold select-none">Authorized {displayRole}</span>
+                              <p className="font-black text-slate-900 text-[11px] sm:text-xs">{displaySignatoryName}</p>
                             </div>
                             <div className="text-right select-none">
                               <div className="text-xs sm:text-sm font-serif italic text-emerald-950 font-semibold h-5 tracking-wide">
-                                {displayPrincipalName.replace("Dr.","").trim()}
+                                {displaySignatoryName.replace("Dr.","").replace("Mrs.","").replace("Mr.","").trim()}
                               </div>
                               <span className="text-[8px] text-slate-400 uppercase tracking-wider block border-t border-slate-200 pt-0.5 mt-0.5">Seal & Signature</span>
                             </div>

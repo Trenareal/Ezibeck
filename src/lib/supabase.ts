@@ -205,7 +205,8 @@ export function mapFrontendIdToUuid(id: string): string {
     juliet: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e10",
     nancy: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e11",
     justina: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e12",
-    samson: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e13"
+    samson: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e13",
+    coadmin: "ea4d6a45-0015-4b1a-b5bd-6f23006e2e14"
   };
   if (mappings[id.toLowerCase()]) {
     return mappings[id.toLowerCase()];
@@ -243,7 +244,8 @@ export function mapUuidToFrontendId(uuid: string): string {
     "ea4d6a45-0015-4b1a-b5bd-6f23006e2e10": "juliet",
     "ea4d6a45-0015-4b1a-b5bd-6f23006e2e11": "nancy",
     "ea4d6a45-0015-4b1a-b5bd-6f23006e2e12": "justina",
-    "ea4d6a45-0015-4b1a-b5bd-6f23006e2e13": "samson"
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2e13": "samson",
+    "ea4d6a45-0015-4b1a-b5bd-6f23006e2e14": "coadmin"
   };
   const lowered = uuid.toLowerCase();
   if (reverseMappings[lowered]) {

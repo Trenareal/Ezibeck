@@ -247,7 +247,7 @@ BEGIN
     ALTER TABLE public.students ADD CONSTRAINT students_class_name_check CHECK (class_name IN (
         'Pre-Nursery', 'Nursery 1', 'Nursery 2', 'Nursery 3', 
         'Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6', 
-        'JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'
+        'JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'
     ));
 
     -- Test Score boundary constraints

@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type ClassName = 'Pre-Nursery' | 'Nursery 1' | 'Nursery 2' | 'Nursery 3' | 'Basic 1' | 'Basic 2' | 'Basic 3' | 'Basic 4' | 'Basic 5' | 'Basic 6' | 'JSS1' | 'JSS2' | 'JSS3' | 'SS1' | 'SS2' | 'SS3';
+export type ClassName = 'Pre-Nursery' | 'Nursery 1' | 'Nursery 2' | 'Nursery 3' | 'Basic 1' | 'Basic 2' | 'Basic 3' | 'Basic 4' | 'Basic 5' | 'Basic 6' | 'JSS1' | 'JSS2' | 'JSS3' | 'SS1' | 'SS2A' | 'SS2B' | 'SS3A' | 'SS3B';
 
 export const ALL_CLASSES: ClassName[] = [
   'Pre-Nursery', 'Nursery 1', 'Nursery 2', 'Nursery 3', 
   'Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6', 
   'JSS1', 'JSS2', 'JSS3', 
-  'SS1', 'SS2', 'SS3'
+  'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'
 ];
 
 export interface SubjectGrade {
@@ -72,8 +72,8 @@ export interface Workspace15Template {
   termDate: string;              // 7
   session: string;               // 8
   principalName: string;         // 9
-  formTeacherJunior: string;     // 10
-  formTeacherSenior: string;     // 11
+  formTeacherJunior: string;     // 10: Headmistress (Basic 1 to 6)
+  formTeacherSenior: string;     // 11: Nursery Admin (Pre-Nursery to Nursery 3)
   currentTerm: string;           // 12
   nextTermFee: string;           // 13
   distinctionThreshold: number;  // 14

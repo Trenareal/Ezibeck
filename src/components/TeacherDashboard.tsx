@@ -83,18 +83,21 @@ const DEFAULT_FACULTY: FacultyProfile[] = [
   { id: "emmanuel", name: "Mr. Emmanuel Eze", role: "Form Teacher - Basic 5", avatar: "👨‍💻", password: "Emmanuel@Basic5", email: "emmanuel@ezibeckacademy.edu.ng", assignedClass: "Basic 5" },
   { id: "juliet", name: "Mrs. Juliet Ngozi", role: "Form Teacher - Basic 6", avatar: "👩‍🏫", password: "Juliet@Basic6", email: "juliet@ezibeckacademy.edu.ng", assignedClass: "Basic 6" },
 
-  // 6 secondary classes: JSS1-3, SS1-3
+  // JSS1-3, SS1, SS2A-B, SS3A-B
   { id: "gladys", name: "Mrs. Gladys Alabi", role: "Form Teacher - JSS1", avatar: "👩‍🏫", password: "Gladys@Jss1", email: "gladys@ezibeckacademy.edu.ng", assignedClass: "JSS1" },
   { id: "anthony", name: "Mr. Anthony Okon", role: "Form Teacher - JSS2", avatar: "👨‍💻", password: "Anthony@Jss2", email: "anthony@ezibeckacademy.edu.ng", assignedClass: "JSS2" },
   { id: "sarah", name: "Mrs. Sarah John", role: "Form Teacher - JSS3", avatar: "👩‍🏫", password: "Sarah@Jss3", email: "sarah@ezibeckacademy.edu.ng", assignedClass: "JSS3" },
   { id: "benson", name: "Mr. Benson Chidi", role: "Form Teacher - SS1", avatar: "👨‍🏫", password: "Benson@Ss1", email: "benson@ezibeckacademy.edu.ng", assignedClass: "SS1" },
-  { id: "florence", name: "Mrs. Florence Musa", role: "Form Teacher - SS2", avatar: "👩‍🏫", password: "Florence@Ss2", email: "florence@ezibeckacademy.edu.ng", assignedClass: "SS2" },
-  { id: "david", name: "Mr. David Ibrahim", role: "Form Teacher - SS3", avatar: "👨‍💻", password: "David@Ss3", email: "david@ezibeckacademy.edu.ng", assignedClass: "SS3" },
+  { id: "florence", name: "Mrs. Florence Musa", role: "Form Teacher - SS2A (Science)", avatar: "👩‍🏫", password: "Florence@Ss2a", email: "florence.ss2a@ezibeckacademy.edu.ng", assignedClass: "SS2A" },
+  { id: "maroger", name: "Mrs. Mabel Rogers", role: "Form Teacher - SS2B (Art)", avatar: "👩‍🏫", password: "Maro@2026", email: "maroger.ss2b@ezibeckacademy.edu.ng", assignedClass: "SS2B" },
+  { id: "david", name: "Mr. David Ibrahim", role: "Form Teacher - SS3A (Science)", avatar: "👨‍💻", password: "David@Ss3a", email: "david.ss3a@ezibeckacademy.edu.ng", assignedClass: "SS3A" },
+  { id: "spare", name: "Mr. Julius Spare", role: "Form Teacher - SS3B (Art)", avatar: "👨‍🏫", password: "Spare@2026", email: "spare.ss3b@ezibeckacademy.edu.ng", assignedClass: "SS3B" },
 
-  // 3 Section Admins (besides Principal)
+  // 3 Section Admins & Co-Admins
   { id: "nancy", name: "Mrs. Nancy Yusuf", role: "Head Teacher (Pre-Nursery to Basic 6)", avatar: "🏫", password: "Nancy@HeadTeacher", email: "nancy.head@ezibeckacademy.edu.ng" },
   { id: "justina", name: "Mrs. Justina Cole", role: "Junior Secondary Admin (JSS1 to JSS3)", avatar: "🏫", password: "Justina@Junior", email: "justina.junior@ezibeckacademy.edu.ng" },
-  { id: "samson", name: "Mr. Samson Duke", role: "Senior Secondary Admin (SS1 to SS3)", avatar: "🏫", password: "Samson@Senior", email: "samson.senior@ezibeckacademy.edu.ng" }
+  { id: "samson", name: "Mr. Samson Duke", role: "Senior Secondary Admin (SS1 to SS3B)", avatar: "🏫", password: "Samson@Senior", email: "samson.senior@ezibeckacademy.edu.ng" },
+  { id: "coadmin", name: "Mr. Paul Coadmin", role: "Co-Administrator", avatar: "👨‍💻", password: "Coadmin@2026", email: "coadmin@ezibeckacademy.edu.ng" }
 ];
 
 function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
@@ -104,8 +107,11 @@ function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
     "teacher2": "Anthony@Jss2",
     "teacher3": "Sarah@Jss3",
     "teacher4": "Benson@Ss1",
-    "teacher5": "Florence@Ss2",
-    "teacher6": "David@Ss3",
+    "teacher5": "Florence@Ss2a",
+    "teacher6": "David@Ss3a",
+    "maroger": "Maro@2026",
+    "spare": "Spare@2026",
+    "coadmin": "Coadmin@2026",
     "evelyn": "Evelyn@PreNursery",
     "rose": "Rose@Nursery1",
     "kelvin": "Kelvin@Nursery2",
@@ -136,18 +142,21 @@ function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
     { key: 'Basic 5', check: (f: FacultyProfile) => f.assignedClass === 'Basic 5', def: DEFAULT_FACULTY[9] },
     { key: 'Basic 6', check: (f: FacultyProfile) => f.assignedClass === 'Basic 6', def: DEFAULT_FACULTY[10] },
 
-    // 6 secondary classes
+    // 8 secondary classes
     { key: 'JSS1', check: (f: FacultyProfile) => f.assignedClass === 'JSS1', def: DEFAULT_FACULTY[11] },
     { key: 'JSS2', check: (f: FacultyProfile) => f.assignedClass === 'JSS2', def: DEFAULT_FACULTY[12] },
     { key: 'JSS3', check: (f: FacultyProfile) => f.assignedClass === 'JSS3', def: DEFAULT_FACULTY[13] },
     { key: 'SS1', check: (f: FacultyProfile) => f.assignedClass === 'SS1', def: DEFAULT_FACULTY[14] },
-    { key: 'SS2', check: (f: FacultyProfile) => f.assignedClass === 'SS2', def: DEFAULT_FACULTY[15] },
-    { key: 'SS3', check: (f: FacultyProfile) => f.assignedClass === 'SS3', def: DEFAULT_FACULTY[16] },
+    { key: 'SS2A', check: (f: FacultyProfile) => f.assignedClass === 'SS2A', def: DEFAULT_FACULTY[15] },
+    { key: 'SS2B', check: (f: FacultyProfile) => f.assignedClass === 'SS2B', def: DEFAULT_FACULTY[16] },
+    { key: 'SS3A', check: (f: FacultyProfile) => f.assignedClass === 'SS3A', def: DEFAULT_FACULTY[17] },
+    { key: 'SS3B', check: (f: FacultyProfile) => f.assignedClass === 'SS3B', def: DEFAULT_FACULTY[18] },
 
-    // 3 Section Admins
-    { key: 'NancyHead', check: (f: FacultyProfile) => f.id === 'nancy' || f.role.toLowerCase().includes('head teacher') || f.role.toLowerCase().includes('nursery'), def: DEFAULT_FACULTY[17] },
-    { key: 'JustinaJunior', check: (f: FacultyProfile) => f.id === 'justina' || f.role.toLowerCase().includes('junior secondary'), def: DEFAULT_FACULTY[18] },
-    { key: 'SamsonSenior', check: (f: FacultyProfile) => f.id === 'samson' || f.role.toLowerCase().includes('senior secondary'), def: DEFAULT_FACULTY[19] }
+    // 4 Admins
+    { key: 'NancyHead', check: (f: FacultyProfile) => f.id === 'nancy' || f.role.toLowerCase().includes('head teacher'), def: DEFAULT_FACULTY[19] },
+    { key: 'JustinaJunior', check: (f: FacultyProfile) => f.id === 'justina' || f.role.toLowerCase().includes('junior secondary'), def: DEFAULT_FACULTY[20] },
+    { key: 'SamsonSenior', check: (f: FacultyProfile) => f.id === 'samson' || f.role.toLowerCase().includes('senior secondary'), def: DEFAULT_FACULTY[21] },
+    { key: 'CoAdmin', check: (f: FacultyProfile) => f.id === 'coadmin' || f.id === 'maroger' || f.role.toLowerCase().includes('co-administrator'), def: DEFAULT_FACULTY[22] }
   ];
 
   const aligned: FacultyProfile[] = [];
@@ -186,14 +195,17 @@ function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
     if (!assignedIds.has(p.id)) {
       // Filter out any leftover seeded or manual generic "Administrator" accounts so they get cleanly deleted
       const isLegacyAdmin = p.id === 'admin' || p.name === 'Administrator' || p.role === 'Admin' || p.role === 'Administrator' || p.name.includes('Administrator');
-      if (!isLegacyAdmin) {
+      const isForbiddenStaff = p.id.toLowerCase().startsWith('a0000') || p.id.toLowerCase() === 'a0000000';
+      if (!isLegacyAdmin && !isForbiddenStaff) {
         aligned.push(p);
         assignedIds.add(p.id);
       }
     }
   }
 
-  return aligned.map(f => {
+  return aligned
+    .filter(f => !f.id.toLowerCase().startsWith('a0000'))
+    .map(f => {
     let updatedPass = f.password;
     if (f.password && oldToNewPassMap[f.password]) {
       updatedPass = oldToNewPassMap[f.password];
@@ -231,10 +243,11 @@ export default function TeacherDashboard({
             "teacher2": "Anthony@Jss2",
             "teacher3": "Sarah@Jss3",
             "teacher4": "Benson@Ss1",
-            "teacher5": "Florence@Ss2",
-            "teacher6": "David@Ss3",
+            "teacher5": "Florence@Ss2a",
+            "teacher6": "David@Ss3a",
             "maroger": "Maro@2026",
-            "spare": "Spare@2026"
+            "spare": "Spare@2026",
+            "coadmin": "Coadmin@2026"
           };
           if (parsed && parsed.password && oldToNewPassMap[parsed.password]) {
             parsed.password = oldToNewPassMap[parsed.password];
@@ -267,7 +280,7 @@ export default function TeacherDashboard({
     currentUser.role.toLowerCase().includes('admin')
   );
   const isCoAdmin = !!(currentUser && (
-    currentUser.id === 'maroger' ||
+    currentUser.id === 'coadmin' ||
     currentUser.role.toLowerCase().includes('co-') ||
     currentUser.role.toLowerCase().includes('coadmin')
   ));
@@ -403,155 +416,155 @@ export default function TeacherDashboard({
     const slateBorder = [226, 232, 240];  // Slate 200 border
     const mutedTextColor = [100, 116, 139]; // Slate 500 gray
 
-    // Background crest watermark
+    // Background crest watermark (Slightly smaller and higher contrast)
     doc.setDrawColor(240, 253, 250);
-    doc.setLineWidth(0.5);
-    doc.circle(105, 148, 45, 'S');
-    doc.circle(105, 148, 43, 'S');
+    doc.setLineWidth(0.4);
+    doc.circle(105, 142, 40, 'S');
+    doc.circle(105, 142, 38, 'S');
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6);
+    doc.setFontSize(5.5);
     doc.setTextColor(220, 235, 230);
-    doc.text(`${template.schoolName.toUpperCase()}  *  ${template.motto.toUpperCase()}  *`, 105, 120, { align: 'center' });
+    doc.text(`${template.schoolName.toUpperCase()}  *  ${template.motto.toUpperCase()}  *`, 105, 116, { align: 'center' });
 
     // Draw real crest at top left
     doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.setLineWidth(0.5);
-    doc.circle(22, 25, 10, 'S');
+    doc.setLineWidth(0.4);
+    doc.circle(22, 21, 9, 'S');
     doc.setDrawColor(217, 119, 6); // Amber index
-    doc.circle(22, 25, 8.5, 'S');
+    doc.circle(22, 21, 7.5, 'S');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text(template.schoolName.charAt(0).toUpperCase() || 'S', 22, 28.5, { align: 'center' });
+    doc.text(template.schoolName.charAt(0).toUpperCase() || 'S', 22, 24.2, { align: 'center' });
 
-    // School Title Header
+    // School Title Header (Slightly compressed vertical offsets)
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(20);
+    doc.setFontSize(18);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text(template.schoolName.toUpperCase(), 35, 21);
+    doc.text(template.schoolName.toUpperCase(), 35, 18);
 
     doc.setFont('helvetica', 'italic');
-    doc.setFontSize(8.5);
+    doc.setFontSize(8.0);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text(`"${template.motto}"`, 35, 25.5);
+    doc.text(`"${template.motto}"`, 35, 22.0);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
+    doc.setFontSize(7.0);
     doc.setTextColor(75, 85, 99);
-    doc.text(`${template.address}  |  Tel: ${template.phone}  |  Email: ${template.email}`, 35, 30);
+    doc.text(`${template.address}  |  Tel: ${template.phone}  |  Email: ${template.email}`, 35, 26.0);
 
     // Double horizontal divider line
     doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.setLineWidth(0.6);
-    doc.line(10, 34, 200, 34);
+    doc.setLineWidth(0.5);
+    doc.line(10, 29.5, 200, 29.5);
     doc.setDrawColor(180, 180, 180);
-    doc.setLineWidth(0.15);
-    doc.line(10, 35, 200, 35);
+    doc.setLineWidth(0.12);
+    doc.line(10, 30.3, 200, 30.3);
 
     // Report Card Section Banner Title
     doc.setFillColor(lightBgColor[0], lightBgColor[1], lightBgColor[2]);
-    doc.rect(10, 39, 190, 7.5, 'F');
+    doc.rect(10, 34, 190, 6.8, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
     doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
-    doc.text(`OFFICIAL STUDENT REPORT SHEET  -  ${activeTerm.toUpperCase()} SESSION`, 105, 44, { align: 'center' });
+    doc.text(`OFFICIAL STUDENT REPORT SHEET  -  ${activeTerm.toUpperCase()} SESSION`, 105, 38.5, { align: 'center' });
 
     // Student Information Grid
-    const infoY = 50;
+    const infoY = 44;
     doc.setDrawColor(slateBorder[0], slateBorder[1], slateBorder[2]);
     doc.setLineWidth(0.3);
-    doc.rect(10, infoY, 190, 21, 'S');
+    doc.rect(10, infoY, 190, 16, 'S');
 
-    doc.line(10, infoY + 10.5, 200, infoY + 10.5); // horizontal mid divider
-    doc.line(55, infoY, 55, infoY + 21); // vert 1
-    doc.line(102, infoY, 102, infoY + 21); // vert 2
-    doc.line(152, infoY, 152, infoY + 21); // vert 3
+    doc.line(10, infoY + 8, 200, infoY + 8); // horizontal mid divider
+    doc.line(55, infoY, 55, infoY + 16); // vert 1
+    doc.line(102, infoY, 102, infoY + 16); // vert 2
+    doc.line(152, infoY, 152, infoY + 16); // vert 3
 
     // Row 1 Column 1
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
+    doc.setFontSize(6.0);
     doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
-    doc.text("FULL STUDENT NAME:", 13, infoY + 4);
+    doc.text("FULL STUDENT NAME:", 13, infoY + 3);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
+    doc.setFontSize(8.0);
     doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
     const trimmedName = student.name.length > 22 ? student.name.substring(0, 20) + "..." : student.name;
-    doc.text(trimmedName, 13, infoY + 8);
+    doc.text(trimmedName, 13, infoY + 6.5);
 
     // Row 1 Column 2
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
+    doc.setFontSize(6.0);
     doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
-    doc.text("STUDENT ACCESS ID:", 58, infoY + 4);
+    doc.text("STUDENT ACCESS ID:", 58, infoY + 3);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
+    doc.setFontSize(8.0);
     doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
-    doc.text(student.id, 58, infoY + 8);
+    doc.text(student.id, 58, infoY + 6.5);
 
     // Row 1 Column 3
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
+    doc.setFontSize(6.0);
     doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
-    doc.text("GENDER / SEX:", 105, infoY + 4);
+    doc.text("GENDER / SEX:", 105, infoY + 3);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
+    doc.setFontSize(8.0);
     doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
-    doc.text(student.sex, 105, infoY + 8);
+    doc.text(student.sex, 105, infoY + 6.5);
 
     // Row 1 Column 4
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
+    doc.setFontSize(6.0);
     doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
-    doc.text("AGE PROFILE:", 155, infoY + 4);
+    doc.text("AGE PROFILE:", 155, infoY + 3);
     doc.setFont('helvetica', 'bold');
-         doc.setFontSize(8.5);
+    doc.setFontSize(8.0);
     doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
-    doc.text(`${student.age} Years`, 155, infoY + 8);
+    doc.text(`${student.age} Years`, 155, infoY + 6.5);
 
     // Row 2 Column 1
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
+    doc.setFontSize(6.0);
     doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
-    doc.text("CLASS STANDARD:", 13, infoY + 14.5);
+    doc.text("CLASS STANDARD:", 13, infoY + 11.0);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
+    doc.setFontSize(8.0);
     doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
-    doc.text(student.className, 13, infoY + 18.5);
+    doc.text(student.className, 13, infoY + 14.5);
 
     // Row 2 Column 2
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
+    doc.setFontSize(6.0);
     doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
-    doc.text("ACADEMIC SESSION:", 58, infoY + 14.5);
+    doc.text("ACADEMIC SESSION:", 58, infoY + 11.0);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
+    doc.setFontSize(8.0);
     doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
-    doc.text(template.session, 58, infoY + 18.5);
+    doc.text(template.session, 58, infoY + 14.5);
 
     // Row 2 Column 3
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
+    doc.setFontSize(6.0);
     doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
-    doc.text("TERM CLOSING DATE:", 105, infoY + 14.5);
+    doc.text("TERM CLOSING DATE:", 105, infoY + 11.0);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
+    doc.setFontSize(8.0);
     doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
-    doc.text(template.termDate, 105, infoY + 18.5);
+    doc.text(template.termDate, 105, infoY + 14.5);
 
     // Row 2 Column 4
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
+    doc.setFontSize(6.0);
     doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
-    doc.text("RESUMPTION DATE:", 155, infoY + 14.5);
+    doc.text("RESUMPTION DATE:", 155, infoY + 11.0);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
+    doc.setFontSize(8.0);
     doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
-    doc.text(template.resumptionDate, 155, infoY + 18.5);
+    doc.text(template.resumptionDate, 155, infoY + 14.5);
 
-    // 6. Subjects Grade Performance Grid Table
-    const tableY = 75;
+    // 6. Subjects Grade Performance Grid Table (Compressed)
+    const tableY = 64;
     const isThirdTerm = activeTerm === 'Third Term';
-    const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes((student.className || '').replace(/\s+/g, ''));
+    const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes((student.className || '').replace(/\s+/g, ''));
     const isSecondarySecondTerm = activeTerm === 'Second Term' && isSecondaryClass;
 
     const w = isThirdTerm ? {
@@ -564,15 +577,15 @@ export default function TeacherDashboard({
 
     // Header Draw
     doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.rect(10, tableY, 190, 7.5, 'F');
+    doc.rect(10, tableY, 190, 5.8, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
+    doc.setFontSize(6.5);
     doc.setTextColor(255, 255, 255);
 
     let currentX = 10;
     const drawTableHeaderText = (txt: string, colW: number, align: 'left' | 'center' = 'center') => {
       const textX = align === 'center' ? currentX + colW / 2 : currentX + 3;
-      doc.text(txt, textX, tableY + 4.8, { align });
+      doc.text(txt, textX, tableY + 3.8, { align });
       currentX += colW;
     };
 
@@ -592,13 +605,13 @@ export default function TeacherDashboard({
     drawTableHeaderText("POSITION", w.rank);
     drawTableHeaderText("TEACHER REMARK", w.remark, 'left');
 
-    doc.setFontSize(7.5);
+    doc.setFontSize(6.5);
     doc.setTextColor(31, 41, 55);
     doc.setLineWidth(0.15);
     doc.setDrawColor(218, 225, 233);
 
-    let rowY = tableY + 7.5;
-    const rowHeight = 5.8;
+    let rowY = tableY + 5.8;
+    const rowHeight = 4.8;
 
     student.subjects.forEach((subj, idx) => {
       if (idx % 2 === 1) {
@@ -618,7 +631,7 @@ export default function TeacherDashboard({
       const writeCellText = (txt: string, colW: number, align: 'left' | 'center' = 'center', isBold = false) => {
         doc.setFont('helvetica', isBold ? 'bold' : 'normal');
         const textX = align === 'center' ? currentX + colW / 2 : currentX + 3;
-        doc.text(txt, textX, rowY + 3.8, { align });
+        doc.text(txt, textX, rowY + 3.2, { align });
         currentX += colW;
       };
 
@@ -652,8 +665,8 @@ export default function TeacherDashboard({
     doc.line(200, tableY, 200, rowY);
 
     // 7. Performance metrics
-    const metricsY = rowY + 5;
-    doc.setFontSize(8);
+    const metricsY = rowY + 3;
+    doc.setFontSize(7);
 
     const kpis = [
       { label: "CUMULATIVE TOTAL", value: `${stats.totalScore} / ${stats.maxPossibleScore}` },
@@ -667,29 +680,29 @@ export default function TeacherDashboard({
       const kpiX = 10 + idx * (kpiWidth + kpiGap);
       doc.setFillColor(248, 250, 252);
       doc.setDrawColor(226, 232, 240);
-      doc.rect(kpiX, metricsY, kpiWidth, 12, 'FD');
+      doc.rect(kpiX, metricsY, kpiWidth, 9.5, 'FD');
 
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(5.5);
+      doc.setFontSize(5.0);
       doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
-      doc.text(k.label, kpiX + kpiWidth/2, metricsY + 4, { align: 'center' });
+      doc.text(k.label, kpiX + kpiWidth/2, metricsY + 3.2, { align: 'center' });
 
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
+      doc.setFontSize(8.0);
       doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-      doc.text(k.value, kpiX + kpiWidth/2, metricsY + 9.5, { align: 'center' });
+      doc.text(k.value, kpiX + kpiWidth/2, metricsY + 7.5, { align: 'center' });
     });
 
     // 8. Affective evaluations
-    const domainsY = metricsY + 16;
+    const domainsY = metricsY + 11.5;
     doc.setFillColor(lightBgColor[0], lightBgColor[1], lightBgColor[2]);
-    doc.rect(10, domainsY, 190, 5.5, 'F');
+    doc.rect(10, domainsY, 190, 4.8, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.5);
+    doc.setFontSize(6.8);
     doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
-    doc.text("PERSONALITY PROFILE & AFFECTIVE SKILLS EVALUATION (5-POINT SCALE)", 105, domainsY + 3.8, { align: 'center' });
+    doc.text("PERSONALITY PROFILE & AFFECTIVE SKILLS EVALUATION (5-POINT SCALE)", 105, domainsY + 3.3, { align: 'center' });
 
-    const ratingsY = domainsY + 5.5;
+    const ratingsY = domainsY + 4.8;
     doc.setLineWidth(0.15);
     doc.setDrawColor(slateBorder[0], slateBorder[1], slateBorder[2]);
 
@@ -704,80 +717,87 @@ export default function TeacherDashboard({
       const isCol2 = idx >= colSize;
       const itemIdx = isCol2 ? idx - colSize : idx;
       const bX = isCol2 ? midX + 4 : 14;
-      const bY = ratingsY + 3.5 + itemIdx * 4.8;
+      const bY = ratingsY + 2.5 + itemIdx * 3.8;
 
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(7);
+      doc.setFontSize(6.0);
       doc.setTextColor(75, 85, 99);
       doc.text(`${b.name.toUpperCase()}:`, bX, bY);
 
       doc.setFont('courier', 'bold');
-      doc.setFontSize(8.5);
+      doc.setFontSize(7.5);
       doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
       doc.text(getRatingStars(b.rating), bX + 38, bY - 0.2);
     });
 
-    const behaviourHeight = colSize * 4.8 + 4;
-    const signatureY = ratingsY + behaviourHeight + 6;
+    const behaviourHeight = colSize * 3.8 + 2;
+    const signatureY = ratingsY + behaviourHeight + 4;
 
     doc.setDrawColor(slateBorder[0], slateBorder[1], slateBorder[2]);
-    doc.setLineWidth(0.35);
-    doc.line(10, signatureY - 2, 200, signatureY - 2);
+    doc.setLineWidth(0.3);
+    doc.line(10, signatureY - 1.5, 200, signatureY - 1.5);
 
-    // 9. Comments
+    // 9. Comments (Compressed Paragraph Spacing)
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.5);
+    doc.setFontSize(6.8);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
 
     doc.text("FORM TEACHER'S EVALUATION REMARK:", 12, signatureY);
     doc.setFont('helvetica', 'italic');
-    doc.setFontSize(8);
+    doc.setFontSize(7.0);
     doc.setTextColor(15, 23, 42);
-    const FTComment = student.formTeacherRemark || "An excellent, dedicated student. consistent performance throughout.";
-    doc.text(`"${FTComment}"`, 12, signatureY + 4, { maxWidth: 185 });
+    const FTComment = (student.formTeacherRemark || "An excellent, dedicated student. consistent performance throughout.").replace(/\r?\n/g, ' ');
+    doc.text(`"${FTComment}"`, 12, signatureY + 3.0, { maxWidth: 185 });
+
+    const cleanClassName = (student.className || '').replace(/\s+/g, '');
+    const isPreNurseryToBasic6 = ['Pre-Nursery', 'Nursery1', 'Nursery2', 'Nursery3', 'Basic1', 'Basic2', 'Basic3', 'Basic4', 'Basic5', 'Basic6'].includes(cleanClassName);
+    const headmistressName = facultyProfiles.find(f => f.id === 'nancy')?.name || "Mrs. Nancy Yusuf";
+    const signatoryName = isPreNurseryToBasic6 ? headmistressName : (template.principalName || "Dr. Ezekiel Beck");
+    const assessmentVerdictLabel = isPreNurseryToBasic6 ? "HEADMISTRESS'S ASSESSMENT VERDICT:" : "PRINCIPAL'S ASSESSMENT VERDICT:";
+    const signatoryTitle = isPreNurseryToBasic6 ? "HEADMISTRESS" : "PRINCIPAL";
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.5);
+    doc.setFontSize(6.8);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text("PRINCIPAL'S ASSESSMENT VERDICT:", 12, signatureY + 11);
+    doc.text(assessmentVerdictLabel, 12, signatureY + 8.5);
     doc.setFont('helvetica', 'italic');
-    doc.setFontSize(8);
+    doc.setFontSize(7.0);
     doc.setTextColor(15, 23, 42);
-    const PRComment = student.principalRemark || "Impressive terminal portfolio marks. Approved for publication.";
-    doc.text(`"${PRComment}"`, 12, signatureY + 15, { maxWidth: 185 });
+    const PRComment = (student.principalRemark || "Impressive terminal portfolio marks. Approved for publication.").replace(/\r?\n/g, ' ');
+    doc.text(`"${PRComment}"`, 12, signatureY + 11.5, { maxWidth: 185 });
 
     // 10. Signatures and Official Stamp Circular Watermark
-    const sigY = signatureY + 28;
+    const sigY = signatureY + 22;
     doc.setDrawColor(180, 180, 180);
-    doc.setLineWidth(0.3);
+    doc.setLineWidth(0.25);
 
     doc.line(15, sigY, 60, sigY);
     doc.line(82, sigY, 127, sigY);
     doc.line(148, sigY, 193, sigY);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
+    doc.setFontSize(5.8);
     doc.setTextColor(mutedTextColor[0], mutedTextColor[1], mutedTextColor[2]);
-    doc.text("CLASS FORM TEACHER", 37.5, sigY + 3.2, { align: 'center' });
-    doc.text("HEAD PRINCIPAL (DR. EZEKIEL BECK)", 104.5, sigY + 3.2, { align: 'center' });
-    doc.text("PARENT / GUARDIAN SIGNATURE", 170.5, sigY + 3.2, { align: 'center' });
+    doc.text("CLASS FORM TEACHER", 37.5, sigY + 2.5, { align: 'center' });
+    doc.text(`${signatoryTitle} (${signatoryName.toUpperCase()})`, 104.5, sigY + 2.5, { align: 'center' });
+    doc.text("PARENT / GUARDIAN SIGNATURE", 170.5, sigY + 2.5, { align: 'center' });
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.5);
+    doc.setFontSize(6.8);
     doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
 
     const formTeacherNameStr = student.formTeacherName || "Form Educator";
-    doc.text(formTeacherNameStr, 37.5, sigY - 1.5, { align: 'center' });
-    doc.text(template.principalName || "Dr. Christopher Vance, PhD", 104.5, sigY - 1.5, { align: 'center' });
+    doc.text(formTeacherNameStr, 37.5, sigY - 1.2, { align: 'center' });
+    doc.text(signatoryName, 104.5, sigY - 1.2, { align: 'center' });
 
     doc.setDrawColor(4, 120, 87);
     doc.setLineWidth(0.15);
-    doc.circle(105, sigY - 9, 7.5, 'S');
+    doc.circle(105, sigY - 7, 6.0, 'S');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(4.2);
+    doc.setFontSize(3.8);
     doc.setTextColor(4, 120, 87);
-    doc.text("OFFICIAL STAMP", 105, sigY - 10, { align: 'center' });
-    doc.text(template.schoolName.toUpperCase(), 105, sigY - 7.5, { align: 'center' });
+    doc.text("OFFICIAL STAMP", 105, sigY - 8.0, { align: 'center' });
+    doc.text(template.schoolName.toUpperCase(), 105, sigY - 5.8, { align: 'center' });
 
     return doc;
   };
@@ -926,12 +946,12 @@ export default function TeacherDashboard({
     }
   }, [activeSubTab]);
 
-  // Prevent Co-Administrators from hanging on the forbidden staff tab
+  // Prevent unauthorized staff from hanging on the forbidden staff tab
   React.useEffect(() => {
-    if (currentUser && isCoAdmin && activeSubTab === 'staff') {
+    if (activeSubTab === 'staff' && (!currentUser || currentUser.id !== 'ezekiel')) {
       setActiveSubTab('roster');
     }
-  }, [currentUser, isCoAdmin, activeSubTab]);
+  }, [currentUser, activeSubTab]);
 
   const [activeTermTab, setActiveTermTab] = useState<'First Term' | 'Second Term' | 'Third Term'>(() => {
     if (template.currentTerm === 'First Term' || template.currentTerm === 'Second Term' || template.currentTerm === 'Third Term') {
@@ -956,8 +976,16 @@ export default function TeacherDashboard({
         try {
           const dbProfiles = await dbService.getFacultyProfiles();
           if (dbProfiles && dbProfiles.length > 0) {
-            const mapped = dbProfiles.map(mapDbFacultyToFrontend);
-            const aligned = alignFacultyProfiles(mapped);
+            // Actively delete any pre-existing legacy/duplicate staff profiles that start with 'a0000'
+            const badProfiles = dbProfiles.filter(p => p.id && p.id.toLowerCase().startsWith('a0000'));
+            for (const bp of badProfiles) {
+              await dbService.deleteFacultyProfile(bp.id).catch(err => {
+                console.error("Failed to delete bad profile:", bp.id, err);
+              });
+            }
+
+            const mapped = dbProfiles.map(mapDbFacultyToFrontend).filter(f => !f.id.toLowerCase().startsWith('a0000'));
+            const aligned = alignFacultyProfiles(mapped).filter(f => !f.id.toLowerCase().startsWith('a0000'));
 
             // Sync any missing or default profiles back to Supabase
             for (const f of aligned) {
@@ -1020,7 +1048,7 @@ export default function TeacherDashboard({
         }
       }
     }
-    return alignFacultyProfiles(initialList);
+    return alignFacultyProfiles(initialList).filter(f => !f.id.toLowerCase().startsWith('a0000'));
   });
 
   // Ensure Administrator is never restricted under any circumstances and clear any stale restriction
@@ -2389,13 +2417,13 @@ export default function TeacherDashboard({
           >
             ⚙️ Workspace Config Template (15 properties)
           </button>
-          {isAdmin && !isCoAdmin && (
+          {currentUser && currentUser.id === 'ezekiel' && (
             <button
               id="subtab-manage-staff-restrict"
               onClick={() => setActiveSubTab('staff')}
               className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${activeSubTab === 'staff' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-650'}`}
             >
-              🔒 Manage Staff Access ({facultyProfiles.length - 1})
+              🔒 Manage Staff Access ({facultyProfiles.length})
             </button>
           )}
           {isAdmin && (
@@ -2630,7 +2658,7 @@ export default function TeacherDashboard({
                             <th className="py-2.5 px-3 border-r border-slate-300 text-center bg-emerald-100/40 w-24">
                               <span className="flex items-center justify-center gap-1 text-emerald-950">Σ TERM (100)</span>
                             </th>
-                            {activeTermTab === 'Second Term' && ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes((viewingReportStudent?.className || '').replace(/\s+/g, '')) && (
+                            {activeTermTab === 'Second Term' && ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes((viewingReportStudent?.className || '').replace(/\s+/g, '')) && (
                               <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-24 bg-blue-50 text-blue-900 font-extrabold">
                                 <span className="flex items-center justify-center gap-1">1st Term Avg</span>
                               </th>
@@ -2682,7 +2710,7 @@ export default function TeacherDashboard({
                                 <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955">{subj.testScore}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955">{subj.examScore}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black font-mono text-emerald-955 bg-emerald-50/30">{tot}</td>
-                                {activeTermTab === 'Second Term' && ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes((viewingReportStudent?.className || '').replace(/\s+/g, '')) && (
+                                {activeTermTab === 'Second Term' && ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes((viewingReportStudent?.className || '').replace(/\s+/g, '')) && (
                                   <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955 bg-blue-50/10">
                                     {(() => {
                                       let firstTermAvgStr = "-";
@@ -2918,7 +2946,7 @@ export default function TeacherDashboard({
                   {/* Part B: Character Assessment */}
                   {(() => {
                     const cleanClassName = (viewingReportStudent?.className || '').replace(/\s+/g, '');
-                    const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes(cleanClassName);
+                    const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes(cleanClassName);
                     return (
                       <div id="pdf-partB-character-traits" className="grid grid-cols-1 md:grid-cols-10 print:grid-cols-10 gap-6 relative z-10">
                         {/* Left Parameter Column: Conduct Evaluation - Width reduced to 40% (md:col-span-4) */}
@@ -3049,7 +3077,7 @@ export default function TeacherDashboard({
                               <span>Fair</span>
                             </li>
                             <li className="flex items-center gap-1.5">
-                              <span className="w-4 h-4 rounded-md bg-red-50 text-red-700 text-[9px] flex items-center justify-center font-mono font-black">1</span>
+                              <span className="w-4 h-4 rounded-md bg-[#FAF9F9] text-[#7A7979] border text-[9px] flex items-center justify-center font-mono font-black">1</span>
                               <span>Needs Work</span>
                             </li>
                           </ul>
@@ -3062,8 +3090,28 @@ export default function TeacherDashboard({
                   <div className="grid grid-cols-2 print:grid-cols-2 gap-4 md:gap-6 relative z-10 pt-6 border-t border-dashed border-slate-200">
                     {/* Form Teacher Remark Callout */}
                     {(() => {
-                      const displayTeacherName = viewingReportStudent.formTeacherName || (viewingReportStudent.className.startsWith('JSS') ? template.formTeacherJunior : template.formTeacherSenior);
-                      const displayPrincipalName = template.principalName;
+                      const cleanClassName = (viewingReportStudent.className || '').replace(/\s+/g, '');
+                      const isNursery = ['Pre-Nursery', 'Nursery1', 'Nursery2', 'Nursery3'].includes(cleanClassName);
+                      const isBasic = ['Basic1', 'Basic2', 'Basic3', 'Basic4', 'Basic5', 'Basic6'].includes(cleanClassName);
+                      const isPreNurseryToBasic6 = isNursery || isBasic;
+
+                      let fallbackTeacher = '';
+                      if (isBasic) {
+                        fallbackTeacher = template.formTeacherJunior || "Headmistress";
+                      } else if (isNursery) {
+                        fallbackTeacher = template.formTeacherSenior || "Nursery Admin";
+                      } else {
+                        fallbackTeacher = template.principalName || "Principal";
+                      }
+
+                      const displayTeacherName = viewingReportStudent.formTeacherName || fallbackTeacher;
+
+                      let displaySignatoryName = template.principalName;
+                      if (isBasic) {
+                        displaySignatoryName = template.formTeacherJunior || "Mrs. Nancy Yusuf";
+                      } else if (isNursery) {
+                        displaySignatoryName = template.formTeacherSenior || "Nursery Admin";
+                      }
                       return (
                         <>
                           <div className="bg-[#FAF9F9] border border-slate-200 p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-3xs text-slate-800 text-xs">
@@ -3090,15 +3138,15 @@ export default function TeacherDashboard({
                             </div>
                           </div>
 
-                          {/* Principal Assessment Callout */}
+                          {/* Signatory Assessment Callout */}
                           <div className="bg-[#FAF9F9] border border-slate-200 p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-3xs text-slate-800 text-xs">
                             <div>
                               <h4 className="font-black text-slate-900 text-xs uppercase tracking-widest border-b border-slate-200/50 pb-1.5 select-none flex items-center gap-1.5">
-                                <span>🎓 Principal's Performance Assessment</span>
+                                <span>{isBasic ? "🏫 Headmistress's Performance Assessment" : isNursery ? "🧸 Nursery Admin's Performance Assessment" : "🎓 Principal's Performance Assessment"}</span>
                               </h4>
                               <p className="italic text-slate-600 pt-3 leading-relaxed">
-                                {(viewingReportStudent as any).principalRemark
-                                  ? `"${(viewingReportStudent as any).principalRemark}"`
+                                {viewingReportStudent.principalRemark
+                                  ? `"${viewingReportStudent.principalRemark}"`
                                   : (viewingReportStudent.formTeacherRemark.includes("outstanding") || stats.avgScore >= (template.distinctionThreshold || 90)
                                     ? `"Highly commendable academic and behavioral character shown during the term session. Excellent candidate. Promoted with honor."`
                                     : stats.avgScore >= (template.passThreshold || 50)
@@ -3109,12 +3157,14 @@ export default function TeacherDashboard({
 
                             <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
                               <div>
-                                <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold select-none">Authorized Principal</span>
-                                <p className="font-black text-slate-900">{displayPrincipalName}</p>
+                                <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold select-none font-sans">
+                                  {isBasic ? "Authorized Headmistress" : isNursery ? "Authorized Nursery Admin" : "Authorized Principal"}
+                                </span>
+                                <p className="font-black text-slate-900">{displaySignatoryName}</p>
                               </div>
                               <div className="text-right select-none">
                                 <div className="text-sm font-serif italic text-emerald-950 font-semibold h-5 tracking-wide">
-                                  {displayPrincipalName.replace("Dr.","").trim()}
+                                  {displaySignatoryName.replace("Dr.","").replace("Mrs.","").replace("Mr.","").trim()}
                                 </div>
                                 <span className="text-[8px] text-slate-400 uppercase tracking-wider block border-t border-slate-200 pt-0.5 mt-0.5">Seal & Signature</span>
                               </div>
@@ -3793,7 +3843,7 @@ export default function TeacherDashboard({
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center w-24"># TEST (30)</th>
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center w-24"># EXAM (70)</th>
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/10 w-24 text-emerald-750">Σ TERM (100)</th>
-                              {activeTermTab === 'Second Term' && ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes((previewStudent?.className || '').replace(/\s+/g, '')) && (
+                              {activeTermTab === 'Second Term' && ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes((previewStudent?.className || '').replace(/\s+/g, '')) && (
                                 <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-24 bg-blue-50 text-blue-900 font-extrabold">
                                   1st Term Avg
                                 </th>
@@ -3830,7 +3880,7 @@ export default function TeacherDashboard({
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-550">{subj.testScore}</td>
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-550">{subj.examScore}</td>
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-750 bg-emerald-50/10">{tot}</td>
-                                  {activeTermTab === 'Second Term' && ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes((previewStudent?.className || '').replace(/\s+/g, '')) && (
+                                  {activeTermTab === 'Second Term' && ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes((previewStudent?.className || '').replace(/\s+/g, '')) && (
                                     <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono font-bold text-slate-950 bg-blue-50/10">
                                       {(() => {
                                         let firstTermAvgStr = "-";
@@ -4061,7 +4111,7 @@ export default function TeacherDashboard({
                     {/* Behavioral & Conduct assessment Part B */}
                     {(() => {
                       const cleanClassName = (previewStudent?.className || '').replace(/\s+/g, '');
-                      const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].includes(cleanClassName);
+                      const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes(cleanClassName);
                       if (isSecondaryClass) return null;
                       return (
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
@@ -4141,7 +4191,20 @@ export default function TeacherDashboard({
                         </div>
                         
                         {(() => {
-                          const displayTeacherName = previewStudent.formTeacherName || (previewStudent.className.startsWith('JSS') ? template.formTeacherJunior : template.formTeacherSenior);
+                          const cleanClassName = (previewStudent.className || '').replace(/\s+/g, '');
+                          const isNursery = ['Pre-Nursery', 'Nursery1', 'Nursery2', 'Nursery3'].includes(cleanClassName);
+                          const isBasic = ['Basic1', 'Basic2', 'Basic3', 'Basic4', 'Basic5', 'Basic6'].includes(cleanClassName);
+
+                          let fallbackTeacher = '';
+                          if (isBasic) {
+                            fallbackTeacher = template.formTeacherJunior || "Headmistress";
+                          } else if (isNursery) {
+                            fallbackTeacher = template.formTeacherSenior || "Nursery Admin";
+                          } else {
+                            fallbackTeacher = template.principalName || "Principal";
+                          }
+
+                          const displayTeacherName = previewStudent.formTeacherName || fallbackTeacher;
                           return (
                             <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
                               <div>
@@ -4159,30 +4222,54 @@ export default function TeacherDashboard({
                         })()}
                       </div>
 
-                      {/* Principal Assessment Callout */}
-                      <div className="bg-[#FAF9F9] border border-slate-200 p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-3xs text-slate-800 text-xs text-left">
-                        <div>
-                          <h4 className="font-black text-slate-900 text-xs uppercase tracking-widest border-b border-slate-200/50 pb-1.5 flex items-center gap-1.5">
-                            <span>🎓 Principal's Performance Assessment</span>
-                          </h4>
-                          <p className="italic text-slate-600 pt-3 leading-relaxed">
-                            {(previewStudent as any).principalRemark
-                              ? `"${(previewStudent as any).principalRemark}"`
-                              : (previewStudent.formTeacherRemark.includes("outstanding") || stats.avgScore >= (template.distinctionThreshold || 90)
-                                ? `"Highly commendable academic and behavioral character shown during the term session. Excellent candidate. Promoted with honor."`
-                                : stats.avgScore >= (template.passThreshold || 50)
-                                  ? `"Satisfactory progress. Continued focus on core concepts will serve candidate well. Promoted."`
-                                  : `"Needs close guidance and study supervision in future sessions to ensure passing criteria."`)}
-                          </p>
-                        </div>
+                      {(() => {
+                        const cleanClassName = (previewStudent.className || '').replace(/\s+/g, '');
+                        const isNursery = ['Pre-Nursery', 'Nursery1', 'Nursery2', 'Nursery3'].includes(cleanClassName);
+                        const isBasic = ['Basic1', 'Basic2', 'Basic3', 'Basic4', 'Basic5', 'Basic6'].includes(cleanClassName);
 
-                        <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
-                          <div>
-                            <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold">Authorized Principal</span>
-                            <p className="font-black text-slate-900">{template.principalName}</p>
+                        let displaySignatoryName = template.principalName;
+                        let displayRole = "Principal";
+                        let assessmentHeading = "🎓 Principal's Performance Assessment";
+
+                        if (isBasic) {
+                          displaySignatoryName = template.formTeacherJunior || "Mrs. Nancy Yusuf";
+                          displayRole = "Headmistress";
+                          assessmentHeading = "🏫 Headmistress's Performance Assessment";
+                        } else if (isNursery) {
+                          displaySignatoryName = template.formTeacherSenior || "Nursery Admin";
+                          displayRole = "Nursery Admin";
+                          assessmentHeading = "🧸 Nursery Admin's Performance Assessment";
+                        }
+
+                        return (
+                          /* Signatory Assessment Callout */
+                          <div className="bg-[#FAF9F9] border border-slate-200 p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-3xs text-slate-800 text-xs text-left">
+                            <div>
+                              <h4 className="font-black text-slate-900 text-xs uppercase tracking-widest border-b border-slate-200/50 pb-1.5 flex items-center gap-1.5">
+                                <span>{assessmentHeading}</span>
+                              </h4>
+                              <p className="italic text-slate-600 pt-3 leading-relaxed">
+                                {(previewStudent as any).principalRemark
+                                  ? `"${(previewStudent as any).principalRemark}"`
+                                  : (previewStudent.formTeacherRemark.includes("outstanding") || stats.avgScore >= (template.distinctionThreshold || 90)
+                                    ? `"Highly commendable academic and behavioral character shown during the term session. Excellent candidate. Promoted with honor."`
+                                    : stats.avgScore >= (template.passThreshold || 50)
+                                      ? `"Satisfactory progress. Continued focus on core concepts will serve candidate well. Promoted."`
+                                      : `"Needs close guidance and study supervision in future sessions to ensure passing criteria."`)}
+                              </p>
+                            </div>
+
+                            <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
+                              <div>
+                                <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold">
+                                  Authorized {displayRole}
+                                </span>
+                                <p className="font-black text-slate-900">{displaySignatoryName}</p>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 );
@@ -4674,7 +4761,7 @@ export default function TeacherDashboard({
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Junior College Advisor (JSS)</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Headmistress (Basic 1 to 6)</label>
                     <input
                       type="text"
                       required
@@ -4684,7 +4771,7 @@ export default function TeacherDashboard({
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Senior College Advisor (SS)</label>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nursery Admin (Pre-Nursery to Nursery 3)</label>
                     <input
                       type="text"
                       required
@@ -4790,9 +4877,7 @@ export default function TeacherDashboard({
 
             {/* Main Admin Only: Reset All Student Results Button */}
             {isAdmin && !isCoAdmin && (() => {
-              const isAugust = new Date().getMonth() === 7;
-              const isThirdTerm = template.currentTerm === 'Third Term';
-              const isResetActive = isThirdTerm && isAugust;
+              const isResetActive = true;
 
               return (
                 <div className="mt-8 pt-6 border-t border-red-100 bg-red-50/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -4801,9 +4886,9 @@ export default function TeacherDashboard({
                       <span>⚠️</span> Session Cleanup & Rollover Control
                     </h4>
                     <p className="text-[10px] text-slate-500 max-w-lg leading-relaxed font-medium">
-                      This action deletes all student terminal results (test scores, exam scores, term summaries, and remarks) across all class grade-levels to prepare records for the next yearly academic session. 
-                      <strong className="block text-red-800 mt-1 font-bold">
-                        Only available during Third Term in the month of August.
+                      This action completely deletes all students and their respective report card records (test scores, exam scores, term summaries, remarks, and settings) across all classes to start completely fresh for the next session.
+                      <strong className="block text-emerald-800 mt-1 font-bold">
+                        Always active and available for administrators.
                       </strong>
                     </p>
                   </div>
@@ -4815,25 +4900,9 @@ export default function TeacherDashboard({
                       if (resetConfirmState === 'idle') {
                         setResetConfirmState('confirming');
                       } else {
-                        // Perform reset!
-                        const resetList = students.map(student => ({
-                          ...student,
-                          attendancePresent: 0,
-                          attendanceTotal: 0,
-                          formTeacherRemark: '',
-                          principalRemark: '',
-                          subjects: student.subjects.map(subj => ({
-                            ...subj,
-                            testScore: 0,
-                            examScore: 0,
-                            firstTermSummary: 0,
-                            secondTermSummary: 0,
-                            thirdTermSummary: 0,
-                            position: 1
-                          }))
-                        }));
-                        onUpdateStudents(resetList);
-                        triggerSuccess('Successfully deleted all student terminal results & reset academic records across all classes for the next yearly session!');
+                        // Perform full reset: completely delete all student records!
+                        onUpdateStudents([]);
+                        triggerSuccess('Successfully deleted all students across all classes for a completely fresh academic session!');
                         setResetConfirmState('idle');
                       }
                     }}
@@ -4846,7 +4915,7 @@ export default function TeacherDashboard({
                     }`}
                   >
                     <span>🗑️</span>
-                    {resetConfirmState === 'confirming' ? 'Click again to confirm Reset' : 'Delete Reset All Classes'}
+                    {resetConfirmState === 'confirming' ? 'Click again to confirm Reset' : 'Delete All Students (Fresh Start)'}
                   </button>
                 </div>
               );
@@ -4854,7 +4923,7 @@ export default function TeacherDashboard({
 
 
           </div>
-        ) : activeSubTab === 'staff' && isAdmin && !isCoAdmin ? (
+        ) : activeSubTab === 'staff' && currentUser && currentUser.id === 'ezekiel' ? (
           /* VIEW 4: ADMIN STAFF MANAGEMENT SCREEN */
           <div className="bg-white border rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm animate-fade-in text-slate-800">
             <div className="border-b pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
