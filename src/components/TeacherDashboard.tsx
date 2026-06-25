@@ -2675,7 +2675,7 @@ export default function TeacherDashboard({
                             <th className="py-2.5 px-3 border-r border-slate-300 text-center bg-emerald-100/40 w-24">
                               <span className="flex items-center justify-center gap-1 text-emerald-950">Σ TERM (100)</span>
                             </th>
-                            {activeTermTab === 'Second Term' && ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes((viewingReportStudent?.className || '').replace(/\s+/g, '')) && (
+                            {activeTermTab === 'Second Term' && (
                               <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-24 bg-blue-50 text-blue-900 font-extrabold">
                                 <span className="flex items-center justify-center gap-1">1st Term Avg</span>
                               </th>
@@ -2727,7 +2727,7 @@ export default function TeacherDashboard({
                                 <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955">{subj.testScore}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955">{subj.examScore}</td>
                                 <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black font-mono text-emerald-955 bg-emerald-50/30">{tot}</td>
-                                {activeTermTab === 'Second Term' && ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes((viewingReportStudent?.className || '').replace(/\s+/g, '')) && (
+                                {activeTermTab === 'Second Term' && (
                                   <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955 bg-blue-50/10">
                                     {(() => {
                                       let firstTermAvgStr = "-";
@@ -3336,12 +3336,17 @@ export default function TeacherDashboard({
 
                 <div className="space-y-2 border rounded-2xl overflow-x-auto shadow-inner">
                   <div className="bg-slate-100 border-b p-3 grid grid-cols-12 text-[10px] font-bold uppercase text-slate-500 tracking-wider min-w-[850px] items-center">
-                    <span className={activeTermTab === 'Third Term' ? "col-span-3" : "col-span-4"}>Subject Course Title</span>
-                    <span className={activeTermTab === 'Third Term' ? "col-span-1 text-center font-bold" : "col-span-2 text-center font-bold"}>Test (30)</span>
-                    <span className={activeTermTab === 'Third Term' ? "col-span-1 text-center font-bold" : "col-span-2 text-center font-bold"}>Exam (70)</span>
+                    <span className={(activeTermTab === 'Third Term' || activeTermTab === 'Second Term') ? "col-span-3" : "col-span-4"}>Subject Course Title</span>
+                    <span className={(activeTermTab === 'Third Term' || activeTermTab === 'Second Term') ? "col-span-1 text-center font-bold" : "col-span-2 text-center font-bold"}>Test (30)</span>
+                    <span className={(activeTermTab === 'Third Term' || activeTermTab === 'Second Term') ? "col-span-1 text-center font-bold" : "col-span-2 text-center font-bold"}>Exam (70)</span>
                     <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-indigo-900 bg-indigo-50 border border-slate-200">
                       Live Total
                     </span>
+                    {activeTermTab === 'Second Term' && (
+                      <span className="col-span-2 text-center font-bold font-sans py-1 rounded text-emerald-800 bg-emerald-100/70 border border-emerald-300">
+                        1st Term Avg (100)
+                      </span>
+                    )}
                     {activeTermTab === 'Third Term' && (
                       <>
                         <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-emerald-800 bg-emerald-100/70 border border-emerald-300">
@@ -3355,7 +3360,7 @@ export default function TeacherDashboard({
                         </span>
                       </>
                     )}
-                    <span className="col-span-2 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300" title="Automatically calculated from Student grades list ranking">
+                    <span className={activeTermTab === 'Second Term' ? "col-span-3 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300" : "col-span-2 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300"} title="Automatically calculated from Student grades list ranking">
                       Subject Position (Auto)
                     </span>
                     <span className="col-span-1 text-center font-bold text-slate-400">Action</span>
@@ -3369,7 +3374,7 @@ export default function TeacherDashboard({
                       const tTermVal = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
                       return (
                         <div key={subj.id} className="p-3 grid grid-cols-12 items-center text-xs font-semibold text-slate-800 hover:bg-slate-50">
-                          <div className={activeTermTab === 'Third Term' ? "col-span-3 flex items-center pr-2" : "col-span-4 flex items-center pr-2"}>
+                          <div className={(activeTermTab === 'Third Term' || activeTermTab === 'Second Term') ? "col-span-3 flex items-center pr-2" : "col-span-4 flex items-center pr-2"}>
                             {(() => {
                               const isKgClass = editingStudent && (editingStudent.className === 'Nursery 1' || editingStudent.className === 'Nursery 2' || editingStudent.className === 'Nursery 3');
                               const isPermanentKgSubject = !!(isKgClass && NURSERY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase()));
@@ -3386,7 +3391,7 @@ export default function TeacherDashboard({
                               );
                             })()}
                           </div>
-                          <span className={activeTermTab === 'Third Term' ? "col-span-1 flex justify-center px-1" : "col-span-2 flex justify-center px-1"}>
+                          <span className={(activeTermTab === 'Third Term' || activeTermTab === 'Second Term') ? "col-span-1 flex justify-center px-1" : "col-span-2 flex justify-center px-1"}>
                             <input
                               type="number"
                               min={0}
@@ -3399,7 +3404,7 @@ export default function TeacherDashboard({
                               className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-emerald-600 font-bold font-mono text-slate-800 disabled:opacity-75 disabled:cursor-not-allowed"
                             />
                           </span>
-                          <span className={activeTermTab === 'Third Term' ? "col-span-1 flex justify-center px-1" : "col-span-2 flex justify-center px-1"}>
+                          <span className={(activeTermTab === 'Third Term' || activeTermTab === 'Second Term') ? "col-span-1 flex justify-center px-1" : "col-span-2 flex justify-center px-1"}>
                             <input
                               type="number"
                               min={0}
@@ -3416,6 +3421,22 @@ export default function TeacherDashboard({
                             {subjTotal}
                           </span>
                           
+                          {activeTermTab === 'Second Term' && (
+                            <span className="col-span-2 flex justify-center px-1">
+                              <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                disabled={isTermReadOnly}
+                                value={focusedInputs[`${subj.id}_firstTerm`] && fTermVal === 0 ? '' : fTermVal}
+                                onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: true }))}
+                                onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: false }))}
+                                onChange={(e) => handleScoreChange(subj.id, 'firstTerm', parseInt(e.target.value) || 0)}
+                                className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50/50 border border-emerald-200 focus:border-emerald-500 text-emerald-800 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
+                              />
+                            </span>
+                          )}
+
                           {activeTermTab === 'Third Term' && (
                             <>
                               {/* First Term Summary */}
@@ -3466,7 +3487,7 @@ export default function TeacherDashboard({
                           )}
 
                           {/* Position (Auto calculated Rank) */}
-                          <span className="col-span-2 flex justify-center px-2">
+                          <span className={activeTermTab === 'Second Term' ? "col-span-3 flex justify-center px-2" : "col-span-2 flex justify-center px-2"}>
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-700 rounded font-mono font-bold text-xs" title="Position is automatically calculated based on class subject ranking">
                               {formatOrdinal(subj.position || 1)}
                             </span>
@@ -3860,7 +3881,7 @@ export default function TeacherDashboard({
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center w-24"># TEST (30)</th>
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center w-24"># EXAM (70)</th>
                               <th className="py-2.5 px-3 border-r border-slate-200 text-center bg-emerald-50/10 w-24 text-emerald-750">Σ TERM (100)</th>
-                              {activeTermTab === 'Second Term' && ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes((previewStudent?.className || '').replace(/\s+/g, '')) && (
+                              {activeTermTab === 'Second Term' && (
                                 <th className="py-2.5 px-3 border-r border-slate-200 text-center text-[10px] w-24 bg-blue-50 text-blue-900 font-extrabold">
                                   1st Term Avg
                                 </th>
@@ -3897,8 +3918,8 @@ export default function TeacherDashboard({
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-550">{subj.testScore}</td>
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono text-slate-550">{subj.examScore}</td>
                                   <td className="py-2.5 px-3 border-r border-slate-100 text-center font-black font-mono text-emerald-750 bg-emerald-50/10">{tot}</td>
-                                  {activeTermTab === 'Second Term' && ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes((previewStudent?.className || '').replace(/\s+/g, '')) && (
-                                    <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono font-bold text-slate-950 bg-blue-50/10">
+                                  {activeTermTab === 'Second Term' && (
+                                    <td className="py-2.5 px-3 border-r border-slate-100 text-center font-mono font-bold text-slate-955 bg-blue-50/10">
                                       {(() => {
                                         let firstTermAvgStr = "-";
                                         const baseId = previewStudent.id.split('_')[0];
