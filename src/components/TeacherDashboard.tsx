@@ -342,6 +342,9 @@ export default function TeacherDashboard({
       element.style.width = '1024px';
       element.style.minWidth = '1024px';
       element.style.maxWidth = '1024px';
+      element.style.height = '1430px';
+      element.style.minHeight = '1430px';
+      element.style.maxHeight = '1430px';
       element.style.boxSizing = 'border-box';
       
       // Force nested tables to render fully visible in layout canvas
