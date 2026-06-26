@@ -122,16 +122,16 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
   return (
     <div 
       ref={ref}
-      className={`report-card-printable bg-white border border-slate-205 rounded-2xl shadow-lg p-4 sm:p-6 space-y-4 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in text-slate-800 text-[13px] ${isGeneratingPdf ? 'pdf-force-light' : ''}`}
+      className={`report-card-printable bg-white border border-slate-200 rounded-xl shadow-md p-3 sm:p-4 space-y-2 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in text-slate-800 text-[13px] leading-tight ${isGeneratingPdf ? 'pdf-force-light' : ''}`}
     >
       {/* Diagonal tiled watermark background */}
       <ReportCardWatermark />
 
       {/* Print layout decorator line */}
-      <div className="absolute inset-2 border border-slate-100 rounded-xl pointer-events-none print:hidden"></div>
+      <div className="absolute inset-2 border border-slate-100/50 rounded-lg pointer-events-none print:hidden"></div>
 
       {/* Ezibeck Style Header Breadcrumbs */}
-      <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-medium text-slate-400 border-b border-slate-100 pb-2 relative z-10 select-none">
+      <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-medium text-slate-400 border-b border-slate-100 pb-1 relative z-10 select-none print:hidden">
         <span>🏫 {template.schoolName}</span>
         <span>/</span>
         <span>📁 Report Registry</span>
@@ -140,12 +140,10 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
         <span>/</span>
         <span className="text-slate-700 font-semibold">📄 {student.name}</span>
       </div>
-
-      {/* School Header Section with centered text and badge on the left */}
-      <div className="relative flex items-center justify-center border-b border-slate-200/50 pb-3 mt-1 select-none">
+      <div className="relative flex items-center justify-center border-b border-slate-200/50 pb-1.5 mt-0 select-none">
         {/* School Badge on the left side */}
         <div className="absolute left-0 flex-shrink-0">
-          <div className="w-12 h-12 bg-white rounded-xl border border-slate-200 shadow-3xs flex items-center justify-center overflow-hidden">
+          <div className="w-10 h-10 bg-white rounded-lg border border-slate-200 shadow-3xs flex items-center justify-center overflow-hidden">
             <img 
               src={schoolBadge} 
               alt={`${template.schoolName} Emblem`} 
@@ -156,40 +154,44 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
         </div>
 
         {/* Centered header details */}
-        <div className="text-center space-y-0.5 max-w-xl">
-          <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-none uppercase">
+        <div className="text-center space-y-0 max-w-xl">
+          <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-none uppercase">
             {template.schoolName}
           </h1>
-          <p className="text-[8.5px] uppercase tracking-wider text-emerald-750 font-extrabold flex items-center justify-center gap-1 select-none">
+          <p className="text-[8px] uppercase tracking-wider text-emerald-750 font-extrabold flex items-center justify-center gap-1 select-none">
             <span className="w-1 h-1 rounded-full bg-emerald-600"></span>
             Motto: {template.motto}
           </p>
-          <p className="text-slate-500 text-[8.5px] leading-none">
+          <p className="text-slate-500 text-[8px] leading-none">
             <strong>Address:</strong> {template.address} | <strong>Phone:</strong> {template.phone} | <strong>Email:</strong> {template.email}
           </p>
         </div>
       </div>
 
       {/* Dynamic Official Page Heading */}
-      <div className="relative z-10 py-1 flex items-center justify-between border-b border-slate-100 select-none">
-        <h2 className="text-[10.5px] font-extrabold text-slate-900 tracking-tight leading-none uppercase flex items-center gap-1.5">
-          <span className="inline-block px-2 py-0.5 bg-slate-900 text-slate-100 text-[8px] font-black rounded tracking-wider">OFFICIAL STATUS</span>
-          STUDENT’S TERMLY REPORT SHEET FOR {student.className.startsWith('JSS') ? 'JUNIOR' : 'SENIOR'} SECONDARY SCHOOL
+      <div className="relative z-10 py-0.5 flex items-center justify-between border-b border-slate-100 select-none">
+        <h2 className="text-[10px] font-extrabold text-slate-900 tracking-tight leading-none uppercase flex items-center gap-1.5">
+          <span className="inline-block px-1.5 py-0.5 bg-slate-900 text-slate-100 text-[7.5px] font-black rounded tracking-wider">OFFICIAL STATUS</span>
+          STUDENT’S TERMLY REPORT SHEET FOR {
+            student.className.startsWith('JSS') ? 'JUNIOR SECONDARY' :
+            student.className.startsWith('SS') ? 'SENIOR SECONDARY' :
+            student.className.startsWith('Basic') ? 'BASIC' : 'NURSERY'
+          } SCHOOL
         </h2>
-        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+        <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-widest">
           {term.toUpperCase()} SESSION
         </span>
       </div>
 
       {/* Top Compact Cards: 2 Columns Grid */}
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="relative z-10 grid grid-cols-2 gap-3">
         {/* Card 1: Student Profile */}
-        <div className="bg-[#FAF9F9] border border-slate-200/80 rounded-xl p-2.5 shadow-3xs text-slate-800 text-[13px] flex flex-col justify-between">
+        <div className="bg-[#FAF9F9] border border-slate-200/80 rounded-xl p-2 shadow-3xs text-slate-800 text-[12px] flex flex-col justify-between">
           <div>
-            <h4 className="font-extrabold text-slate-900 text-[11px] uppercase tracking-wider mb-1.5 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
+            <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
               <span>👤</span> Student Profile
             </h4>
-            <div className="space-y-0.5">
+            <div className="space-y-0">
               <div className="flex justify-between items-center gap-1">
                 <span className="text-slate-400 font-semibold select-none">Name:</span>
                 <span className="font-extrabold text-slate-900 truncate max-w-[220px]">{student.name}</span>
@@ -212,19 +214,19 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
               </div>
             </div>
           </div>
-          <div className="border-t border-slate-200/50 pt-1 mt-1 flex justify-between items-center text-[11px]">
+          <div className="border-t border-slate-200/50 pt-0.5 mt-0.5 flex justify-between items-center text-[10.5px]">
             <span className="text-slate-400 font-semibold select-none">Attendance:</span>
-            <span className="font-bold text-slate-800">{student.attendancePresent} / {student.attendanceTotal} sessions ({Math.round((student.attendancePresent || 0) / (student.attendanceTotal || 1) * 100)}%)</span>
+            <span className="font-bold text-slate-800">{student.attendancePresent} / {student.attendanceTotal} sessions ({Math.round((student.attendancePresent || 0) / (student.attendanceTotal || 1) * 105)}%)</span>
           </div>
         </div>
 
-        {/* Card 3: Next Term & Fees Summary */}
-        <div className="bg-[#FAF9F9] border border-slate-200/80 rounded-xl p-2.5 shadow-3xs text-slate-850 text-[11px] flex flex-col justify-between">
+        {/* Card 2: Next Term & Fees Summary */}
+        <div className="bg-[#FAF9F9] border border-slate-200/80 rounded-xl p-2 shadow-3xs text-slate-855 text-[12px] flex flex-col justify-between">
           <div>
-            <h4 className="font-extrabold text-slate-900 text-[11px] uppercase tracking-wider mb-1.5 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
+            <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
               <span>💰</span> Next Term Fees Summary
             </h4>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[12px]">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-0 text-[11px]">
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 font-medium">School Fees:</span>
                 <span className="font-bold text-slate-700">{sFee}</span>
@@ -243,11 +245,11 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
               </div>
             </div>
           </div>
-          <div className="border-t border-dashed border-emerald-300 pt-1 mt-1 flex justify-between items-center text-[12px]">
-            <span className="font-extrabold text-emerald-850">Total Invoice:</span>
-            <span className="font-black text-emerald-850 font-mono">{totalFormatted}</span>
+          <div className="border-t border-dashed border-emerald-300 pt-0.5 mt-0.5 flex justify-between items-center text-[11px]">
+            <span className="font-extrabold text-emerald-855">Total Invoice:</span>
+            <span className="font-black text-emerald-855 font-mono">{totalFormatted}</span>
           </div>
-          <div className="flex justify-between items-center mt-0.5 text-[11px] text-slate-400 leading-none">
+          <div className="flex justify-between items-center mt-0.5 text-[10.5px] text-slate-400 leading-none">
             <span>Resumption:</span>
             <span className="font-extrabold text-slate-600">{template.resumptionDate}</span>
           </div>
@@ -255,7 +257,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
       </div>
 
       {/* Part A: Academic Course Evaluation */}
-      <div className="relative z-10 space-y-1.5">
+      <div className="relative z-10 space-y-1">
         <h3 className="text-slate-900 font-black text-[10.5px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 py-0.5 flex items-center justify-between select-none">
           <span>Part A: Academic Course Evaluation</span>
           <span className="text-[8.5px] text-slate-450 normal-case font-bold">Standard Formula Matrix Layout</span>
@@ -441,46 +443,15 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
         </div>
       </div>
 
-      {/* Part B: Academic Performance Summary (Moved to Bottom of Table) */}
-      <div className="relative z-10 bg-[#FAF9F9] border border-slate-200/85 rounded-xl p-3 shadow-3xs text-slate-800 text-[13px] print:text-[13px]">
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
-          <div className="flex items-center gap-2">
-            <span className="font-extrabold text-slate-900 uppercase tracking-wider text-[11px] select-none">📊 Academic Summary:</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-500 font-semibold select-none">Cumulative Total:</span>
-              <span className="font-black text-slate-900">{stats.totalScore} / {stats.maxPossibleScore}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-500 font-semibold select-none">Termly Average:</span>
-              <span className="font-black text-emerald-800 font-mono">{stats.avgScore.toFixed(1)}%</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-500 font-semibold select-none">Total Subjects:</span>
-              <span className="font-bold text-slate-800">{student.subjects.length}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-500 font-semibold select-none">Passed:</span>
-              <span className="font-bold text-emerald-700">{stats.creditsAndAbove + stats.passes}</span>
-            </div>
-            <div className="flex items-center gap-1.5 border-l border-slate-200 pl-4">
-              <span className="text-slate-500 font-semibold select-none">Verdict:</span>
-              <span className="font-black text-emerald-850 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">{stats.avgScore >= (template.passThreshold || 50) ? "PASS" : "FAIL"}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Ratings & Grade Scale Row */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 relative z-10 pt-3 border-t border-dashed border-slate-200">
+      <div className="grid grid-cols-12 gap-3 relative z-10 pt-2 border-t border-dashed border-slate-200">
         {/* Column 1: Character & Behavioral Conduct Ratings (takes 8/12 width) */}
-        <div className="md:col-span-8 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-3 shadow-3xs flex flex-col justify-between">
+        <div className="col-span-8 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between">
           <div>
-            <h4 className="font-extrabold text-slate-900 text-[11px] uppercase tracking-wider mb-2 select-none border-b border-slate-200/50 pb-1 flex items-center gap-1">
+            <h4 className="font-extrabold text-slate-900 text-[10.5px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
               <span>🌟</span> Character & Skills Ratings
             </h4>
-            <div className="space-y-1 text-[13px] text-slate-800">
+            <div className="space-y-0 text-[12px] text-slate-800">
               {(() => {
                 const isKgClass = student.className === 'Pre-Nursery' || student.className.startsWith('Nursery');
                 if (isKgClass) {
@@ -492,21 +463,21 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                   );
                   return (
                     <div className="grid grid-cols-2 gap-x-4">
-                      <div className="space-y-0.5">
-                        <h5 className="font-bold text-[9px] text-slate-400 uppercase tracking-wider pb-0.5 border-b border-slate-100">Behavioral</h5>
+                      <div className="space-y-0">
+                        <h5 className="font-bold text-[8.5px] text-slate-400 uppercase tracking-wider pb-0.2 border-b border-slate-100">Behavioral</h5>
                         {behaviouralList.map(b => (
-                          <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-100">
+                          <div key={b.name} className="flex items-center justify-between py-0.2 border-b border-dashed border-slate-100">
                             <span className="font-semibold text-slate-600 truncate max-w-[100px]">{b.name}</span>
-                            <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1.5 rounded">{b.rating}/5</span>
+                            <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1 rounded">{b.rating}/5</span>
                           </div>
                         ))}
                       </div>
-                      <div className="space-y-0.5">
-                        <h5 className="font-bold text-[9px] text-slate-400 uppercase tracking-wider pb-0.5 border-b border-slate-100">Skills</h5>
+                      <div className="space-y-0">
+                        <h5 className="font-bold text-[8.5px] text-slate-400 uppercase tracking-wider pb-0.2 border-b border-slate-100">Skills</h5>
                         {skillList.map(b => (
-                          <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-100">
+                          <div key={b.name} className="flex items-center justify-between py-0.2 border-b border-dashed border-slate-100">
                             <span className="font-semibold text-slate-600 truncate max-w-[100px]">{b.name}</span>
-                            <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1.5 rounded">{b.rating}/5</span>
+                            <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1 rounded">{b.rating}/5</span>
                           </div>
                         ))}
                       </div>
@@ -516,9 +487,9 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                   return (
                     <div className="grid grid-cols-2 gap-x-4">
                       {student.behaviour.map(b => (
-                        <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-100">
+                        <div key={b.name} className="flex items-center justify-between py-0.2 border-b border-dashed border-slate-100">
                           <span className="font-semibold text-slate-600 truncate max-w-[110px]">{b.name}</span>
-                          <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1.5 rounded">{b.rating}/5</span>
+                          <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1 rounded">{b.rating}/5</span>
                         </div>
                       ))}
                     </div>
@@ -530,64 +501,64 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
         </div>
 
         {/* Column 2: Grades Index & Conduct Scale (takes 4/12 width, very compact) */}
-        <div className="md:col-span-4 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-3 shadow-3xs flex flex-col justify-between">
+        <div className="col-span-4 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between">
           <div>
-            <h4 className="font-extrabold text-slate-900 text-[11px] uppercase tracking-wider mb-2 select-none border-b border-slate-200/50 pb-1 flex items-center gap-1">
+            <h4 className="font-extrabold text-slate-900 text-[10.5px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
               <span>📋</span> Grade Key & Conduct Scale
             </h4>
-            <div className="grid grid-cols-2 gap-2 text-[12px]">
+            <div className="grid grid-cols-2 gap-2 text-[11px]">
               {/* Grades Index table */}
               <div className="border border-slate-150 rounded-lg overflow-hidden shadow-3xs">
-                <table className="w-full text-[9px] text-left border-collapse text-slate-600">
+                <table className="w-full text-[8.5px] text-left border-collapse text-slate-600">
                   <tbody className="divide-y divide-slate-100 font-semibold">
                     <tr>
-                      <td className="py-0.5 px-1 font-black text-emerald-700 bg-emerald-50">A+</td>
-                      <td className="py-0.5 px-1">90-100</td>
+                      <td className="py-0 px-1 font-black text-emerald-700 bg-emerald-50">A+</td>
+                      <td className="py-0 px-1">90-100</td>
                     </tr>
                     <tr>
-                      <td className="py-0.5 px-1 font-black text-green-700 bg-green-50">A</td>
-                      <td className="py-0.5 px-1">80-89</td>
+                      <td className="py-0 px-1 font-black text-green-700 bg-green-50">A</td>
+                      <td className="py-0 px-1">80-89</td>
                     </tr>
                     <tr>
-                      <td className="py-0.5 px-1 font-black text-sky-700 bg-sky-50">B</td>
-                      <td className="py-0.5 px-1">70-79</td>
+                      <td className="py-0 px-1 font-black text-sky-700 bg-sky-50">B</td>
+                      <td className="py-0 px-1">70-79</td>
                     </tr>
                     <tr>
-                      <td className="py-0.5 px-1 font-black text-amber-500 bg-amber-50">C</td>
-                      <td className="py-0.5 px-1">60-69</td>
+                      <td className="py-0 px-1 font-black text-amber-500 bg-amber-50">C</td>
+                      <td className="py-0 px-1">60-69</td>
                     </tr>
                     <tr>
-                      <td className="py-0.5 px-1 font-black text-orange-600 bg-orange-50">D</td>
-                      <td className="py-0.5 px-1">50-59</td>
+                      <td className="py-0 px-1 font-black text-orange-600 bg-orange-50">D</td>
+                      <td className="py-0 px-1">50-59</td>
                     </tr>
                     <tr>
-                      <td className="py-0.5 px-1 font-black text-red-500 bg-red-50">F</td>
-                      <td className="py-0.5 px-1">&lt; 50</td>
+                      <td className="py-0 px-1 font-black text-red-500 bg-red-50">F</td>
+                      <td className="py-0 px-1">&lt; 50</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
 
               {/* Conduct Scale list */}
-              <div className="space-y-0.5 text-slate-500 font-bold text-[9px]">
+              <div className="space-y-0 text-slate-500 font-bold text-[8.5px]">
                 <div className="flex items-center gap-1">
-                  <span className="w-3.5 h-3.5 rounded bg-emerald-50 text-emerald-700 text-[8px] flex items-center justify-center font-mono font-black">5</span>
+                  <span className="w-3 h-3 rounded bg-emerald-50 text-emerald-700 text-[7.5px] flex items-center justify-center font-mono font-black">5</span>
                   <span>Excellent</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="w-3.5 h-3.5 rounded bg-green-50 text-green-700 text-[8px] flex items-center justify-center font-mono font-black">4</span>
+                  <span className="w-3 h-3 rounded bg-green-50 text-green-700 text-[7.5px] flex items-center justify-center font-mono font-black">4</span>
                   <span>Very Good</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="w-3.5 h-3.5 rounded bg-sky-50 text-sky-700 text-[8px] flex items-center justify-center font-mono font-black">3</span>
+                  <span className="w-3 h-3 rounded bg-sky-50 text-sky-700 text-[7.5px] flex items-center justify-center font-mono font-black">3</span>
                   <span>Good</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="w-3.5 h-3.5 rounded bg-amber-50 text-amber-600 text-[8px] flex items-center justify-center font-mono font-black">2</span>
+                  <span className="w-3 h-3 rounded bg-amber-50 text-amber-650 text-[7.5px] flex items-center justify-center font-mono font-black">2</span>
                   <span>Fair</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="w-3.5 h-3.5 rounded bg-slate-50 text-slate-500 text-[8px] flex items-center justify-center font-mono font-black">1</span>
+                  <span className="w-3 h-3 rounded bg-slate-50 text-slate-500 text-[7.5px] flex items-center justify-center font-mono font-black">1</span>
                   <span>Needs Work</span>
                 </div>
               </div>
@@ -596,36 +567,36 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
         </div>
       </div>
 
-      {/* Appraisals, Signatures & Stamps (One Row) */}
-      <div className="bg-[#FAF9F9] border border-slate-200 rounded-xl p-3 shadow-3xs text-[13px] print:text-[13px] text-slate-800 space-y-3 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Appraisals, Signatures & Stamps (Guaranteed 1 row using grid-cols-2) */}
+      <div className="bg-[#FAF9F9] border border-slate-200 rounded-xl p-2 shadow-3xs text-[12px] print:text-[12px] text-slate-800 space-y-2 relative z-10">
+        <div className="grid grid-cols-2 gap-4">
           {/* Column 1: Teacher Remark */}
-          <div className="space-y-2">
+          <div className="space-y-1">
             <div>
-              <span className="font-extrabold text-slate-955 uppercase tracking-wider block border-b border-slate-200 pb-1 select-none text-[11px]">
+              <span className="font-extrabold text-slate-955 uppercase tracking-wider block border-b border-slate-200 pb-0.5 select-none text-[10px]">
                 💬 Teacher Appraisal
               </span>
-              <p className="italic text-slate-600 leading-tight pt-1 min-h-[40px]">
+              <p className="italic text-slate-600 leading-tight pt-0.5">
                 "{student.formTeacherRemark}"
               </p>
             </div>
             
-            <div className="pt-2 flex justify-between items-center border-t border-slate-100">
+            <div className="pt-1 flex justify-between items-center border-t border-slate-100">
               <div>
-                <p className="font-black text-slate-900 select-none text-[12px]">{displayTeacherName}</p>
-                <span className="text-slate-455 uppercase tracking-wider select-none font-bold text-[9px]">Class Teacher</span>
+                <p className="font-black text-slate-900 select-none text-[11px]">{displayTeacherName}</p>
+                <span className="text-slate-455 uppercase tracking-wider select-none font-bold text-[8.5px]">Class Teacher</span>
               </div>
-              <div className="border-b border-dashed border-slate-400 w-24 h-5"></div>
+              <div className="border-b border-dashed border-slate-400 w-20 h-4"></div>
             </div>
           </div>
 
           {/* Column 2: Principal / Headmistress Remark */}
-          <div className="space-y-2">
+          <div className="space-y-1">
             <div>
-              <span className="font-extrabold text-slate-955 uppercase tracking-wider block border-b border-slate-200 pb-1 select-none text-[11px]">
+              <span className="font-extrabold text-slate-955 uppercase tracking-wider block border-b border-slate-200 pb-0.5 select-none text-[10px]">
                 {isBasic ? "Headmistress assessment" : isNursery ? "Nursery Admin assessment" : "Principal assessment"}
               </span>
-              <p className="italic text-slate-600 leading-tight pt-1 min-h-[40px]">
+              <p className="italic text-slate-600 leading-tight pt-0.5">
                 {student.principalRemark
                   ? `"${student.principalRemark}"`
                   : (student.formTeacherRemark.includes("outstanding") || stats.avgScore >= (template.distinctionThreshold || 90)
@@ -636,18 +607,18 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
               </p>
             </div>
 
-            <div className="pt-2 flex justify-between items-center border-t border-slate-100">
+            <div className="pt-1 flex justify-between items-center border-t border-slate-100">
               <div>
-                <p className="font-black text-slate-900 select-none text-[12px]">{displaySignatoryName}</p>
-                <span className="text-slate-455 uppercase tracking-wider select-none font-bold text-[9px]">
+                <p className="font-black text-slate-900 select-none text-[11px]">{displaySignatoryName}</p>
+                <span className="text-slate-455 uppercase tracking-wider select-none font-bold text-[8.5px]">
                   {isBasic ? "Headmistress" : isNursery ? "Nursery Admin" : "Principal"}
                 </span>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="border-b border-dashed border-slate-400 w-24 h-5"></div>
-                <div className="w-8 h-8 rounded-full border border-emerald-600/50 flex flex-col items-center justify-center bg-white text-emerald-700 font-bold shrink-0">
-                  <span className="text-[3px] leading-none">OFFICIAL</span>
-                  <span className="text-[4px] leading-none">STAMP</span>
+              <div className="flex items-center gap-2">
+                <div className="border-b border-dashed border-slate-400 w-20 h-4"></div>
+                <div className="w-7 h-7 rounded-full border border-emerald-600/50 flex flex-col items-center justify-center bg-white text-emerald-700 font-bold shrink-0">
+                  <span className="text-[2.5px] leading-none">OFFICIAL</span>
+                  <span className="text-[3.5px] leading-none">STAMP</span>
                 </div>
               </div>
             </div>
@@ -655,14 +626,45 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
         </div>
       </div>
 
+      {/* Part B: Academic Performance Summary (Moved to Bottom of Table/Page, above status bar) */}
+      <div className="relative z-10 bg-[#FAF9F9] border border-slate-200/85 rounded-xl p-2 shadow-3xs text-slate-800 text-[12px] print:text-[12px]">
+        <div className="flex items-center justify-between gap-x-4 gap-y-1">
+          <div className="flex items-center gap-1">
+            <span className="font-extrabold text-slate-900 uppercase tracking-wider text-[10.5px] select-none">📊 Academic Summary:</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <div className="flex items-center gap-1">
+              <span className="text-slate-500 font-semibold select-none">Cumulative Total:</span>
+              <span className="font-black text-slate-900">{stats.totalScore} / {stats.maxPossibleScore}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-slate-500 font-semibold select-none">Termly Average:</span>
+              <span className="font-black text-emerald-800 font-mono">{stats.avgScore.toFixed(1)}%</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-slate-500 font-semibold select-none">Total Subjects:</span>
+              <span className="font-bold text-slate-800">{student.subjects.length}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-slate-500 font-semibold select-none">Passed:</span>
+              <span className="font-bold text-emerald-700">{stats.creditsAndAbove + stats.passes}</span>
+            </div>
+            <div className="flex items-center gap-1 border-l border-slate-200 pl-3">
+              <span className="text-slate-500 font-semibold select-none">Verdict:</span>
+              <span className="font-black text-emerald-855 bg-emerald-50 px-1.5 py-0.2 rounded text-[10.5px]">{stats.avgScore >= (template.passThreshold || 50) ? "PASS" : "FAIL"}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Bottom Status bar stamp */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-2 bg-slate-900 text-slate-200 py-2 px-3.5 rounded-xl relative z-10 text-[10px] border border-slate-800 shadow-sm animate-fade-in select-none">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-1.5 bg-slate-900 text-slate-200 py-1.5 px-3 rounded-xl relative z-10 text-[9.5px] border border-slate-800 shadow-sm animate-fade-in select-none">
         <span className="flex items-center gap-1.5 font-medium">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           <span>Candidate Academic Status: <strong className="text-white">Active and Promoted</strong></span>
         </span>
         
-        <span className="bg-emerald-600 text-white font-extrabold px-2 py-0.5 text-[8.5px] rounded tracking-wider uppercase">
+        <span className="bg-emerald-600 text-white font-extrabold px-1.5 py-0.2 text-[8px] rounded tracking-wider uppercase">
           ★ Official Seal Verified
         </span>
       </div>
