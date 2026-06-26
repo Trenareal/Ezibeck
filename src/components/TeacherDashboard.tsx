@@ -286,12 +286,10 @@ export default function TeacherDashboard({
     currentUser.role.toLowerCase().includes('coadmin')
   ));
   const canAccessWorkspaceConfig = !!(currentUser && (
-    isAdmin ||
-    isCoAdmin ||
-    currentUser.id === 'nancy' ||
-    currentUser.role.toLowerCase().includes('headteacher') ||
-    currentUser.role.toLowerCase().includes('head teacher') ||
-    currentUser.role.toLowerCase().includes('headmistress')
+    currentUser.id === 'ezekiel' ||
+    currentUser.role.toLowerCase() === 'administrator (head principal)' ||
+    currentUser.role.toLowerCase() === 'administrator' ||
+    currentUser.role.toLowerCase() === 'main admin'
   ));
   const [selectedClass, setSelectedClass] = useState<ClassName>('Pre-Nursery');
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
@@ -1740,20 +1738,32 @@ export default function TeacherDashboard({
     const matchProfile = facultyProfiles.find(f => f.id === currentUser.id);
     const roleStr = ((matchProfile?.role || currentUser.role) || '').toLowerCase();
 
-    if (currentUser.id === 'nancy' || roleStr.includes('head teacher')) {
-      return ['Pre-Nursery', 'Nursery 1', 'Nursery 2', 'Nursery 3', 'Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6'];
+    // 1. The main admin should be the only one that has access to the workspace configuration, and has access to all classes
+    if (currentUser.id === 'ezekiel' || roleStr === 'administrator (head principal)' || roleStr === 'administrator' || roleStr === 'main admin') {
+      return ALL_CLASSES;
     }
-    if (roleStr.includes('nursery section admin') || roleStr.includes('nursery admin')) {
+
+    // 2. The nursery admin should only have access to pre-nursery, Nursery 1, Nursery 2, and Nursery 3
+    if (roleStr.includes('nursery admin') || roleStr.includes('nursery section admin')) {
       return ['Pre-Nursery', 'Nursery 1', 'Nursery 2', 'Nursery 3'];
     }
-    if (roleStr.includes('primary section admin') || roleStr.includes('primary admin')) {
+
+    // 3. The basic admin should have access to basic 1 to 6
+    if (roleStr.includes('basic admin') || roleStr.includes('primary admin') || roleStr.includes('primary section admin') || roleStr.includes('head teacher') || currentUser.id === 'nancy') {
       return ['Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6'];
     }
-    if (currentUser.id === 'justina' || roleStr.includes('junior secondary admin') || roleStr.includes('junior secondary section admin')) {
-      return ['JSS1', 'JSS2', 'JSS3'];
-    }
-    if (currentUser.id === 'samson' || roleStr.includes('senior secondary admin') || roleStr.includes('senior secondary section admin')) {
-      return ['SS1', 'SS2', 'SS3'];
+
+    // 4. The principal should access to jss1 to ss3b
+    if (
+      roleStr.includes('principal') || 
+      roleStr.includes('junior secondary admin') || 
+      roleStr.includes('junior secondary section admin') || 
+      roleStr.includes('senior secondary admin') || 
+      roleStr.includes('senior secondary section admin') ||
+      currentUser.id === 'justina' || 
+      currentUser.id === 'samson'
+    ) {
+      return ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'];
     }
 
     const assigned = matchProfile?.assignedClass || currentUser.assignedClass;
@@ -4982,32 +4992,24 @@ export default function TeacherDashboard({
                     <label className="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Designation / Role</label>
                     <select
                       value={
-                        editingFacultyRole.toLowerCase().includes('head principal') || editingFacultyRole.toLowerCase().includes('administrator') ? 'admin' :
-                        editingFacultyRole.toLowerCase().includes('head teacher') ? 'head' :
-                        editingFacultyRole.toLowerCase().includes('nursery section admin') ? 'nursery_admin' :
-                        editingFacultyRole.toLowerCase().includes('primary section admin') ? 'primary_admin' :
-                        editingFacultyRole.toLowerCase().includes('junior secondary admin') ? 'junior' :
-                        editingFacultyRole.toLowerCase().includes('senior secondary admin') ? 'senior' : 'form'
+                        editingFacultyRole.toLowerCase().includes('head principal') || editingFacultyRole.toLowerCase().includes('administrator') || editingFacultyRole.toLowerCase().includes('main admin') ? 'admin' :
+                        editingFacultyRole.toLowerCase().includes('nursery section admin') || editingFacultyRole.toLowerCase().includes('nursery admin') ? 'nursery_admin' :
+                        editingFacultyRole.toLowerCase().includes('primary section admin') || editingFacultyRole.toLowerCase().includes('primary admin') || editingFacultyRole.toLowerCase().includes('basic admin') || editingFacultyRole.toLowerCase().includes('head teacher') ? 'primary_admin' :
+                        editingFacultyRole.toLowerCase().includes('principal') || editingFacultyRole.toLowerCase().includes('junior') || editingFacultyRole.toLowerCase().includes('senior') ? 'senior' : 'form'
                       }
                       onChange={(e) => {
                         const val = e.target.value;
                         if (val === 'admin') {
                           setEditingFacultyRole('Administrator (Head Principal)');
                           setEditingFacultyClass('');
-                        } else if (val === 'head') {
-                          setEditingFacultyRole('Head Teacher (Pre-Nursery to Basic 6)');
-                          setEditingFacultyClass('');
                         } else if (val === 'nursery_admin') {
-                          setEditingFacultyRole('Nursery Section Admin (Pre-Nursery to Nursery 3)');
+                          setEditingFacultyRole('Nursery Admin (Pre-Nursery to Nursery 3)');
                           setEditingFacultyClass('');
                         } else if (val === 'primary_admin') {
-                          setEditingFacultyRole('Primary Section Admin (Basic 1 to 6)');
-                          setEditingFacultyClass('');
-                        } else if (val === 'junior') {
-                          setEditingFacultyRole('Junior Secondary Admin (JSS1 to JSS3)');
+                          setEditingFacultyRole('Basic Admin (Basic 1 to 6)');
                           setEditingFacultyClass('');
                         } else if (val === 'senior') {
-                          setEditingFacultyRole('Senior Secondary Admin (SS1 to SS3)');
+                          setEditingFacultyRole('Principal (JSS1 to SS3B)');
                           setEditingFacultyClass('');
                         } else {
                           setEditingFacultyRole('Form Teacher - ');
@@ -5017,11 +5019,9 @@ export default function TeacherDashboard({
                     >
                       <option value="form">Form Teacher (Select Class)</option>
                       <option value="admin">Administrator (Head Principal)</option>
-                      <option value="head">Head Teacher (Pre-Nursery to Basic 6)</option>
-                      <option value="nursery_admin">Nursery Section Admin (Pre-Nursery to Nursery 3)</option>
-                      <option value="primary_admin">Primary Section Admin (Basic 1 to 6)</option>
-                      <option value="junior">Junior Secondary Admin (JSS1-3)</option>
-                      <option value="senior">Senior Secondary Admin (SS1-3)</option>
+                      <option value="nursery_admin">Nursery Admin (Pre-Nursery to Nursery 3)</option>
+                      <option value="primary_admin">Basic Admin (Basic 1 to 6)</option>
+                      <option value="senior">Principal (JSS1 to SS3B)</option>
                     </select>
                   </div>
 
@@ -5029,13 +5029,7 @@ export default function TeacherDashboard({
                     <label className="block text-[9px] font-black text-slate-500 uppercase tracking-wider mb-1">Class Assigned</label>
                     <select
                       disabled={
-                        editingFacultyRole.toLowerCase().includes('head principal') || 
-                        editingFacultyRole.toLowerCase().includes('administrator') || 
-                        editingFacultyRole.toLowerCase().includes('head teacher') || 
-                        editingFacultyRole.toLowerCase().includes('nursery section admin') || 
-                        editingFacultyRole.toLowerCase().includes('primary section admin') || 
-                        editingFacultyRole.toLowerCase().includes('junior secondary admin') || 
-                        editingFacultyRole.toLowerCase().includes('senior secondary admin')
+                        !editingFacultyRole.toLowerCase().startsWith('form teacher')
                       }
                       value={editingFacultyClass || ''}
                       onChange={(e) => {
