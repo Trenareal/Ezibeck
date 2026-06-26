@@ -8,11 +8,12 @@ import { ArrowLeft, GraduationCap, Search, BookOpen, Eye, EyeOff, Layers, Printe
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Student, ClassName, Workspace15Template, DbStatus, AuditLogEntry, ALL_CLASSES } from '../types';
-import { SCHOOL_INFO, calculateStudentStats, getLetterAndRemark, calculateSubjectTotal, BEHAVIOUR_TRAITS, generateUnique6DigitPassword, getStudentPasscodesFromOtherTerms, loadStoredStudents, saveStudents, isStudentInTerm } from '../utils/academicUtils';
+import { SCHOOL_INFO, calculateStudentStats, getLetterAndRemark, calculateSubjectTotal, BEHAVIOUR_TRAITS, generateUnique6DigitPassword, getStudentPasscodesFromOtherTerms, loadStoredStudents, saveStudents, isStudentInTerm, calculateClassPositions, formatOrdinal } from '../utils/academicUtils';
 import { logPasscodeEvent } from '../utils/auditLogger';
 import { isSupabaseConfigured, dbService, mapDbStudentToFrontend } from '../lib/supabase';
 import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
 import { ReportCardWatermark } from './ReportCardWatermark';
+import { ReportCardPrintable } from './ReportCardPrintable';
 import GuidelinesComponent from './GuidelinesComponent';
 import { safeStorage } from '../utils/safeStorage';
 
@@ -984,10 +985,16 @@ export default function StudentPortal({
               );
             }            // Otherwise, render full standard report sheet card (printable)
             return (
-              <div 
-                ref={printAreaRef}
-                className={`report-card-printable bg-white border border-slate-200/80 rounded-3xl shadow-xl p-4 sm:p-12 space-y-6 sm:space-y-8 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in ${isGeneratingPdf ? 'pdf-force-light' : ''}`}
-              >
+              <>
+                <ReportCardPrintable 
+                  ref={printAreaRef}
+                  student={selectedStudent}
+                  term={viewingTerm}
+                  template={template}
+                  studentsRoster={students}
+                  isGeneratingPdf={isGeneratingPdf}
+                />
+                <div className="hidden print:hidden">
                 {/* Diagonal tiled watermark background */}
                 <ReportCardWatermark />
 
@@ -1832,6 +1839,7 @@ export default function StudentPortal({
                   </span>
                 </div>
               </div>
+              </>
             );
           })()}
         </div>

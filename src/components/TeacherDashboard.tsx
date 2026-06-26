@@ -14,6 +14,7 @@ import { logPasscodeEvent, getAuditLogs, clearAuditLogs } from '../utils/auditLo
 import { dbService, mapDbFacultyToFrontend, mapDbStudentToFrontend } from '../lib/supabase';
 import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
 import { ReportCardWatermark, ScratchCardWatermark } from './ReportCardWatermark';
+import { ReportCardPrintable } from './ReportCardPrintable';
 import GuidelinesComponent from './GuidelinesComponent';
 import AIAgentComponent from './AIAgentComponent';
 import { safeStorage } from '../utils/safeStorage';
@@ -2508,7 +2509,7 @@ export default function TeacherDashboard({
                 >
                   {isGeneratingPdf ? (
                     <>
-                      <span className="animate-spin inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-once"></span>
+                      <span className="animate-spin inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full"></span>
                       Saving PDF...
                     </>
                   ) : (
@@ -2525,18 +2526,24 @@ export default function TeacherDashboard({
               const stats = calculateStudentStatsForTerm(viewingReportStudent, activeTermTab);
               const isSecondary = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes((viewingReportStudent?.className || '').replace(/\s+/g, ''));
               return (
-                <div 
-                  ref={teacherPrintAreaRef}
-                  className={`report-card-printable bg-white border border-slate-205 rounded-3xl shadow-xl p-6 sm:p-12 space-y-8 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in text-slate-800 ${isGeneratingPdf ? 'pdf-force-light' : ''}`}
-                >
+                <>
+                  <ReportCardPrintable 
+                    ref={teacherPrintAreaRef}
+                    student={viewingReportStudent}
+                    term={activeTermTab}
+                    template={template}
+                    studentsRoster={students}
+                    isGeneratingPdf={isGeneratingPdf}
+                  />
+                  <div className="hidden print:hidden">
                   {/* Diagonal tiled watermark background */}
                   <ReportCardWatermark />
 
                   {/* Print layout decorator line */}
-                  <div className="absolute inset-3 border border-slate-100 rounded-2xl pointer-events-none print:hidden"></div>
+                  <div className="absolute inset-2 border border-slate-100 rounded-xl pointer-events-none print:hidden"></div>
 
                   {/* Ezibeck Style Header Breadcrumbs */}
-                  <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-slate-400 border-b border-slate-100/70 pb-3 mb-2 relative z-10 select-none">
+                  <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-medium text-slate-400 border-b border-slate-100 pb-2 relative z-10 select-none">
                     <span>🏫 {template.schoolName}</span>
                     <span>/</span>
                     <span>📁 Report Registry</span>
@@ -2547,10 +2554,10 @@ export default function TeacherDashboard({
                   </div>
 
                   {/* School Header Section with centered text and badge on the left */}
-                  <div className="relative flex flex-col sm:flex-row items-center sm:justify-center border-b border-slate-200/60 pb-6 mb-6 mt-4 select-none">
+                  <div className="relative flex items-center justify-center border-b border-slate-200/50 pb-3 mt-1 select-none">
                     {/* School Badge on the left side */}
-                    <div className="sm:absolute sm:left-0 flex-shrink-0 mb-4 sm:mb-0">
-                      <div className="w-16 h-16 sm:w-24 sm:h-24 bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden">
+                    <div className="absolute left-0 flex-shrink-0">
+                      <div className="w-12 h-12 bg-white rounded-xl border border-slate-200 shadow-3xs flex items-center justify-center overflow-hidden">
                         <img 
                           src={schoolBadge} 
                           alt={`${template.schoolName} Emblem`} 
@@ -2561,155 +2568,241 @@ export default function TeacherDashboard({
                     </div>
 
                     {/* Centered header details */}
-                    <div className="text-center space-y-2 max-w-2xl">
-                      <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-none uppercase">
+                    <div className="text-center space-y-0.5 max-w-xl">
+                      <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-none uppercase">
                         {template.schoolName}
                       </h1>
-                      <p className="text-[10px] sm:text-[11.5px] uppercase tracking-wider text-emerald-700 font-extrabold flex items-center justify-center gap-1.5 select-none">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                      <p className="text-[8.5px] uppercase tracking-wider text-emerald-750 font-extrabold flex items-center justify-center gap-1 select-none">
+                        <span className="w-1 h-1 rounded-full bg-emerald-600"></span>
                         Motto: {template.motto}
                       </p>
-                      <p className="text-slate-500 text-[10px] sm:text-[11px] leading-relaxed">
-                        <strong>Registered Address:</strong> {template.address} | <strong>Phone:</strong> {template.phone} | <strong>Email:</strong> {template.email}
+                      <p className="text-slate-500 text-[8.5px] leading-none">
+                        <strong>Address:</strong> {template.address} | <strong>Phone:</strong> {template.phone} | <strong>Email:</strong> {template.email}
                       </p>
                     </div>
                   </div>
 
                   {/* Dynamic Official Page Heading */}
-                  <div className="relative z-10 py-2.5">
-                    <h2 className="text-sm sm:text-base font-extrabold text-slate-900 tracking-tight leading-none uppercase flex items-center gap-2">
-                      <span className="inline-block px-2.5 py-1 bg-slate-900 text-slate-100 text-[10px] font-black rounded-md tracking-wider">OFFICIAL STATUS</span>
+                  <div className="relative z-10 py-1 flex items-center justify-between border-b border-slate-100 select-none">
+                    <h2 className="text-[10.5px] font-extrabold text-slate-900 tracking-tight leading-none uppercase flex items-center gap-1.5">
+                      <span className="inline-block px-2 py-0.5 bg-slate-900 text-slate-100 text-[8px] font-black rounded tracking-wider">OFFICIAL STATUS</span>
                       STUDENT’S TERMLY REPORT SHEET FOR {viewingReportStudent.className.startsWith('JSS') ? 'JUNIOR' : 'SENIOR'} SECONDARY SCHOOL
                     </h2>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                      {activeTermTab.toUpperCase()} SESSION
+                    </span>
                   </div>
 
-                  {/* Database Properties Box: Student Info */}
-                  <div className="relative z-10 border border-slate-200/80 rounded-2xl bg-[#FCFCFC]/80 divide-y divide-slate-100 shadow-3xs">
-                    <div className="bg-[#FAF9F9] px-4 py-2 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 select-none">
-                      <span>📋 Student Properties Collection View</span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-3.5 gap-x-6 p-4 sm:p-5 text-xs text-slate-700">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                        <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
-                          <span>📝</span> Student Name
-                        </span>
-                        <span className="font-extrabold text-slate-900 text-right w-1/2 truncate">{viewingReportStudent.name}</span>
+                  {/* Top Compact Cards: 3 Columns Grid */}
+                  <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {/* Card 1: Student Profile */}
+                    <div className="bg-[#FAF9F9] border border-slate-200/80 rounded-xl p-2.5 shadow-3xs text-slate-800 text-[10px] flex flex-col justify-between">
+                      <div>
+                        <h4 className="font-extrabold text-slate-900 text-[9px] uppercase tracking-wider mb-1.5 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
+                          <span>👤</span> Student Profile
+                        </h4>
+                        <div className="space-y-0.5">
+                          <div className="flex justify-between items-center gap-1">
+                            <span className="text-slate-400 font-semibold select-none">Name:</span>
+                            <span className="font-extrabold text-slate-900 truncate max-w-[150px]">{viewingReportStudent.name}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400 font-semibold select-none">Access ID:</span>
+                            <span className="font-mono font-bold text-slate-750">{viewingReportStudent.id}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400 font-semibold select-none">Class:</span>
+                            <span className="font-extrabold text-slate-900">{viewingReportStudent.className}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400 font-semibold select-none">Sex / Gender:</span>
+                            <span className="font-bold text-slate-800">{viewingReportStudent.sex}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400 font-semibold select-none">Age Profile:</span>
+                            <span className="font-bold text-slate-800">{viewingReportStudent.age} Years</span>
+                          </div>
+                        </div>
                       </div>
-
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                        <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
-                          <span>🔑</span> Student ID
-                        </span>
-                        <span className="font-mono font-bold text-emerald-700 text-right w-1/2">{viewingReportStudent.id}</span>
-                      </div>
-
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                        <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
-                          <span>🏫</span> Class
-                        </span>
-                        <span className="font-extrabold text-slate-900 text-right w-1/2">{viewingReportStudent.className}</span>
-                      </div>
-
-                      <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 sm:border-0 sm:pb-0">
-                        <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
-                          <span>🧬</span> Sex / Gender
-                        </span>
-                        <span className="font-bold text-slate-800 text-right w-1/2">{viewingReportStudent.sex}</span>
-                      </div>
-
-                      <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 sm:border-0 sm:pb-0">
-                        <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
-                          <span>🎂</span> Age Profile
-                        </span>
-                        <span className="font-bold text-slate-800 text-right w-1/2">{viewingReportStudent.age} Years</span>
-                      </div>
-
-                      <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 sm:border-0 sm:pb-0">
-                        <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
-                          <span>📅</span> Report Date
-                        </span>
-                        <span className="font-bold text-slate-800 text-right w-1/2">{template.termDate}</span>
-                      </div>
-
-                      <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 lg:border-0 lg:pb-0">
-                        <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
-                          <span>🗓️</span> Academic Session
-                        </span>
-                        <span className="font-extrabold text-slate-900 text-right w-1/2">{template.session}</span>
-                      </div>
-
-                      <div className="flex items-center justify-between border-b border-slate-200/40 pb-1.5 lg:border-0 lg:pb-0">
-                        <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
-                          <span>🚌</span> Attendance Present
-                        </span>
-                        <span className="font-bold text-slate-800 text-right w-1/2">{viewingReportStudent.attendancePresent} / {viewingReportStudent.attendanceTotal} sessions</span>
-                      </div>
-
-                      <div className="flex items-center justify-between lg:border-0">
-                        <span className="font-semibold text-slate-400 select-none flex items-center gap-1.5 w-1/2">
-                          <span>🔄</span> Resumption Date
-                        </span>
-                        <span className="font-extrabold text-emerald-750 text-right w-1/2">{template.resumptionDate}</span>
+                      <div className="border-t border-slate-200/50 pt-1 mt-1 flex justify-between items-center text-[9px]">
+                        <span className="text-slate-400 font-semibold select-none">Attendance:</span>
+                        <span className="font-bold text-slate-800">{viewingReportStudent.attendancePresent} / {viewingReportStudent.attendanceTotal} sessions ({Math.round(viewingReportStudent.attendancePresent / (viewingReportStudent.attendanceTotal || 1) * 100)}%)</span>
                       </div>
                     </div>
+
+                    {/* Card 2: Academic Summary */}
+                    <div className="bg-[#FAF9F9] border border-slate-200/80 rounded-xl p-2.5 shadow-3xs text-slate-800 text-[10px] flex flex-col justify-between">
+                      <div>
+                        <h4 className="font-extrabold text-slate-900 text-[9px] uppercase tracking-wider mb-1.5 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
+                          <span>📊</span> Academic Performance
+                        </h4>
+                        <div className="space-y-0.5">
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400 font-semibold select-none">Cumulative Total:</span>
+                            <span className="font-black text-slate-900">{stats.totalScore} / {stats.maxPossibleScore}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400 font-semibold select-none">Termly Average:</span>
+                            <span className="font-black text-emerald-800 font-mono">{stats.avgScore.toFixed(1)}%</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400 font-semibold select-none">Class Position:</span>
+                            <span className="font-black text-slate-900">{(() => {
+                              const sortedRoster = calculateClassPositions(students, viewingReportStudent.className, activeTermTab)
+                                .filter(s => s.className === viewingReportStudent.className);
+                              const posIdx = sortedRoster.findIndex(s => s.id === viewingReportStudent.id);
+                              return posIdx !== -1 ? `${formatOrdinal(posIdx + 1)} of ${sortedRoster.length}` : "N/A";
+                            })()}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400 font-semibold select-none">Total Subjects:</span>
+                            <span className="font-bold text-slate-800">{viewingReportStudent.subjects.length} Subjects</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-slate-400 font-semibold select-none">Subjects Passed:</span>
+                            <span className="font-bold text-emerald-700">{stats.creditsAndAbove + stats.passes} Passed</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="border-t border-slate-200/50 pt-1 mt-1 flex justify-between items-center text-[9px]">
+                        <span className="text-slate-400 font-semibold select-none">Academic Verdict:</span>
+                        <span className="font-bold text-emerald-800">{stats.avgScore >= (template.passThreshold || 50) ? "PASS" : "FAIL"}</span>
+                      </div>
+                    </div>
+
+                    {/* Card 3: Next Term & Fees Summary */}
+                    {(() => {
+                      const parseNum = (v: string): number => {
+                        const cln = v.replace(/[^\d.]/g, '');
+                        const parsed = parseFloat(cln);
+                        return isNaN(parsed) ? 0 : parsed;
+                      };
+                      
+                      const cls = viewingReportStudent.className || '';
+                      let sFee = template.schoolFee || '₦100,000.00';
+                      let pFee = template.partyFee || '₦15,000.00';
+                      let eFee = template.enrollmentFee || '₦15,000.00';
+                      let bFee = template.bookFee || '₦20,000.00';
+                      
+                      if (cls === 'Pre-Nursery' || cls === 'Nursery 1' || cls === 'Nursery 2' || cls === 'Nursery 3') {
+                        sFee = template.schoolFeeNursery || sFee;
+                        pFee = template.partyFeeNursery || pFee;
+                        eFee = template.enrollmentFeeNursery || eFee;
+                        bFee = template.bookFeeNursery || bFee;
+                      } else if (cls.startsWith('Basic')) {
+                        sFee = template.schoolFeePrimary || sFee;
+                        pFee = template.partyFeePrimary || pFee;
+                        eFee = template.enrollmentFeePrimary || eFee;
+                        bFee = template.bookFeePrimary || bFee;
+                      } else if (cls.startsWith('JSS')) {
+                        sFee = template.schoolFeeJunior || sFee;
+                        pFee = template.partyFeeJunior || pFee;
+                        eFee = template.enrollmentFeeJunior || eFee;
+                        bFee = template.bookFeeJunior || bFee;
+                      } else if (cls.startsWith('SS')) {
+                        sFee = template.schoolFeeSenior || sFee;
+                        pFee = template.partyFeeSenior || pFee;
+                        eFee = template.enrollmentFeeSenior || eFee;
+                        bFee = template.bookFeeSenior || bFee;
+                      }
+
+                      const totalVal = parseNum(sFee) + parseNum(pFee) + parseNum(eFee) + parseNum(bFee);
+                      const totalFormatted = `₦${totalVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+                      return (
+                        <div className="bg-[#FAF9F9] border border-slate-200/80 rounded-xl p-2.5 shadow-3xs text-slate-850 text-[9px] flex flex-col justify-between">
+                          <div>
+                            <h4 className="font-extrabold text-slate-900 text-[9px] uppercase tracking-wider mb-1.5 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
+                              <span>💰</span> Next Term Fees Summary
+                            </h4>
+                            <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-400 font-medium">School Fees:</span>
+                                <span className="font-bold text-slate-700">{sFee}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-400 font-medium">Party Fee:</span>
+                                <span className="font-bold text-slate-700">{pFee}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-400 font-medium">Enrollment:</span>
+                                <span className="font-bold text-slate-700">{eFee}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-slate-400 font-medium">Book Fees:</span>
+                                <span className="font-bold text-slate-700">{bFee}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="border-t border-dashed border-emerald-300 pt-1 mt-1 flex justify-between items-center text-[10px]">
+                            <span className="font-extrabold text-emerald-850">Total Invoice:</span>
+                            <span className="font-black text-emerald-850 font-mono">{totalFormatted}</span>
+                          </div>
+                          <div className="flex justify-between items-center mt-0.5 text-[8.5px] text-slate-400 leading-none">
+                            <span>Resumption:</span>
+                            <span className="font-extrabold text-slate-600">{template.resumptionDate}</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Part A: Academic Course Evaluation */}
-                  <div className="relative z-10 space-y-4">
-                    <h3 className="text-slate-900 font-extrabold text-xs uppercase tracking-widest border-l-4 border-slate-900 pl-2.5 pb-0.5 flex items-center justify-between select-none">
+                  <div className="relative z-10 space-y-1.5">
+                    <h3 className="text-slate-900 font-black text-[10.5px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 py-0.5 flex items-center justify-between select-none">
                       <span>Part A: Academic Course Evaluation</span>
-                      <span className="text-[10px] text-slate-400 normal-case font-bold">Standard Formula Matrix Layout</span>
+                      <span className="text-[8.5px] text-slate-450 normal-case font-bold">Standard Formula Matrix Layout</span>
                     </h3>
                     {/* Ezibeck-style database table */}
-                    <div className="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-3xs">
-                      <table className="w-full text-left text-xs border-collapse">
+                    <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white shadow-3xs">
+                      <table className="w-full text-left text-[10px] border-collapse">
                         <thead>
-                          <tr className="bg-[#EAEAEA] border-b border-slate-300 text-slate-950 font-black select-none text-[10.5px] uppercase tracking-wider">
-                            <th className="py-2.5 px-3 border-r border-slate-300 min-w-[150px]">
-                              <span className="flex items-center gap-1.5">📝 Subjects</span>
+                          <tr className="bg-[#EAEAEA] border-b border-slate-300 text-slate-950 font-black select-none text-[9px] uppercase tracking-wider">
+                            <th className="py-1 px-2 border-r border-slate-300 min-w-[130px]">
+                              <span className="flex items-center gap-1">📝 Subjects</span>
                             </th>
-                            <th className="py-2.5 px-3 border-r border-slate-300 text-center w-24">
-                              <span className="flex items-center justify-center gap-1"># TEST (30)</span>
+                            <th className="py-1 px-2 border-r border-slate-300 text-center w-16">
+                              <span className="flex items-center justify-center">TEST (30)</span>
                             </th>
-                            <th className="py-2.5 px-3 border-r border-slate-300 text-center w-24">
-                              <span className="flex items-center justify-center gap-1"># EXAM (70)</span>
+                            <th className="py-1 px-2 border-r border-slate-300 text-center w-16">
+                              <span className="flex items-center justify-center">EXAM (70)</span>
                             </th>
-                            <th className="py-2.5 px-3 border-r border-slate-300 text-center bg-emerald-100/40 w-24">
-                              <span className="flex items-center justify-center gap-1 text-emerald-955">Σ TERM (100)</span>
+                            <th className="py-1 px-2 border-r border-slate-300 text-center bg-emerald-100/30 w-18">
+                              <span className="flex items-center justify-center text-emerald-950 font-black">TERM (100)</span>
                             </th>
                             {activeTermTab === 'Second Term' && isSecondary && (
-                              <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-24 bg-blue-50 text-blue-900 font-extrabold">
-                                <span className="flex items-center justify-center gap-1">1st Term Avg</span>
+                              <th className="py-1 px-2 border-r border-slate-300 text-center text-[8.5px] w-20 bg-blue-50 text-blue-900 font-black">
+                                <span className="flex items-center justify-center">1ST T AVG</span>
                               </th>
                             )}
                             {activeTermTab === 'Third Term' && (
                               <>
-                                <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
-                                  <span className="flex items-center justify-center gap-1"># 1ST TERM (20)</span>
+                                <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
+                                  <span className="flex items-center justify-center">1ST T (20)</span>
                                 </th>
-                                <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
-                                  <span className="flex items-center justify-center gap-1"># 2ND TERM (20)</span>
+                                <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
+                                  <span className="flex items-center justify-center">2ND T (20)</span>
                                 </th>
-                                <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
-                                  <span className="flex items-center justify-center gap-1"># 3RD TERM (60)</span>
+                                <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
+                                  <span className="flex items-center justify-center">3RD T (60)</span>
                                 </th>
-                                <th className="py-2.5 px-3 border-r border-slate-300 text-center bg-emerald-100/30 w-28 text-slate-950 font-black">
-                                  <span className="flex items-center justify-center gap-1 text-slate-950 font-black">Σ SESSION AVE</span>
+                                <th className="py-1 px-2 border-r border-slate-300 text-center bg-emerald-100/20 w-22 text-slate-950 font-black">
+                                  <span className="flex items-center justify-center font-black">SESS AVG</span>
                                 </th>
                               </>
                             )}
-                            <th className="py-2.5 px-3 border-r border-slate-300 text-center w-20">
-                              <span className="flex items-center justify-center gap-1">Σ GRADE</span>
+                            <th className="py-1 px-2 border-r border-slate-300 text-center w-16">
+                              <span className="flex items-center justify-center">GRADE</span>
                             </th>
-                            <th className="py-2.5 px-3 border-r border-slate-300 text-center w-16">
-                              <span className="flex items-center justify-center gap-1"># POSITION</span>
+                            <th className="py-1 px-1 border-r border-slate-300 text-center w-14">
+                              <span className="flex items-center justify-center">POSITION</span>
                             </th>
-                            <th className="py-2.5 px-4 font-black text-slate-950">
-                              <span className="flex items-center gap-1.5">💬 TEACHER'S REMARK</span>
+                            <th className="py-1 px-2 font-black text-slate-955">
+                              <span className="flex items-center gap-1">💬 REMARK</span>
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 font-medium text-slate-705">
+                        <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
                           {viewingReportStudent.subjects.map(subj => {
                             const tot = calculateSubjectTotal(subj);
                             
@@ -2724,13 +2817,13 @@ export default function TeacherDashboard({
                             );
 
                             return (
-                              <tr key={subj.id} className="hover:bg-slate-50/60 transition-all border-b border-slate-200">
-                                <td className="py-2.5 px-3 border-r border-slate-200 font-extrabold text-slate-955 bg-slate-50/40">{subj.name}</td>
-                                <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955">{subj.testScore}</td>
-                                <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955">{subj.examScore}</td>
-                                <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black font-mono text-emerald-955 bg-emerald-50/30">{tot}</td>
+                              <tr key={subj.id} className="hover:bg-slate-50/50 border-b border-slate-150 text-[10px]">
+                                <td className="py-1 px-2 border-r border-slate-150 font-extrabold text-slate-900 bg-slate-50/20">{subj.name}</td>
+                                <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{subj.testScore}</td>
+                                <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{subj.examScore}</td>
+                                <td className="py-1 px-2 border-r border-slate-150 text-center font-black font-mono text-emerald-850 bg-emerald-50/10">{tot}</td>
                                 {activeTermTab === 'Second Term' && isSecondary && (
-                                  <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955 bg-blue-50/10">
+                                  <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800 bg-blue-50/5">
                                     {(() => {
                                       let firstTermAvgStr = "-";
                                       const baseId = viewingReportStudent.id.split('_')[0];
@@ -2761,70 +2854,70 @@ export default function TeacherDashboard({
                                 )}
                                 {activeTermTab === 'Third Term' && (
                                   <>
-                                    <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955">{firstTerm}</td>
-                                    <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955">{secondTerm}</td>
-                                    <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955">{thirdTerm}</td>
-                                    <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black font-mono text-emerald-955 bg-slate-50/60">{sessionAvg}</td>
+                                    <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{firstTerm}</td>
+                                    <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{secondTerm}</td>
+                                    <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{thirdTerm}</td>
+                                    <td className="py-1 px-2 border-r border-slate-150 text-center font-black font-mono text-emerald-850 bg-slate-50/40">{sessionAvg}</td>
                                   </>
                                 )}
-                                <td className="py-2.5 px-3 border-r border-slate-200 text-center">
-                                  <span className={`px-2 py-0.5 text-[10px] font-black rounded-sm tracking-wider ${ratingClass}`}>
+                                <td className="py-1 px-2 border-r border-slate-150 text-center">
+                                  <span className={`px-1.5 py-0.5 text-[8.5px] font-black rounded-sm tracking-wider ${ratingClass}`}>
                                     {letter}
                                   </span>
                                 </td>
-                                <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black text-slate-955 bg-slate-50/20">{formatOrdinal(subj.position)}</td>
-                                <td className="py-2.5 px-4 italic text-slate-955 text-[11px] font-bold leading-tight bg-[#FCFCFC]">{remark}</td>
+                                <td className="py-1 px-1 border-r border-slate-150 text-center font-black text-slate-900 bg-slate-50/10">{formatOrdinal(subj.position)}</td>
+                                <td className="py-1 px-2 italic text-slate-700 text-[9px] font-bold leading-tight bg-[#FCFCFC]">{remark}</td>
                               </tr>
                             );
                           })}
 
                           {/* Calculation Footer */}
-                          <tr className="bg-[#FAF9F9]/90 border-t border-slate-205 text-slate-400 font-medium select-none text-[10px] uppercase tracking-wider divide-x divide-slate-100">
-                            <td className="py-2 px-3 font-semibold text-slate-500">
+                          <tr className="bg-[#FAF9F9]/90 border-t border-slate-205 text-slate-400 font-semibold select-none text-[9px] uppercase tracking-wider divide-x divide-slate-100">
+                            <td className="py-1 px-2 font-semibold text-slate-500">
                               Count: {viewingReportStudent.subjects.length}
                             </td>
-                            <td className="py-2 px-3 text-center font-bold">
-                              Average: {(() => {
+                            <td className="py-1 px-2 text-center font-bold">
+                              Avg: {(() => {
                                 const tCount = viewingReportStudent.subjects.length || 1;
                                 const testSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.testScore || 0), 0);
                                 return (testSum / tCount).toFixed(1);
                               })()}
                             </td>
-                            <td className="py-2 px-3 text-center font-bold">
-                              Average: {(() => {
+                            <td className="py-1 px-2 text-center font-bold">
+                              Avg: {(() => {
                                 const tCount = viewingReportStudent.subjects.length || 1;
                                 const examSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.examScore || 0), 0);
                                 return (examSum / tCount).toFixed(1);
                               })()}
                             </td>
-                            <td className="py-2 px-3 text-center font-black text-indigo-705 bg-emerald-50/10">
-                              Average: {stats.avgScore.toFixed(1)}%
+                            <td className="py-1 px-2 text-center font-black text-emerald-850 bg-emerald-50/10">
+                              Avg: {stats.avgScore.toFixed(1)}%
                             </td>
                             {activeTermTab === 'Third Term' && (
                               <>
-                                <td className="py-2 px-3 text-center font-bold">
-                                  Average: {(() => {
+                                <td className="py-1 px-1 text-center font-bold">
+                                  Avg: {(() => {
                                     const tCount = viewingReportStudent.subjects.length || 1;
                                     const fSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
                                     return (fSum / tCount).toFixed(1);
                                   })()}
                                 </td>
-                                <td className="py-2 px-3 text-center font-bold">
-                                  Average: {(() => {
+                                <td className="py-1 px-1 text-center font-bold">
+                                  Avg: {(() => {
                                     const tCount = viewingReportStudent.subjects.length || 1;
                                     const sSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
                                     return (sSum / tCount).toFixed(1);
                                   })()}
                                 </td>
-                                <td className="py-2 px-3 text-center font-bold">
-                                  Average: {(() => {
+                                <td className="py-1 px-1 text-center font-bold">
+                                  Avg: {(() => {
                                     const tCount = viewingReportStudent.subjects.length || 1;
                                     const thSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
                                     return (thSum / tCount).toFixed(1);
                                   })()}
                                 </td>
-                                <td className="py-2 px-3 text-center font-black bg-slate-100/50">
-                                  Average: {(() => {
+                                <td className="py-1 px-2 text-center font-black bg-slate-100/50 text-slate-800">
+                                  Avg: {(() => {
                                     const tCount = viewingReportStudent.subjects.length || 1;
                                     const sessionSum = viewingReportStudent.subjects.reduce((sum, s) => {
                                       const f = s.firstTermSummary !== undefined ? s.firstTermSummary : 0;
@@ -2837,145 +2930,26 @@ export default function TeacherDashboard({
                                 </td>
                               </>
                             )}
-                            <td className="py-2 px-3" colSpan={3}></td>
+                            <td className="py-1 px-2" colSpan={3}></td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
                   </div>
 
-                  {/* Sub-Score KPI Dashboard metrics - optimized to single row with reduced size */}
-                  <div className="flex flex-wrap sm:flex-nowrap print:flex-nowrap gap-1.5 sm:gap-2 relative z-10 w-full select-none text-slate-800">
-                    <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                      <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">Cumulative</span>
-                      <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
-                        {stats.totalScore}<span className="text-[9px] text-slate-400 font-normal">/{stats.maxPossibleScore}</span>
-                      </p>
-                    </div>
-
-                    <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                      <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">Termly Avg</span>
-                      <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
-                        {stats.avgScore.toFixed(1)}%
-                      </p>
-                    </div>
-
-                    {activeTermTab === 'Second Term' && (
-                      <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term Avg</span>
-                        <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
-                          {(() => {
-                            const avg = getOverallAverageForTerm(viewingReportStudent.id, 'ezibeck_students_first_term');
-                            return avg !== null ? `${avg.toFixed(1)}%` : "N/A";
-                          })()}
-                        </p>
-                      </div>
-                    )}
-
-                    {activeTermTab === 'Third Term' && (
-                      <>
-                        <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term Avg</span>
-                          <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
-                            {(() => {
-                              const avg = getOverallAverageForTerm(viewingReportStudent.id, 'ezibeck_students_first_term');
-                              return avg !== null ? `${avg.toFixed(1)}%` : "N/A";
-                            })()}
-                          </p>
-                        </div>
-                        <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">2nd Term Avg</span>
-                          <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
-                            {(() => {
-                              const avg = getOverallAverageForTerm(viewingReportStudent.id, 'ezibeck_students_second_term');
-                              return avg !== null ? `${avg.toFixed(1)}%` : "N/A";
-                            })()}
-                          </p>
-                        </div>
-                      </>
-                    )}
-
-                    {activeTermTab === 'Third Term' && (
-                      <>
-                        <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term (20%)</span>
-                          <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
-                            {(() => {
-                              const tCount = viewingReportStudent.subjects.length || 1;
-                              const fSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
-                              return (fSum / tCount).toFixed(1);
-                            })()}<span className="text-[8px] text-slate-400 font-normal">/20</span>
-                          </p>
-                        </div>
-
-                        <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">2nd Term (20%)</span>
-                          <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
-                            {(() => {
-                              const tCount = viewingReportStudent.subjects.length || 1;
-                              const sSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
-                              return (sSum / tCount).toFixed(1);
-                            })()}<span className="text-[8px] text-slate-400 font-normal">/20</span>
-                          </p>
-                        </div>
-
-                        <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">3rd Term (60%)</span>
-                          <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
-                            {(() => {
-                              const tCount = viewingReportStudent.subjects.length || 1;
-                              const thSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
-                              return (thSum / tCount).toFixed(1);
-                            })()}<span className="text-[8px] text-slate-400 font-normal">/60</span>
-                          </p>
-                        </div>
-                      </>
-                    )}
-
-                    <div className="flex-1 min-w-[70px] bg-[#FAF9F9] border border-slate-150 py-1.5 px-1 sm:py-2 px-1.5 rounded-lg text-center space-y-0.5 shadow-3xs">
-                      <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">Attendance</span>
-                      <p className="font-extrabold text-emerald-600 text-[10.5px] sm:text-xs leading-none">
-                        {Math.round(viewingReportStudent.attendancePresent / viewingReportStudent.attendanceTotal * 100)}%
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Academic Accomplishments: Credits, Fails & Subject count strip */}
-                  <div className="relative z-10 grid grid-cols-3 gap-2 sm:gap-4 select-none leading-none w-full">
-                    <div className="bg-sky-50/40 border border-sky-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-sky-900 font-medium shadow-3xs">
-                      <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
-                        <span className="text-sky-550 font-black">📚</span> Number of Subjects:
-                      </span>
-                      <span className="font-black text-sky-850 text-xs">{viewingReportStudent.subjects.length} Total</span>
-                    </div>
-                    <div className="bg-emerald-50/40 border border-emerald-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-emerald-990 font-medium shadow-3xs">
-                      <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
-                        <span className="text-emerald-500 font-black">✔</span> Number of Credits:
-                      </span>
-                      <span className="font-black text-emerald-800 text-xs">{stats.creditsAndAbove + stats.passes} Passed</span>
-                    </div>
-                    <div className="bg-red-50/40 border border-red-155 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-red-990 font-medium shadow-3xs">
-                      <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
-                        <span className="text-red-500 font-black">✘</span> Number of Fails:
-                      </span>
-                      <span className="font-black text-red-800 text-xs">{stats.failures} Failed</span>
-                    </div>
-                  </div>
-
-                  {/* Part B: Character Assessment */}
-                  {(() => {
-                    const cleanClassName = (viewingReportStudent?.className || '').replace(/\s+/g, '');
-                    const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes(cleanClassName);
-                    return (
-                      <div id="pdf-partB-character-traits" className="grid grid-cols-1 md:grid-cols-10 print:grid-cols-10 gap-6 relative z-10">
-                        {/* Left Parameter Column: Conduct Evaluation - Width reduced to 40% (md:col-span-4) */}
-                        {!isSecondaryClass && (
-                          <div className="md:col-span-4 print:col-span-4 bg-[#FCFCFC]/60 border border-slate-150 p-5 rounded-2xl space-y-3.5 shadow-3xs">
-                            <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-widest border-l-4 border-emerald-600 pl-2 select-none">
-                              Part B: Character & Behavioral Conduct
+                  {/* Side-by-Side Bottom Grid layout */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 relative z-10 pt-3 border-t border-dashed border-slate-200">
+                    {/* Column 1: Character & Behavioral Conduct Ratings */}
+                    {(() => {
+                      const cleanClassName = (viewingReportStudent?.className || '').replace(/\s+/g, '');
+                      const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes(cleanClassName);
+                      return (
+                        <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-3 shadow-3xs flex flex-col justify-between">
+                          <div>
+                            <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider mb-2 select-none border-b border-slate-200/50 pb-1 flex items-center gap-1">
+                              <span>🌟</span> Character & Skills Ratings
                             </h4>
-
-                            <div className="grid grid-cols-1 xs:grid-cols-2 gap-x-5 gap-y-2 text-xs text-slate-800">
+                            <div className="space-y-1 text-[10px] text-slate-800">
                               {(() => {
                                 const isKgClass = viewingReportStudent.className === 'Pre-Nursery' || viewingReportStudent.className.startsWith('Nursery');
                                 if (isKgClass) {
@@ -2986,128 +2960,113 @@ export default function TeacherDashboard({
                                     ["Hand-writing", "Fluency", "Attitude to Property"].includes(b.name)
                                   );
                                   return (
-                                    <div className="col-span-2 grid grid-cols-2 gap-x-4 gap-y-3">
-                                      <div className="space-y-1.5">
-                                        <h5 className="font-bold text-[10px] text-slate-400 uppercase tracking-wider border-b pb-0.5">Behavioural Ratings</h5>
-                                        {behaviouralList.length === 0 ? (
-                                          <p className="text-[9px] text-slate-400 italic">No ratings</p>
-                                        ) : behaviouralList.map(b => (
-                                          <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-150">
-                                            <span className="font-semibold text-slate-600 text-[10.5px]">{b.name}</span>
-                                            <span className="font-mono font-black text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
-                                              {b.rating} / 5
-                                            </span>
+                                    <div className="grid grid-cols-2 gap-x-2">
+                                      <div className="space-y-0.5">
+                                        <h5 className="font-bold text-[8px] text-slate-400 uppercase tracking-wider pb-0.5 border-b border-slate-100">Behavioral</h5>
+                                        {behaviouralList.map(b => (
+                                          <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-100">
+                                            <span className="font-semibold text-slate-600 truncate max-w-[60px]">{b.name}</span>
+                                            <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1 rounded">{b.rating}/5</span>
                                           </div>
                                         ))}
                                       </div>
-                                      <div className="space-y-1.5">
-                                        <h5 className="font-bold text-[10px] text-slate-400 uppercase tracking-wider border-b pb-0.5">Skill Ratings</h5>
-                                        {skillList.length === 0 ? (
-                                          <p className="text-[9px] text-slate-400 italic">No ratings</p>
-                                        ) : skillList.map(b => (
-                                          <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-150">
-                                            <span className="font-semibold text-slate-600 text-[10.5px]">{b.name}</span>
-                                            <span className="font-mono font-black text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
-                                              {b.rating} / 5
-                                            </span>
+                                      <div className="space-y-0.5">
+                                        <h5 className="font-bold text-[8px] text-slate-400 uppercase tracking-wider pb-0.5 border-b border-slate-100">Skills</h5>
+                                        {skillList.map(b => (
+                                          <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-100">
+                                            <span className="font-semibold text-slate-600 truncate max-w-[60px]">{b.name}</span>
+                                            <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1 rounded">{b.rating}/5</span>
                                           </div>
                                         ))}
                                       </div>
                                     </div>
                                   );
                                 } else {
-                                  return viewingReportStudent.behaviour.map(b => (
-                                    <div key={b.name} className="flex items-center justify-between py-1 border-b border-dashed border-slate-150">
-                                      <span className="font-semibold text-slate-600 text-[10.5px]">{b.name}</span>
-                                      <span className="font-mono font-black text-[10px] text-emerald-750 bg-emerald-50 border border-emerald-100/60 px-1.5 py-0.5 rounded-md">
-                                        {b.rating} / 5
-                                      </span>
+                                  return (
+                                    <div className="grid grid-cols-2 gap-x-2">
+                                      {viewingReportStudent.behaviour.map(b => (
+                                        <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-100">
+                                          <span className="font-semibold text-slate-600 truncate max-w-[70px]">{b.name}</span>
+                                          <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1 rounded">{b.rating}/5</span>
+                                        </div>
+                                      ))}
                                     </div>
-                                  ));
+                                  );
                                 }
                               })()}
                             </div>
                           </div>
-                        )}
+                        </div>
+                      );
+                    })()}
 
-                        {/* Grades Index - Immediately to the right of the ratings */}
-                        <div className={`${isSecondaryClass ? 'md:col-span-6 print:col-span-6' : 'md:col-span-4 print:col-span-4'} bg-white border border-slate-200 rounded-2xl p-4 space-y-2.5 text-slate-800`}>
-                          <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 select-none">
-                            Grades Index
-                          </h4>
-                          <div className="border border-slate-155 rounded-xl overflow-hidden shadow-3xs">
-                            <table className="w-full text-[9px] text-left border-collapse text-slate-600">
-                              <thead>
-                                <tr className="bg-[#FAF9F9] border-b border-slate-150 font-bold select-none text-slate-500">
-                                  <th className="py-1 px-1.5 border-r border-slate-150 w-8">Grade</th>
-                                  <th className="py-1 px-1.5">Details</th>
-                                </tr>
-                              </thead>
+                    {/* Column 2: Grades Index & Conduct Scale */}
+                    <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-3 shadow-3xs flex flex-col justify-between">
+                      <div>
+                        <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider mb-2 select-none border-b border-slate-200/50 pb-1 flex items-center gap-1">
+                          <span>📋</span> Grade Key & Conduct Scale
+                        </h4>
+                        <div className="grid grid-cols-2 gap-2 text-[10px]">
+                          {/* Grades Index table */}
+                          <div className="border border-slate-150 rounded-lg overflow-hidden shadow-3xs">
+                            <table className="w-full text-[8px] text-left border-collapse text-slate-600">
                               <tbody className="divide-y divide-slate-100 font-semibold">
-                                <tr className="hover:bg-slate-50/50">
-                                  <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-emerald-700 bg-emerald-50 text-[9px]">A+</td>
-                                  <td className="py-0.5 px-1.5">90 - 100</td>
+                                <tr>
+                                  <td className="py-0.5 px-1 font-black text-emerald-700 bg-emerald-50">A+</td>
+                                  <td className="py-0.5 px-1">90-100</td>
                                 </tr>
-                                <tr className="hover:bg-slate-50/50">
-                                  <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-green-700 bg-green-50 text-[9px]">A</td>
-                                  <td className="py-0.5 px-1.5">80 - 89</td>
+                                <tr>
+                                  <td className="py-0.5 px-1 font-black text-green-700 bg-green-50">A</td>
+                                  <td className="py-0.5 px-1">80-89</td>
                                 </tr>
-                                <tr className="hover:bg-slate-50/50">
-                                  <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-sky-700 bg-sky-50 text-[9px]">B</td>
-                                  <td className="py-0.5 px-1.5">70 - 79</td>
+                                <tr>
+                                  <td className="py-0.5 px-1 font-black text-sky-700 bg-sky-50">B</td>
+                                  <td className="py-0.5 px-1">70-79</td>
                                 </tr>
-                                <tr className="hover:bg-slate-50/50">
-                                  <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-amber-500 bg-amber-50 text-[9px]">C</td>
-                                  <td className="py-0.5 px-1.5">60 - 69</td>
+                                <tr>
+                                  <td className="py-0.5 px-1 font-black text-amber-500 bg-amber-50">C</td>
+                                  <td className="py-0.5 px-1">60-69</td>
                                 </tr>
-                                <tr className="hover:bg-slate-50/50">
-                                  <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-orange-600 bg-orange-50 text-[9px]">D</td>
-                                  <td className="py-0.5 px-1.5">50 - 59</td>
+                                <tr>
+                                  <td className="py-0.5 px-1 font-black text-orange-600 bg-orange-50">D</td>
+                                  <td className="py-0.5 px-1">50-59</td>
                                 </tr>
-                                <tr className="hover:bg-slate-50/50">
-                                  <td className="py-0.5 px-1.5 border-r border-slate-155 font-black text-red-500 bg-red-50 text-[9px]">F</td>
-                                  <td className="py-0.5 px-1.5">Below 50</td>
+                                <tr>
+                                  <td className="py-0.5 px-1 font-black text-red-500 bg-red-50">F</td>
+                                  <td className="py-0.5 px-1">&lt; 50</td>
                                 </tr>
                               </tbody>
                             </table>
                           </div>
-                        </div>
 
-                        {/* Conduct Scale - Rightmost scale */}
-                        <div className={`${isSecondaryClass ? 'md:col-span-4 print:col-span-4' : 'md:col-span-2 print:col-span-2'} bg-white border border-slate-200 rounded-2xl p-4 space-y-2 text-slate-850 animate-fade-in`}>
-                          <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 select-none">
-                            Conduct Scale
-                          </h4>
-                          <ul className="text-[10px] text-slate-500 space-y-1 font-bold pt-1">
-                            <li className="flex items-center gap-1.5">
-                              <span className="w-4 h-4 rounded-md bg-emerald-50 text-emerald-700 text-[9px] flex items-center justify-center font-mono font-black">5</span>
+                          {/* Conduct Scale list */}
+                          <div className="space-y-0.5 text-slate-500 font-bold">
+                            <div className="flex items-center gap-1">
+                              <span className="w-3.5 h-3.5 rounded bg-emerald-50 text-emerald-700 text-[8px] flex items-center justify-center font-mono font-black">5</span>
                               <span>Excellent</span>
-                            </li>
-                            <li className="flex items-center gap-1.5">
-                              <span className="w-4 h-4 rounded-md bg-green-50 text-green-700 text-[9px] flex items-center justify-center font-mono font-black">4</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="w-3.5 h-3.5 rounded bg-green-50 text-green-700 text-[8px] flex items-center justify-center font-mono font-black">4</span>
                               <span>Very Good</span>
-                            </li>
-                            <li className="flex items-center gap-1.5">
-                              <span className="w-4 h-4 rounded-md bg-sky-50 text-sky-700 text-[9px] flex items-center justify-center font-mono font-black">3</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="w-3.5 h-3.5 rounded bg-sky-50 text-sky-700 text-[8px] flex items-center justify-center font-mono font-black">3</span>
                               <span>Good</span>
-                            </li>
-                            <li className="flex items-center gap-1.5">
-                              <span className="w-4 h-4 rounded-md bg-amber-50 text-amber-600 text-[9px] flex items-center justify-center font-mono font-black">2</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="w-3.5 h-3.5 rounded bg-amber-50 text-amber-600 text-[8px] flex items-center justify-center font-mono font-black">2</span>
                               <span>Fair</span>
-                            </li>
-                            <li className="flex items-center gap-1.5">
-                              <span className="w-4 h-4 rounded-md bg-[#FAF9F9] text-[#7A7979] border text-[9px] flex items-center justify-center font-mono font-black">1</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="w-3.5 h-3.5 rounded bg-slate-50 text-slate-500 text-[8px] flex items-center justify-center font-mono font-black">1</span>
                               <span>Needs Work</span>
-                            </li>
-                          </ul>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    );
-                  })()}
+                    </div>
 
-                  {/* Part C: Remarks & Signatures Segment */}
-                  <div className="grid grid-cols-2 print:grid-cols-2 gap-4 md:gap-6 relative z-10 pt-6 border-t border-dashed border-slate-200">
-                    {/* Form Teacher Remark Callout */}
+                    {/* Column 3: Appraisals, Signatures & Stamps */}
                     {(() => {
                       const cleanClassName = (viewingReportStudent.className || '').replace(/\s+/g, '');
                       const isNursery = ['Pre-Nursery', 'Nursery1', 'Nursery2', 'Nursery3'].includes(cleanClassName);
@@ -3132,38 +3091,24 @@ export default function TeacherDashboard({
                         displaySignatoryName = template.formTeacherSenior || "Nursery Admin";
                       }
                       return (
-                        <>
-                          <div className="bg-[#FAF9F9] border border-slate-200 p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-3xs text-slate-800 text-xs">
+                        <div className="bg-[#FAF9F9] border border-slate-200 rounded-xl p-2.5 shadow-3xs text-[9.5px] text-slate-800 space-y-1.5 flex flex-col justify-between">
+                          <div className="space-y-1">
+                            {/* Teacher Remark */}
                             <div>
-                              <h4 className="font-black text-slate-900 text-xs uppercase tracking-widest border-b border-slate-200/50 pb-1.5 select-none flex items-center gap-1.5">
-                                <span>💬 Form Teacher's Appraisal</span>
-                              </h4>
-                              <p className="italic text-slate-600 pt-3 leading-relaxed">
+                              <span className="font-extrabold text-slate-950 uppercase tracking-wider block border-b border-slate-200 pb-0.5 select-none text-[8.5px]">
+                                💬 Teacher Appraisal
+                              </span>
+                              <p className="italic text-slate-600 leading-tight">
                                 "{viewingReportStudent.formTeacherRemark}"
                               </p>
                             </div>
-                            
-                            <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
-                              <div>
-                                <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold select-none font-sans">Appraiser</span>
-                                <p className="font-black text-slate-900 font-sans">{displayTeacherName}</p>
-                              </div>
-                              <div className="text-right select-none">
-                                <div className="text-sm font-serif italic text-emerald-950 font-semibold h-5 tracking-wide">
-                                  {displayTeacherName.replace("Mrs.", "").replace("Mr.","").trim()}
-                                </div>
-                                <span className="text-[8px] text-slate-400 uppercase tracking-wider block border-t border-slate-200 pt-0.5 mt-0.5">Signature & Stamp</span>
-                              </div>
-                            </div>
-                          </div>
 
-                          {/* Signatory Assessment Callout */}
-                          <div className="bg-[#FAF9F9] border border-slate-200 p-5 rounded-2xl space-y-4 flex flex-col justify-between shadow-3xs text-slate-800 text-xs">
+                            {/* Principal Remark */}
                             <div>
-                              <h4 className="font-black text-slate-900 text-xs uppercase tracking-widest border-b border-slate-200/50 pb-1.5 select-none flex items-center gap-1.5">
-                                <span>{isBasic ? "🏫 Headmistress's Performance Assessment" : isNursery ? "🧸 Nursery Admin's Performance Assessment" : "🎓 Principal's Performance Assessment"}</span>
-                              </h4>
-                              <p className="italic text-slate-600 pt-3 leading-relaxed">
+                              <span className="font-extrabold text-slate-955 uppercase tracking-wider block border-b border-slate-200 pb-0.5 select-none text-[8.5px]">
+                                {isBasic ? "Headmistress assessment" : isNursery ? "Nursery Admin assessment" : "Principal assessment"}
+                              </span>
+                              <p className="italic text-slate-600 leading-tight">
                                 {viewingReportStudent.principalRemark
                                   ? `"${viewingReportStudent.principalRemark}"`
                                   : (viewingReportStudent.formTeacherRemark.includes("outstanding") || stats.avgScore >= (template.distinctionThreshold || 90)
@@ -3173,39 +3118,47 @@ export default function TeacherDashboard({
                                       : `"Needs close guidance and study supervision in future sessions to ensure passing criteria."`)}
                               </p>
                             </div>
+                          </div>
 
-                            <div className="border-t border-slate-200 pt-3 flex justify-between items-end">
-                              <div>
-                                <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-extrabold select-none font-sans">
-                                  {isBasic ? "Authorized Headmistress" : isNursery ? "Authorized Nursery Admin" : "Authorized Principal"}
-                                </span>
-                                <p className="font-black text-slate-900">{displaySignatoryName}</p>
-                              </div>
-                              <div className="text-right select-none">
-                                <div className="text-sm font-serif italic text-emerald-950 font-semibold h-5 tracking-wide">
-                                  {displaySignatoryName.replace("Dr.","").replace("Mrs.","").replace("Mr.","").trim()}
-                                </div>
-                                <span className="text-[8px] text-slate-400 uppercase tracking-wider block border-t border-slate-200 pt-0.5 mt-0.5">Seal & Signature</span>
+                          {/* Signatures & Seal Row */}
+                          <div className="border-t border-slate-200 pt-1.5 flex justify-between items-center text-[7.5px] gap-2 leading-none">
+                            <div>
+                              <p className="font-black text-slate-900 select-none">{displayTeacherName}</p>
+                              <span className="text-slate-450 uppercase tracking-wider select-none font-bold">Teacher</span>
+                            </div>
+                            
+                            <div className="flex flex-col items-center select-none shrink-0">
+                              <div className="w-7 h-7 rounded-full border border-emerald-600/50 flex flex-col items-center justify-center bg-white text-emerald-700 font-bold scale-90">
+                                <span className="text-[3px] leading-none">OFFICIAL</span>
+                                <span className="text-[4px] leading-none">STAMP</span>
                               </div>
                             </div>
+
+                            <div className="text-right">
+                              <p className="font-black text-slate-900 select-none">{displaySignatoryName}</p>
+                              <span className="text-slate-450 uppercase tracking-wider select-none font-bold">
+                                {isBasic ? "Headmistress" : isNursery ? "Nursery Admin" : "Principal"}
+                              </span>
+                            </div>
                           </div>
-                        </>
+                        </div>
                       );
                     })()}
                   </div>
 
                   {/* Bottom Status bar stamp */}
-                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-900 text-slate-200 p-4 rounded-xl relative z-10 text-xs border border-slate-800 shadow-sm animate-fade-in select-none">
-                    <span className="flex items-center gap-2.5 font-medium">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-2 bg-slate-900 text-slate-200 py-2 px-3.5 rounded-xl relative z-10 text-[10px] border border-slate-800 shadow-sm animate-fade-in select-none">
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                       <span>Candidate Academic Status: <strong className="text-white">Active and Promoted</strong></span>
                     </span>
                     
-                    <span className="bg-emerald-600 text-white font-extrabold px-3 py-1 text-[10px] rounded tracking-widest uppercase font-bold">
+                    <span className="bg-emerald-600 text-white font-extrabold px-2 py-0.5 text-[8.5px] rounded tracking-wider uppercase">
                       ★ Official Seal Verified
                     </span>
                   </div>
                 </div>
+                </>
               );
             })()}
 
