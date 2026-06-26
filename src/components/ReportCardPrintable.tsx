@@ -122,7 +122,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
   return (
     <div 
       ref={ref}
-      className={`report-card-printable bg-white border border-slate-205 rounded-2xl shadow-lg p-4 sm:p-6 space-y-4 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in text-slate-800 ${isGeneratingPdf ? 'pdf-force-light' : ''}`}
+      className={`report-card-printable bg-white border border-slate-205 rounded-2xl shadow-lg p-4 sm:p-6 space-y-4 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in text-slate-800 text-[13px] ${isGeneratingPdf ? 'pdf-force-light' : ''}`}
     >
       {/* Diagonal tiled watermark background */}
       <ReportCardWatermark />
@@ -181,18 +181,18 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
         </span>
       </div>
 
-      {/* Top Compact Cards: 3 Columns Grid */}
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-3">
+      {/* Top Compact Cards: 2 Columns Grid */}
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* Card 1: Student Profile */}
-        <div className="bg-[#FAF9F9] border border-slate-200/80 rounded-xl p-2.5 shadow-3xs text-slate-800 text-[10px] flex flex-col justify-between">
+        <div className="bg-[#FAF9F9] border border-slate-200/80 rounded-xl p-2.5 shadow-3xs text-slate-800 text-[13px] flex flex-col justify-between">
           <div>
-            <h4 className="font-extrabold text-slate-900 text-[9px] uppercase tracking-wider mb-1.5 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
+            <h4 className="font-extrabold text-slate-900 text-[11px] uppercase tracking-wider mb-1.5 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
               <span>👤</span> Student Profile
             </h4>
             <div className="space-y-0.5">
               <div className="flex justify-between items-center gap-1">
                 <span className="text-slate-400 font-semibold select-none">Name:</span>
-                <span className="font-extrabold text-slate-900 truncate max-w-[150px]">{student.name}</span>
+                <span className="font-extrabold text-slate-900 truncate max-w-[220px]">{student.name}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 font-semibold select-none">Access ID:</span>
@@ -212,59 +212,19 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
               </div>
             </div>
           </div>
-          <div className="border-t border-slate-200/50 pt-1 mt-1 flex justify-between items-center text-[9px]">
+          <div className="border-t border-slate-200/50 pt-1 mt-1 flex justify-between items-center text-[11px]">
             <span className="text-slate-400 font-semibold select-none">Attendance:</span>
             <span className="font-bold text-slate-800">{student.attendancePresent} / {student.attendanceTotal} sessions ({Math.round((student.attendancePresent || 0) / (student.attendanceTotal || 1) * 100)}%)</span>
           </div>
         </div>
 
-        {/* Card 2: Academic Summary */}
-        <div className="bg-[#FAF9F9] border border-slate-200/80 rounded-xl p-2.5 shadow-3xs text-slate-800 text-[10px] flex flex-col justify-between">
-          <div>
-            <h4 className="font-extrabold text-slate-900 text-[9px] uppercase tracking-wider mb-1.5 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
-              <span>📊</span> Academic Performance
-            </h4>
-            <div className="space-y-0.5">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 font-semibold select-none">Cumulative Total:</span>
-                <span className="font-black text-slate-900">{stats.totalScore} / {stats.maxPossibleScore}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 font-semibold select-none">Termly Average:</span>
-                <span className="font-black text-emerald-800 font-mono">{stats.avgScore.toFixed(1)}%</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 font-semibold select-none">Class Position:</span>
-                <span className="font-black text-slate-900">{(() => {
-                  const sortedRoster = calculateClassPositions(studentsRoster, student.className, term)
-                    .filter(s => s.className === student.className);
-                  const posIdx = sortedRoster.findIndex(s => s.id === student.id);
-                  return posIdx !== -1 ? `${formatOrdinal(posIdx + 1)} of ${sortedRoster.length}` : "N/A";
-                })()}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 font-semibold select-none">Total Subjects:</span>
-                <span className="font-bold text-slate-800">{student.subjects.length} Subjects</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 font-semibold select-none">Subjects Passed:</span>
-                <span className="font-bold text-emerald-700">{stats.creditsAndAbove + stats.passes} Passed</span>
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-slate-200/50 pt-1 mt-1 flex justify-between items-center text-[9px]">
-            <span className="text-slate-400 font-semibold select-none">Academic Verdict:</span>
-            <span className="font-bold text-emerald-800">{stats.avgScore >= (template.passThreshold || 50) ? "PASS" : "FAIL"}</span>
-          </div>
-        </div>
-
         {/* Card 3: Next Term & Fees Summary */}
-        <div className="bg-[#FAF9F9] border border-slate-200/80 rounded-xl p-2.5 shadow-3xs text-slate-850 text-[9px] flex flex-col justify-between">
+        <div className="bg-[#FAF9F9] border border-slate-200/80 rounded-xl p-2.5 shadow-3xs text-slate-850 text-[11px] flex flex-col justify-between">
           <div>
-            <h4 className="font-extrabold text-slate-900 text-[9px] uppercase tracking-wider mb-1.5 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
+            <h4 className="font-extrabold text-slate-900 text-[11px] uppercase tracking-wider mb-1.5 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
               <span>💰</span> Next Term Fees Summary
             </h4>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[12px]">
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 font-medium">School Fees:</span>
                 <span className="font-bold text-slate-700">{sFee}</span>
@@ -283,11 +243,11 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
               </div>
             </div>
           </div>
-          <div className="border-t border-dashed border-emerald-300 pt-1 mt-1 flex justify-between items-center text-[10px]">
+          <div className="border-t border-dashed border-emerald-300 pt-1 mt-1 flex justify-between items-center text-[12px]">
             <span className="font-extrabold text-emerald-850">Total Invoice:</span>
             <span className="font-black text-emerald-850 font-mono">{totalFormatted}</span>
           </div>
-          <div className="flex justify-between items-center mt-0.5 text-[8.5px] text-slate-400 leading-none">
+          <div className="flex justify-between items-center mt-0.5 text-[11px] text-slate-400 leading-none">
             <span>Resumption:</span>
             <span className="font-extrabold text-slate-600">{template.resumptionDate}</span>
           </div>
@@ -302,7 +262,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
         </h3>
         {/* Ezibeck-style database table */}
         <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white shadow-3xs">
-          <table className="w-full text-left text-[10px] border-collapse">
+          <table className="w-full text-left text-[13px] border-collapse">
             <thead>
               <tr className="bg-[#EAEAEA] border-b border-slate-300 text-slate-955 font-black select-none text-[9px] uppercase tracking-wider">
                 <th className="py-1 px-2 border-r border-slate-300 min-w-[130px]">
@@ -364,7 +324,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                 );
 
                 return (
-                  <tr key={subj.id} className="hover:bg-slate-50/50 border-b border-slate-150 text-[10px]">
+                  <tr key={subj.id} className="hover:bg-slate-50/50 border-b border-slate-150">
                     <td className="py-1 px-2 border-r border-slate-150 font-extrabold text-slate-900 bg-slate-50/20">{subj.name}</td>
                     <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{subj.testScore}</td>
                     <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{subj.examScore}</td>
@@ -400,20 +360,20 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                       </>
                     )}
                     <td className="py-1 px-2 border-r border-slate-150 text-center">
-                      <span className={`px-1.5 py-0.5 text-[8.5px] font-black rounded-sm tracking-wider ${ratingClass}`}>
+                      <span className={`px-1.5 py-0.5 text-[11px] font-black rounded-sm tracking-wider ${ratingClass}`}>
                         {letter}
                       </span>
                     </td>
                     <td className="py-1 px-1 border-r border-slate-150 text-center font-black text-slate-900 bg-slate-50/10">
                       {isNursery || isBasic ? '-' : formatOrdinal(subj.position)}
                     </td>
-                    <td className="py-1 px-2 italic text-slate-700 text-[9px] font-bold leading-tight bg-[#FCFCFC]">{remark}</td>
+                    <td className="py-1 px-2 italic text-slate-700 text-[12px] font-bold leading-tight bg-[#FCFCFC]">{remark}</td>
                   </tr>
                 );
               })}
 
               {/* Calculation Footer */}
-              <tr className="bg-[#FAF9F9]/90 border-t border-slate-205 text-slate-400 font-semibold select-none text-[9px] uppercase tracking-wider divide-x divide-slate-100">
+              <tr className="bg-[#FAF9F9]/90 border-t border-slate-205 text-slate-400 font-semibold select-none text-[12px] uppercase tracking-wider divide-x divide-slate-100">
                 <td className="py-1 px-2 font-semibold text-slate-500">
                   Count: {student.subjects.length}
                 </td>
@@ -481,15 +441,46 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
         </div>
       </div>
 
-      {/* Side-by-Side Bottom Grid layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 relative z-10 pt-3 border-t border-dashed border-slate-200">
-        {/* Column 1: Character & Behavioral Conduct Ratings */}
-        <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-3 shadow-3xs flex flex-col justify-between">
+      {/* Part B: Academic Performance Summary (Moved to Bottom of Table) */}
+      <div className="relative z-10 bg-[#FAF9F9] border border-slate-200/85 rounded-xl p-3 shadow-3xs text-slate-800 text-[13px] print:text-[13px]">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+          <div className="flex items-center gap-2">
+            <span className="font-extrabold text-slate-900 uppercase tracking-wider text-[11px] select-none">📊 Academic Summary:</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-500 font-semibold select-none">Cumulative Total:</span>
+              <span className="font-black text-slate-900">{stats.totalScore} / {stats.maxPossibleScore}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-500 font-semibold select-none">Termly Average:</span>
+              <span className="font-black text-emerald-800 font-mono">{stats.avgScore.toFixed(1)}%</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-500 font-semibold select-none">Total Subjects:</span>
+              <span className="font-bold text-slate-800">{student.subjects.length}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-500 font-semibold select-none">Passed:</span>
+              <span className="font-bold text-emerald-700">{stats.creditsAndAbove + stats.passes}</span>
+            </div>
+            <div className="flex items-center gap-1.5 border-l border-slate-200 pl-4">
+              <span className="text-slate-500 font-semibold select-none">Verdict:</span>
+              <span className="font-black text-emerald-850 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">{stats.avgScore >= (template.passThreshold || 50) ? "PASS" : "FAIL"}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Ratings & Grade Scale Row */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 relative z-10 pt-3 border-t border-dashed border-slate-200">
+        {/* Column 1: Character & Behavioral Conduct Ratings (takes 8/12 width) */}
+        <div className="md:col-span-8 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-3 shadow-3xs flex flex-col justify-between">
           <div>
-            <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider mb-2 select-none border-b border-slate-200/50 pb-1 flex items-center gap-1">
+            <h4 className="font-extrabold text-slate-900 text-[11px] uppercase tracking-wider mb-2 select-none border-b border-slate-200/50 pb-1 flex items-center gap-1">
               <span>🌟</span> Character & Skills Ratings
             </h4>
-            <div className="space-y-1 text-[10px] text-slate-800">
+            <div className="space-y-1 text-[13px] text-slate-800">
               {(() => {
                 const isKgClass = student.className === 'Pre-Nursery' || student.className.startsWith('Nursery');
                 if (isKgClass) {
@@ -500,22 +491,22 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                     ["Hand-writing", "Fluency", "Attitude to Property"].includes(b.name)
                   );
                   return (
-                    <div className="grid grid-cols-2 gap-x-2">
+                    <div className="grid grid-cols-2 gap-x-4">
                       <div className="space-y-0.5">
-                        <h5 className="font-bold text-[8px] text-slate-400 uppercase tracking-wider pb-0.5 border-b border-slate-100">Behavioral</h5>
+                        <h5 className="font-bold text-[9px] text-slate-400 uppercase tracking-wider pb-0.5 border-b border-slate-100">Behavioral</h5>
                         {behaviouralList.map(b => (
                           <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-100">
-                            <span className="font-semibold text-slate-600 truncate max-w-[60px]">{b.name}</span>
-                            <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1 rounded">{b.rating}/5</span>
+                            <span className="font-semibold text-slate-600 truncate max-w-[100px]">{b.name}</span>
+                            <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1.5 rounded">{b.rating}/5</span>
                           </div>
                         ))}
                       </div>
                       <div className="space-y-0.5">
-                        <h5 className="font-bold text-[8px] text-slate-400 uppercase tracking-wider pb-0.5 border-b border-slate-100">Skills</h5>
+                        <h5 className="font-bold text-[9px] text-slate-400 uppercase tracking-wider pb-0.5 border-b border-slate-100">Skills</h5>
                         {skillList.map(b => (
                           <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-100">
-                            <span className="font-semibold text-slate-600 truncate max-w-[60px]">{b.name}</span>
-                            <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1 rounded">{b.rating}/5</span>
+                            <span className="font-semibold text-slate-600 truncate max-w-[100px]">{b.name}</span>
+                            <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1.5 rounded">{b.rating}/5</span>
                           </div>
                         ))}
                       </div>
@@ -523,11 +514,11 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                   );
                 } else {
                   return (
-                    <div className="grid grid-cols-2 gap-x-2">
+                    <div className="grid grid-cols-2 gap-x-4">
                       {student.behaviour.map(b => (
                         <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-100">
-                          <span className="font-semibold text-slate-600 truncate max-w-[70px]">{b.name}</span>
-                          <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1 rounded">{b.rating}/5</span>
+                          <span className="font-semibold text-slate-600 truncate max-w-[110px]">{b.name}</span>
+                          <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1.5 rounded">{b.rating}/5</span>
                         </div>
                       ))}
                     </div>
@@ -538,16 +529,16 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
           </div>
         </div>
 
-        {/* Column 2: Grades Index & Conduct Scale */}
-        <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-3 shadow-3xs flex flex-col justify-between">
+        {/* Column 2: Grades Index & Conduct Scale (takes 4/12 width, very compact) */}
+        <div className="md:col-span-4 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-3 shadow-3xs flex flex-col justify-between">
           <div>
-            <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider mb-2 select-none border-b border-slate-200/50 pb-1 flex items-center gap-1">
+            <h4 className="font-extrabold text-slate-900 text-[11px] uppercase tracking-wider mb-2 select-none border-b border-slate-200/50 pb-1 flex items-center gap-1">
               <span>📋</span> Grade Key & Conduct Scale
             </h4>
-            <div className="grid grid-cols-2 gap-2 text-[10px]">
+            <div className="grid grid-cols-2 gap-2 text-[12px]">
               {/* Grades Index table */}
               <div className="border border-slate-150 rounded-lg overflow-hidden shadow-3xs">
-                <table className="w-full text-[8px] text-left border-collapse text-slate-600">
+                <table className="w-full text-[9px] text-left border-collapse text-slate-600">
                   <tbody className="divide-y divide-slate-100 font-semibold">
                     <tr>
                       <td className="py-0.5 px-1 font-black text-emerald-700 bg-emerald-50">A+</td>
@@ -578,7 +569,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
               </div>
 
               {/* Conduct Scale list */}
-              <div className="space-y-0.5 text-slate-500 font-bold">
+              <div className="space-y-0.5 text-slate-500 font-bold text-[9px]">
                 <div className="flex items-center gap-1">
                   <span className="w-3.5 h-3.5 rounded bg-emerald-50 text-emerald-700 text-[8px] flex items-center justify-center font-mono font-black">5</span>
                   <span>Excellent</span>
@@ -603,26 +594,38 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Column 3: Appraisals, Signatures & Stamps */}
-        <div className="bg-[#FAF9F9] border border-slate-200 rounded-xl p-2.5 shadow-3xs text-[9.5px] text-slate-800 space-y-1.5 flex flex-col justify-between">
-          <div className="space-y-1">
-            {/* Teacher Remark */}
+      {/* Appraisals, Signatures & Stamps (One Row) */}
+      <div className="bg-[#FAF9F9] border border-slate-200 rounded-xl p-3 shadow-3xs text-[13px] print:text-[13px] text-slate-800 space-y-3 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Column 1: Teacher Remark */}
+          <div className="space-y-2">
             <div>
-              <span className="font-extrabold text-slate-955 uppercase tracking-wider block border-b border-slate-200 pb-0.5 select-none text-[8.5px]">
+              <span className="font-extrabold text-slate-955 uppercase tracking-wider block border-b border-slate-200 pb-1 select-none text-[11px]">
                 💬 Teacher Appraisal
               </span>
-              <p className="italic text-slate-600 leading-tight">
+              <p className="italic text-slate-600 leading-tight pt-1 min-h-[40px]">
                 "{student.formTeacherRemark}"
               </p>
             </div>
+            
+            <div className="pt-2 flex justify-between items-center border-t border-slate-100">
+              <div>
+                <p className="font-black text-slate-900 select-none text-[12px]">{displayTeacherName}</p>
+                <span className="text-slate-455 uppercase tracking-wider select-none font-bold text-[9px]">Class Teacher</span>
+              </div>
+              <div className="border-b border-dashed border-slate-400 w-24 h-5"></div>
+            </div>
+          </div>
 
-            {/* Principal Remark */}
+          {/* Column 2: Principal / Headmistress Remark */}
+          <div className="space-y-2">
             <div>
-              <span className="font-extrabold text-slate-955 uppercase tracking-wider block border-b border-slate-200 pb-0.5 select-none text-[8.5px]">
+              <span className="font-extrabold text-slate-955 uppercase tracking-wider block border-b border-slate-200 pb-1 select-none text-[11px]">
                 {isBasic ? "Headmistress assessment" : isNursery ? "Nursery Admin assessment" : "Principal assessment"}
               </span>
-              <p className="italic text-slate-600 leading-tight">
+              <p className="italic text-slate-600 leading-tight pt-1 min-h-[40px]">
                 {student.principalRemark
                   ? `"${student.principalRemark}"`
                   : (student.formTeacherRemark.includes("outstanding") || stats.avgScore >= (template.distinctionThreshold || 90)
@@ -632,27 +635,21 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                       : `"Needs close guidance and study supervision in future sessions to ensure passing criteria."`)}
               </p>
             </div>
-          </div>
 
-          {/* Signatures & Seal Row */}
-          <div className="border-t border-slate-200 pt-1.5 flex justify-between items-center text-[7.5px] gap-2 leading-none">
-            <div>
-              <p className="font-black text-slate-900 select-none">{displayTeacherName}</p>
-              <span className="text-slate-455 uppercase tracking-wider select-none font-bold">Teacher</span>
-            </div>
-            
-            <div className="flex flex-col items-center select-none shrink-0">
-              <div className="w-7 h-7 rounded-full border border-emerald-600/50 flex flex-col items-center justify-center bg-white text-emerald-700 font-bold scale-90">
-                <span className="text-[3px] leading-none">OFFICIAL</span>
-                <span className="text-[4px] leading-none">STAMP</span>
+            <div className="pt-2 flex justify-between items-center border-t border-slate-100">
+              <div>
+                <p className="font-black text-slate-900 select-none text-[12px]">{displaySignatoryName}</p>
+                <span className="text-slate-455 uppercase tracking-wider select-none font-bold text-[9px]">
+                  {isBasic ? "Headmistress" : isNursery ? "Nursery Admin" : "Principal"}
+                </span>
               </div>
-            </div>
-
-            <div className="text-right">
-              <p className="font-black text-slate-900 select-none">{displaySignatoryName}</p>
-              <span className="text-slate-455 uppercase tracking-wider select-none font-bold">
-                {isBasic ? "Headmistress" : isNursery ? "Nursery Admin" : "Principal"}
-              </span>
+              <div className="flex items-center gap-3">
+                <div className="border-b border-dashed border-slate-400 w-24 h-5"></div>
+                <div className="w-8 h-8 rounded-full border border-emerald-600/50 flex flex-col items-center justify-center bg-white text-emerald-700 font-bold shrink-0">
+                  <span className="text-[3px] leading-none">OFFICIAL</span>
+                  <span className="text-[4px] leading-none">STAMP</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
