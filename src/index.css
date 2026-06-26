@@ -10,7 +10,7 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 1.0mm 1.2mm 1.0mm 1.2mm; /* Slightly reduced margins for maximum coverage */
+    margin: 1.6mm 2mm 1.6mm 2mm;
   }
   body {
     -webkit-print-color-adjust: exact !important;
@@ -33,59 +33,8 @@
     margin: 0 !important;
     box-shadow: none !important;
     border: none !important;
-    height: 294mm !important; /* Perfect fit for A4 height with reduced margins */
-    max-height: 294mm !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
-    gap: 10px !important;
-    /* Zoom/Scale up the elements on print to occupy more of the page and prevent horizontal overflow */
-    zoom: 0.92 !important;
-    font-size: 13pt !important;
-    line-height: 1.35 !important;
-  }
-
-  .report-card-printable td,
-  .report-card-printable th,
-  .report-card-printable p,
-  .report-card-printable span,
-  .report-card-printable div {
-    font-size: 13pt !important;
-  }
-
-  .report-card-printable .text-[8px],
-  .report-card-printable .text-[8.5px],
-  .report-card-printable .text-[9px],
-  .report-card-printable .text-[9.5px],
-  .report-card-printable .text-[10px],
-  .report-card-printable .text-xs,
-  .report-card-printable .text-sm {
-    font-size: 11pt !important;
-  }
-
-  .report-card-printable h1 {
-    font-size: 26pt !important;
-    font-weight: 950 !important;
-  }
-
-  .report-card-printable h2 {
-    font-size: 14.5pt !important;
-    font-weight: 900 !important;
-  }
-
-  .report-card-printable h3 {
-    font-size: 15pt !important;
-    font-weight: 900 !important;
-  }
-
-  .report-card-printable h4 {
-    font-size: 14pt !important;
-    font-weight: 900 !important;
-  }
-
-  .report-card-printable h5 {
-    font-size: 11.5pt !important;
-    font-weight: 800 !important;
+    /* Zoom/Scale down the elements only on print to prevent horizontal overflow */
+    zoom: 0.8 !important;
   }
 
   /* Force tables to display in full length on print without vertical/horizontal truncation */
@@ -184,18 +133,11 @@
   font-weight: 800 !important;
 }
 
-/* Force PDF document elements to use larger 13pt font-size for ultimate clarity and professional layout */
+/* Force PDF document elements to use larger 17px font-size for ultimate clarity */
 .pdf-force-light {
-  font-size: 13pt !important;
-  line-height: 1.35 !important;
-  height: 1430px !important;
-  max-height: 1430px !important;
-  box-sizing: border-box !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: space-between !important;
+  font-size: 17px !important;
+  line-height: 1.3 !important;
   gap: 12px !important;
-  padding: 24px !important;
 }
 
 .pdf-force-light td,
@@ -203,46 +145,23 @@
 .pdf-force-light p,
 .pdf-force-light span,
 .pdf-force-light div {
-  font-size: 13pt !important;
+  font-size: 17px !important;
 }
 
-/* Proportional sizes for smaller labels/captions/mottos and metadata */
-.pdf-force-light .text-[8px],
-.pdf-force-light .text-[8.5px],
-.pdf-force-light .text-[9px],
-.pdf-force-light .text-[9.5px],
+/* Specific styling to elevate key header text sizes slightly */
+.pdf-force-light .text-[11px],
 .pdf-force-light .text-[10px],
 .pdf-force-light .text-xs,
 .pdf-force-light .text-sm {
-  font-size: 11pt !important;
+  font-size: 17px !important;
 }
 
-/* Proportional heading sizes */
+/* Force Ezibeck Academy heading on the PDF document to be significantly larger */
 .pdf-force-light h1 {
-  font-size: 26pt !important;
+  font-size: 44px !important;
   font-weight: 950 !important;
   color: #0f172a !important;
   line-height: normal !important;
-}
-
-.pdf-force-light h2 {
-  font-size: 14.5pt !important;
-  font-weight: 900 !important;
-}
-
-.pdf-force-light h3 {
-  font-size: 15pt !important;
-  font-weight: 900 !important;
-}
-
-.pdf-force-light h4 {
-  font-size: 14pt !important;
-  font-weight: 900 !important;
-}
-
-.pdf-force-light h5 {
-  font-size: 11.5pt !important;
-  font-weight: 800 !important;
 }
 
 /* Compress spacing for PDF to force single-page fit while rendering large text */
@@ -276,9 +195,9 @@
 }
 .pdf-force-light table th,
 .pdf-force-light table td {
-  padding-top: 3px !important;
-  padding-bottom: 3px !important;
-  line-height: 1.15 !important;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+  line-height: 1.1 !important;
 }
 
 
