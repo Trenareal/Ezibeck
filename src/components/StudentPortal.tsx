@@ -1206,7 +1206,7 @@ export default function StudentPortal({
                           <th className="py-2.5 px-3 border-r border-slate-300 text-center bg-emerald-100/40 w-24">
                             <span className="flex items-center justify-center gap-1 text-emerald-950">Σ TERM (100)</span>
                           </th>
-                          {viewingTerm === 'Second Term' && (
+                          {viewingTerm === 'Second Term' && isSecondaryClass && (
                             <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-24">
                               <span className="flex items-center justify-center gap-1">1st Term Avg</span>
                             </th>
@@ -1273,11 +1273,11 @@ export default function StudentPortal({
                               <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{subj.testScore}</td>
                               <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{subj.examScore}</td>
                               <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black font-mono text-emerald-950 bg-emerald-50/30">{tot}</td>
-                              {viewingTerm === 'Second Term' && (
-                                <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950 bg-blue-50/10">
-                                  {firstTermAvgStr !== "-" ? `${firstTermAvgStr}%` : "-"}
-                                </td>
-                              )}
+                               {viewingTerm === 'Second Term' && isSecondaryClass && (
+                                 <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950 bg-blue-50/10">
+                                   {firstTermAvgStr !== "-" ? `${firstTermAvgStr}%` : "-"}
+                                 </td>
+                               )}
                               {viewingTerm === 'Third Term' && (
                                 <>
                                   <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{firstTerm}</td>
