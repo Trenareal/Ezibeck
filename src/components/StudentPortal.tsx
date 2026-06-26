@@ -353,12 +353,12 @@ export default function StudentPortal({
       const updatedStudent = { ...selectedStudent, passwordUseCount: currentUses };
       let rollMsg = "";
       
-      if (currentUses >= 3) {
+      if (currentUses >= 5) {
         const newPasscode = generateUnique6DigitPassword(selectedStudent.name, selectedStudent.id);
         updatedStudent.password = newPasscode;
         updatedStudent.passwordUseCount = 0;
         updatedStudent.passwordRolledOver = true;
-        rollMsg = `🔒 ROLLOVER SECURITY NOTICE: This password has been verified successfully 3 times and is now expired. For maximum account security, a fresh 6-digit passcode has been automatically generated. For security reasons, you have been temporarily logged in, but you will not be able to use your previous password again. Please contact your class teacher or a school administrator to retrieve your new, freshly-generated 6-digit passcode for future logins!`;
+        rollMsg = `🔒 ROLLOVER SECURITY NOTICE: This password has been verified successfully 5 times and is now expired. For maximum account security, a fresh 6-digit passcode has been automatically generated. For security reasons, you have been temporarily logged in, but you will not be able to use your previous password again. Please contact your class teacher or a school administrator to retrieve your new, freshly-generated 6-digit passcode for future logins!`;
         
         logPasscodeEvent({
           studentId: selectedStudent.id,
@@ -754,7 +754,7 @@ export default function StudentPortal({
                 <span className="text-red-650 font-bold bg-red-50 border border-red-105 px-1.5 py-0.5 rounded text-[10px]">🔒 Passcode Expired (Rolled over). Request the new passcode from Staff / Admin.</span>
               ) : (
                 <>
-                  <strong className="font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">{selectedStudent.password || '123456'}</strong> <span className="text-[10px] text-slate-450 italic">({3 - (selectedStudent.passwordUseCount || 0)} uses remaining before rollover)</span>
+                  <strong className="font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">{selectedStudent.password || '123456'}</strong> <span className="text-[10px] text-slate-450 italic">({5 - (selectedStudent.passwordUseCount || 0)} uses remaining before rollover)</span>
                 </>
               )}
             </p>

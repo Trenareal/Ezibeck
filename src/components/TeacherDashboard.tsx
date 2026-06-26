@@ -3267,10 +3267,10 @@ export default function TeacherDashboard({
                   {(() => {
                     if (!editingStudent) return null;
                     const used = editingStudent.passwordUseCount || 0;
-                    if (editingStudent.passwordRolledOver || used >= 3) {
+                    if (editingStudent.passwordRolledOver || used >= 5) {
                       return <span className="text-red-600 font-extrabold uppercase animate-pulse">⚠️ Rolled Over (Expired)</span>;
                     }
-                    return <span className="text-emerald-700 font-semibold">{3 - used} uses left before auto-reset</span>;
+                    return <span className="text-emerald-700 font-semibold">{5 - used} uses left before auto-reset</span>;
                   })()}
                 </div>
               </div>
