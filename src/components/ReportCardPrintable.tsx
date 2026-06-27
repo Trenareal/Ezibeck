@@ -264,7 +264,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
         </h3>
         {/* Ezibeck-style database table */}
         <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white shadow-3xs">
-          <table className="w-full text-left text-[13px] border-collapse">
+          <table className="academic-evaluation-table w-full text-left text-[13px] border-collapse">
             <thead>
               <tr className="bg-[#EAEAEA] border-b border-slate-300 text-slate-955 font-black select-none text-[9px] uppercase tracking-wider">
                 <th className="py-1 px-2 border-r border-slate-300 min-w-[130px]">

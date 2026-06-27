@@ -299,6 +299,41 @@
     padding-bottom: 4px !important;
     line-height: 1.25 !important;
   }
+
+  /* Reduce academic course evaluation table size by 20% on print */
+  .report-card-printable .academic-evaluation-table,
+  .report-card-printable .academic-evaluation-table th,
+  .report-card-printable .academic-evaluation-table td,
+  .report-card-printable .academic-evaluation-table p,
+  .report-card-printable .academic-evaluation-table div {
+    font-size: 8pt !important;
+  }
+  .report-card-printable .academic-evaluation-table th,
+  .report-card-printable .academic-evaluation-table td {
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    line-height: 1.15 !important;
+  }
+  .report-card-printable .academic-evaluation-table span {
+    font-size: 7pt !important;
+  }
+  .report-card-printable .academic-evaluation-table .text-\[11px\] {
+    font-size: 6.5pt !important;
+  }
+  .report-card-printable .academic-evaluation-table .text-\[12px\] {
+    font-size: 7.2pt !important;
+  }
+  .report-card-printable .academic-evaluation-table .text-\[9px\] {
+    font-size: 5.4pt !important;
+  }
+  .report-card-printable .academic-evaluation-table .text-\[8.5px\] {
+    font-size: 5.1pt !important;
+  }
+  .report-card-printable .academic-evaluation-table .text-\[8px\] {
+    font-size: 4.8pt !important;
+  }
 }
 
 .pdf-force-light {
@@ -355,6 +390,41 @@
   padding-top: 4px !important;
   padding-bottom: 4px !important;
   line-height: 1.25 !important;
+}
+
+/* Reduce academic course evaluation table size by 20% on generated PDF preview */
+.pdf-force-light .academic-evaluation-table,
+.pdf-force-light .academic-evaluation-table th,
+.pdf-force-light .academic-evaluation-table td,
+.pdf-force-light .academic-evaluation-table p,
+.pdf-force-light .academic-evaluation-table div {
+  font-size: 8pt !important;
+}
+.pdf-force-light .academic-evaluation-table th,
+.pdf-force-light .academic-evaluation-table td {
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+  line-height: 1.15 !important;
+}
+.pdf-force-light .academic-evaluation-table span {
+  font-size: 7pt !important;
+}
+.pdf-force-light .academic-evaluation-table .text-\[11px\] {
+  font-size: 6.5pt !important;
+}
+.pdf-force-light .academic-evaluation-table .text-\[12px\] {
+  font-size: 7.2pt !important;
+}
+.pdf-force-light .academic-evaluation-table .text-\[9px\] {
+  font-size: 5.4pt !important;
+}
+.pdf-force-light .academic-evaluation-table .text-\[8.5px\] {
+  font-size: 5.1pt !important;
+}
+.pdf-force-light .academic-evaluation-table .text-\[8px\] {
+  font-size: 4.8pt !important;
 }
 
 

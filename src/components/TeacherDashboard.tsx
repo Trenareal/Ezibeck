@@ -319,64 +319,71 @@ export default function TeacherDashboard({
       setIsGeneratingPdf(false);
       return;
     }
-    
-    // Store original scroll & style to safely restore in case of success or failure
-    const originalStyle = element.getAttribute('style') || '';
-    const originalScrollY = window.scrollY;
-    
-    // Find nested scroll wrappers so we can restore them fully
-    const overflowElms = element.querySelectorAll('.overflow-x-auto');
-    const originalOverflows: string[] = [];
-    const originalWidths: string[] = [];
-    overflowElms.forEach((el, idx) => {
-      const htmlEl = el as HTMLElement;
-      originalOverflows[idx] = htmlEl.style.overflowX || '';
-      originalWidths[idx] = htmlEl.style.width || '';
-    });
 
-    const restoreStyles = () => {
-      element.setAttribute('style', originalStyle);
-      overflowElms.forEach((el, idx) => {
-        const htmlEl = el as HTMLElement;
-        htmlEl.style.overflowX = originalOverflows[idx];
-        htmlEl.style.width = originalWidths[idx];
-      });
-      window.scrollTo(0, originalScrollY);
-    };
-
+    let container: HTMLDivElement | null = null;
     try {
-      // Configure temporary desktop-optimized layout bounds to prevent text folding on mobile screens
-      element.style.width = '1024px';
-      element.style.minWidth = '1024px';
-      element.style.maxWidth = '1024px';
-      element.style.height = '1448px';
-      element.style.minHeight = '1448px';
-      element.style.maxHeight = '1448px';
-      element.style.boxSizing = 'border-box';
+      // 1. Clone the element to render in an isolated, off-screen sandbox
+      const clone = element.cloneNode(true) as HTMLElement;
       
-      // Force nested tables to render fully visible in layout canvas
-      overflowElms.forEach((el) => {
+      // Ensure 'pdf-force-light' class is applied on the clone
+      if (!clone.classList.contains('pdf-force-light')) {
+        clone.classList.add('pdf-force-light');
+      }
+
+      // 2. Set desktop-optimized dimensions on the clone to prevent text folding/clipping
+      clone.style.width = '1024px';
+      clone.style.minWidth = '1024px';
+      clone.style.maxWidth = '1024px';
+      clone.style.height = '1448px';
+      clone.style.minHeight = '1448px';
+      clone.style.maxHeight = '1448px';
+      clone.style.boxSizing = 'border-box';
+      clone.style.overflow = 'hidden';
+      clone.style.position = 'relative';
+
+      // Ensure all overflow containers within the clone are fully expanded
+      const cloneOverflows = clone.querySelectorAll('.overflow-x-auto');
+      cloneOverflows.forEach((el) => {
         const htmlEl = el as HTMLElement;
         htmlEl.style.overflowX = 'visible';
+        htmlEl.style.overflowY = 'visible';
         htmlEl.style.width = '100%';
       });
 
-      // Generate razor sharp canvas ignoring active window scrolls
-      const canvas = await html2canvas(element, {
-        scale: 3.0, // High-DPI razor sharp scaling
+      // 3. Mount clone inside a hidden, absolute-positioned off-screen wrapper at the root level (document.body)
+      container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      container.style.top = '-9999px';
+      container.style.width = '1024px';
+      container.style.height = '1448px';
+      container.style.overflow = 'hidden';
+      container.style.backgroundColor = '#ffffff';
+      
+      container.appendChild(clone);
+      document.body.appendChild(container);
+
+      // 4. Generate high-DPI razor sharp canvas using html2canvas targeting the off-screen sandbox
+      const canvas = await html2canvas(clone, {
+        scale: 3.0, // Razor sharp 3x scaling for high-quality vectors/text
         useCORS: true,
         allowTaint: true,
         logging: false,
         backgroundColor: '#ffffff',
         scrollX: 0,
         scrollY: 0,
-        windowWidth: 1024
+        windowWidth: 1024,
+        windowHeight: 1448
       });
-      
-      restoreStyles();
-      
+
+      // 5. Clean up off-screen container immediately after capture
+      if (container && container.parentNode) {
+        container.parentNode.removeChild(container);
+        container = null;
+      }
+
       const imgData = canvas.toDataURL('image/png');
-      
+
       // Fit comfortably in portrait A4 width (210mm) with 0.6mm margins on all sides (80% margin reduction)
       const maxPdfWidth = 208.8; // 210mm - 1.2mm margins (0.6mm on each side)
       const maxPdfHeight = 295.8; // 297mm - 1.2mm margins (0.6mm on each side)
@@ -407,10 +414,12 @@ export default function TeacherDashboard({
     } catch (err) {
       console.error('Direct PDF Generation Error:', err);
       
-      // Fallback style restoration
-      restoreStyles();
+      // Cleanup on error
+      if (container && container.parentNode) {
+        container.parentNode.removeChild(container);
+      }
       
-      // Trigger native printing directly
+      // Fallback: Trigger native printing
       window.print();
     } finally {
       setIsGeneratingPdf(false);
