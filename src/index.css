@@ -10,9 +10,13 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 1.6mm 2mm 1.6mm 2mm;
+    margin: 0 !important;
   }
-  body {
+  html, body {
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     background-color: white !important;
@@ -24,17 +28,23 @@
     break-inside: avoid;
   }
 
-  /* Scale the whole report card beautifully inside printed portrait document */
+  /* Scale the whole report card beautifully inside printed portrait document to fill exactly one A4 */
   .report-card-printable {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    padding: 0 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    min-height: 297mm !important;
+    max-height: 297mm !important;
+    padding: 24px !important;
     margin: 0 !important;
     box-shadow: none !important;
     border: none !important;
-    /* Zoom/Scale down the elements only on print to prevent horizontal overflow */
-    zoom: 0.8 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    overflow: hidden !important;
+    background-color: white !important;
   }
 
   /* Force tables to display in full length on print without vertical/horizontal truncation */
@@ -133,11 +143,65 @@
   font-weight: 800 !important;
 }
 
-/* Force PDF document elements to use larger 17px font-size for ultimate clarity */
+/* Proportional font-scaling rules for both Print and PDF Generation */
+@media print {
+  .report-card-printable td,
+  .report-card-printable th,
+  .report-card-printable p,
+  .report-card-printable span,
+  .report-card-printable div {
+    font-size: 13.5pt !important;
+  }
+  .report-card-printable .text-\[13px\] { font-size: 13.5pt !important; }
+  .report-card-printable .text-\[12px\] { font-size: 12.5pt !important; }
+  .report-card-printable .text-xs { font-size: 12.5pt !important; }
+  .report-card-printable .text-\[11px\] { font-size: 11.5pt !important; }
+  .report-card-printable .text-\[10.5px\] { font-size: 11pt !important; }
+  .report-card-printable .text-\[10px\] { font-size: 10.5pt !important; }
+  .report-card-printable .text-\[9.5px\] { font-size: 10pt !important; }
+  .report-card-printable .text-\[9px\] { font-size: 9.5pt !important; }
+  .report-card-printable .text-\[8.5px\] { font-size: 9pt !important; }
+  .report-card-printable .text-\[8px\] { font-size: 8.5pt !important; }
+  .report-card-printable .text-\[7.5px\] { font-size: 8pt !important; }
+  .report-card-printable .text-\[2.5px\] { font-size: 4.5pt !important; }
+  .report-card-printable .text-\[3.5px\] { font-size: 5.5pt !important; }
+  .report-card-printable .text-sm { font-size: 14pt !important; }
+  .report-card-printable .text-base { font-size: 16pt !important; }
+  .report-card-printable .text-lg { font-size: 18pt !important; }
+  .report-card-printable .text-xl { font-size: 20pt !important; }
+
+  /* Headings proportionally larger */
+  .report-card-printable h1 { font-size: 28pt !important; font-weight: 950 !important; }
+  .report-card-printable h2 { font-size: 16pt !important; font-weight: 900 !important; }
+  .report-card-printable h3 { font-size: 15pt !important; font-weight: 900 !important; }
+  .report-card-printable h4 { font-size: 14pt !important; font-weight: 900 !important; }
+  .report-card-printable h5 { font-size: 12.5pt !important; font-weight: 800 !important; }
+
+  /* Set balanced padding for table cells to let content fit comfortably */
+  .report-card-printable table th,
+  .report-card-printable table td {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    line-height: 1.25 !important;
+  }
+}
+
 .pdf-force-light {
-  font-size: 17px !important;
-  line-height: 1.3 !important;
+  font-size: 13.5pt !important;
+  line-height: 1.35 !important;
+  width: 1024px !important;
+  min-width: 1024px !important;
+  max-width: 1024px !important;
+  height: 1448px !important;
+  min-height: 1448px !important;
+  max-height: 1448px !important;
+  box-sizing: border-box !important;
+  padding: 32px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
   gap: 12px !important;
+  overflow: hidden !important;
 }
 
 .pdf-force-light td,
@@ -145,59 +209,39 @@
 .pdf-force-light p,
 .pdf-force-light span,
 .pdf-force-light div {
-  font-size: 17px !important;
+  font-size: 13.5pt !important;
 }
 
-/* Specific styling to elevate key header text sizes slightly */
-.pdf-force-light .text-[11px],
-.pdf-force-light .text-[10px],
-.pdf-force-light .text-xs,
-.pdf-force-light .text-sm {
-  font-size: 17px !important;
-}
+.pdf-force-light .text-\[13px\] { font-size: 13.5pt !important; }
+.pdf-force-light .text-\[12px\] { font-size: 12.5pt !important; }
+.pdf-force-light .text-xs { font-size: 12.5pt !important; }
+.pdf-force-light .text-\[11px\] { font-size: 11.5pt !important; }
+.pdf-force-light .text-\[10.5px\] { font-size: 11pt !important; }
+.pdf-force-light .text-\[10px\] { font-size: 10.5pt !important; }
+.pdf-force-light .text-\[9.5px\] { font-size: 10pt !important; }
+.pdf-force-light .text-\[9px\] { font-size: 9.5pt !important; }
+.pdf-force-light .text-\[8.5px\] { font-size: 9pt !important; }
+.pdf-force-light .text-\[8px\] { font-size: 8.5pt !important; }
+.pdf-force-light .text-\[7.5px\] { font-size: 8pt !important; }
+.pdf-force-light .text-\[2.5px\] { font-size: 4.5pt !important; }
+.pdf-force-light .text-\[3.5px\] { font-size: 5.5pt !important; }
+.pdf-force-light .text-sm { font-size: 14pt !important; }
+.pdf-force-light .text-base { font-size: 16pt !important; }
+.pdf-force-light .text-lg { font-size: 18pt !important; }
+.pdf-force-light .text-xl { font-size: 20pt !important; }
 
-/* Force Ezibeck Academy heading on the PDF document to be significantly larger */
-.pdf-force-light h1 {
-  font-size: 44px !important;
-  font-weight: 950 !important;
-  color: #0f172a !important;
-  line-height: normal !important;
-}
+/* Headings proportionally larger */
+.pdf-force-light h1 { font-size: 28pt !important; font-weight: 950 !important; }
+.pdf-force-light h2 { font-size: 16pt !important; font-weight: 900 !important; }
+.pdf-force-light h3 { font-size: 15pt !important; font-weight: 900 !important; }
+.pdf-force-light h4 { font-size: 14pt !important; font-weight: 900 !important; }
+.pdf-force-light h5 { font-size: 12.5pt !important; font-weight: 800 !important; }
 
-/* Compress spacing for PDF to force single-page fit while rendering large text */
-.pdf-force-light p,
-.pdf-force-light blockquote,
-.pdf-force-light .markdown-body p,
-.report-card-printable p,
-.report-card-printable blockquote {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-}
-
-.pdf-force-light .space-y-6,
-.pdf-force-light .space-y-8,
-.pdf-force-light .space-y-4 {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-}
-.pdf-force-light .py-6, .pdf-force-light .py-8, .pdf-force-light .py-12,
-.pdf-force-light .pb-6, .pdf-force-light .pb-8, .pdf-force-light .pb-12,
-.pdf-force-light .pt-6, .pdf-force-light .pt-8, .pdf-force-light .pt-12 {
-  padding-top: 2px !important;
-  padding-bottom: 2px !important;
-}
-.pdf-force-light .mt-4, .pdf-force-light .mt-6, .pdf-force-light .mt-8,
-.pdf-force-light .mb-4, .pdf-force-light .mb-6, .pdf-force-light .mb-8 {
-  margin-top: 2px !important;
-  margin-bottom: 2px !important;
-}
 .pdf-force-light table th,
 .pdf-force-light table td {
-  padding-top: 2px !important;
-  padding-bottom: 2px !important;
-  line-height: 1.1 !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  line-height: 1.25 !important;
 }
 
 
