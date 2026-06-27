@@ -3361,17 +3361,21 @@ export default function TeacherDashboard({
                         <div key={subj.id} className="p-3 grid grid-cols-12 items-center text-xs font-semibold text-slate-800 hover:bg-slate-50">
                           <div className={(activeTermTab === 'Third Term' || (activeTermTab === 'Second Term' && editingIsSecondary)) ? "col-span-3 flex items-center pr-2" : "col-span-4 flex items-center pr-2"}>
                             {(() => {
-                              const isKgClass = editingStudent && (editingStudent.className === 'Nursery 1' || editingStudent.className === 'Nursery 2' || editingStudent.className === 'Nursery 3');
+                              const isKgClass = editingStudent && (editingStudent.className === 'Pre-Nursery' || editingStudent.className.startsWith('Nursery'));
                               const isPermanentKgSubject = !!(isKgClass && NURSERY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase()));
                               return (
                                 <input
                                   type="text"
                                   required
-                                  disabled={true}
+                                  disabled={isTermReadOnly || isPermanentKgSubject}
                                   value={subj.name}
                                   onChange={(e) => handleSubjectNameChange(subj.id, e.target.value)}
                                   placeholder="e.g. Mathematics"
-                                  className="w-full bg-slate-100 border border-slate-200 py-1 px-1.5 rounded text-xs font-bold text-slate-500 outline-none transition-all font-sans cursor-not-allowed"
+                                  className={`w-full py-1 px-1.5 rounded text-xs font-bold outline-none transition-all font-sans ${
+                                    isTermReadOnly || isPermanentKgSubject
+                                      ? "bg-slate-100 border border-slate-200 text-slate-500 cursor-not-allowed"
+                                      : "bg-white border border-slate-300 text-slate-800 hover:border-slate-400 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/30 font-extrabold"
+                                  }`}
                                 />
                               );
                             })()}
@@ -3481,7 +3485,7 @@ export default function TeacherDashboard({
                           {/* Action Button */}
                           <div className="col-span-1 flex justify-center">
                             {(() => {
-                              const isKgClass = editingStudent && (editingStudent.className === 'Nursery 1' || editingStudent.className === 'Nursery 2' || editingStudent.className === 'Nursery 3');
+                              const isKgClass = editingStudent && (editingStudent.className === 'Pre-Nursery' || editingStudent.className.startsWith('Nursery'));
                               const isPermanentKgSubject = !!(isKgClass && NURSERY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase()));
                               
                               if (isPermanentKgSubject) {

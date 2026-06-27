@@ -533,9 +533,7 @@ export function generateUnique6DigitPassword(studentName: string, baseIdOrName: 
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-export function createStudent(name: string, className: ClassName, idx: number, term?: string): Student {
-  const activeTerm = term || 'Third Term';
-  
+export function getDefaultSubjectsForClass(className: ClassName, term?: string, studentIdx?: number): SubjectGrade[] {
   let subjectsList = JSS_SUBJECTS;
   if (className === 'Pre-Nursery' || className.startsWith('Nursery')) {
     subjectsList = NURSERY_SUBJECTS;
@@ -544,6 +542,11 @@ export function createStudent(name: string, className: ClassName, idx: number, t
   } else if (className.startsWith('SS')) {
     subjectsList = SS_SUBJECTS;
   }
+  return generateRandomGrades(subjectsList, term, studentIdx);
+}
+
+export function createStudent(name: string, className: ClassName, idx: number, term?: string): Student {
+  const activeTerm = term || 'Third Term';
   
   let age = 15;
   if (className === 'Pre-Nursery') {
@@ -659,7 +662,7 @@ export function createStudent(name: string, className: ClassName, idx: number, t
     session: "2025/2026",
     attendancePresent: attendancePresentVal,
     attendanceTotal: attendanceTotalVal,
-    subjects: generateRandomGrades(subjectsList, activeTerm, idx),
+    subjects: getDefaultSubjectsForClass(className, activeTerm, idx),
     behaviour: generateDefaultBehaviour(className),
     formTeacherRemark: remarks[remarkIdx],
     formTeacherName,
@@ -711,10 +714,17 @@ export function loadStoredStudents(term?: string): Student[] {
     if (val) {
       const parsed = JSON.parse(val);
       if (Array.isArray(parsed)) {
-        const migrated = parsed.map(std => ({
-          ...std,
-          behaviour: adjustBehaviourIfRequired(std.behaviour, std.className)
-        }));
+        const migrated = parsed.map((std, idx) => {
+          let subjects = std.subjects || [];
+          if (subjects.length === 0) {
+            subjects = getDefaultSubjectsForClass(std.className, activeTerm, idx);
+          }
+          return {
+            ...std,
+            subjects,
+            behaviour: adjustBehaviourIfRequired(std.behaviour, std.className)
+          };
+        });
         return migrated;
       }
     }
@@ -723,10 +733,17 @@ export function loadStoredStudents(term?: string): Student[] {
     if (legacyVal && activeTerm === 'Third Term') {
       const parsed = JSON.parse(legacyVal);
       if (Array.isArray(parsed)) {
-        const migrated = parsed.map(std => ({
-          ...std,
-          behaviour: adjustBehaviourIfRequired(std.behaviour, std.className)
-        }));
+        const migrated = parsed.map((std, idx) => {
+          let subjects = std.subjects || [];
+          if (subjects.length === 0) {
+            subjects = getDefaultSubjectsForClass(std.className, activeTerm, idx);
+          }
+          return {
+            ...std,
+            subjects,
+            behaviour: adjustBehaviourIfRequired(std.behaviour, std.className)
+          };
+        });
         saveStudents(migrated, activeTerm);
         return migrated;
       }

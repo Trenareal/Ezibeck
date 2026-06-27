@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { Student, Workspace15Template, ClassName, FacultyProfile } from '../types';
-import { compareSubjects } from '../utils/academicUtils';
+import { compareSubjects, getDefaultSubjectsForClass } from '../utils/academicUtils';
 import { safeStorage } from '../utils/safeStorage';
 
 const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
@@ -48,17 +48,19 @@ export const mapDbStudentToFrontend = (dbStudent: any): Student => {
     resumptionDate: dbStudent.resumption_date,
     password: dbStudent.password,
     principalRemark: dbStudent.principal_remark || '',
-    subjects: (dbStudent.subjects || []).map((sub: any) => ({
-      id: sub.id,
-      name: sub.name,
-      testScore: sub.test_score,
-      examScore: sub.exam_score,
-      firstTermSummary: sub.first_term_summary,
-      secondTermSummary: sub.second_term_summary,
-      thirdTermSummary: sub.third_term_summary,
-      position: sub.position,
-      isPositionManual: sub.is_position_manual
-    })).sort((a: any, b: any) => compareSubjects(a.name, b.name)),
+    subjects: (dbStudent.subjects && dbStudent.subjects.length > 0)
+      ? dbStudent.subjects.map((sub: any) => ({
+          id: sub.id,
+          name: sub.name,
+          testScore: sub.test_score,
+          examScore: sub.exam_score,
+          firstTermSummary: sub.first_term_summary,
+          secondTermSummary: sub.second_term_summary,
+          thirdTermSummary: sub.third_term_summary,
+          position: sub.position,
+          isPositionManual: sub.is_position_manual
+        })).sort((a: any, b: any) => compareSubjects(a.name, b.name))
+      : getDefaultSubjectsForClass(dbStudent.class_name as ClassName, dbStudent.term || 'Third Term'),
     behaviour: (dbStudent.behaviour || []).map((b: any) => ({
       name: b.name,
       rating: b.rating
