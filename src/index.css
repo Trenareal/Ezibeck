@@ -77,14 +77,14 @@
 /* Base resets for container and immediate children, avoiding universal '*' to prevent nested background-color destruction */
 .pdf-force-light .bg-white,
 .pdf-force-light .bg-slate-50,
-.pdf-force-light .bg-[#FCFCFC]/80,
-.pdf-force-light .bg-[#FCFCFC]/60,
+.pdf-force-light .bg-\[\#FCFCFC\]\/80,
+.pdf-force-light .bg-\[\#FCFCFC\]\/60,
 .pdf-force-light [class*="bg-[#FCFCFC]"] {
   background-color: #ffffff !important;
 }
 
 /* Ensure background of the stats/summary boxes has a clean subtle grey fill instead of disappearing */
-.pdf-force-light .bg-[#FAF9F9],
+.pdf-force-light .bg-\[\#FAF9F9\],
 .pdf-force-light .bg-slate-100,
 .pdf-force-light [class*="bg-slate-100"] {
   background-color: #f8fafc !important;
@@ -104,7 +104,8 @@
 .pdf-force-light .text-slate-950,
 .pdf-force-light .text-slate-900,
 .pdf-force-light .text-slate-800,
-.pdf-force-light .text-slate-700 {
+.pdf-force-light .text-slate-700,
+.pdf-force-light .text-slate-855 {
   color: #0f172a !important; /* Perfect obsidian/black for high readability */
 }
 
@@ -119,8 +120,14 @@
 
 /* Make semantic color texts darker and richer for high print contrast */
 .pdf-force-light .text-emerald-700,
-.pdf-force-light .text-emerald-800 {
+.pdf-force-light .text-emerald-800,
+.pdf-force-light .text-emerald-850,
+.pdf-force-light .text-emerald-855 {
   color: #064e3b !important; /* Deep emerald green */
+}
+
+.pdf-force-light .text-emerald-750 {
+  color: #047857 !important;
 }
 
 .pdf-force-light .text-sky-850,
@@ -131,6 +138,116 @@
 .pdf-force-light .text-red-850,
 .pdf-force-light .text-red-800 {
   color: #7f1d1d !important; /* Crimson red */
+}
+
+.pdf-force-light .text-blue-900 {
+  color: #1e3a8a !important;
+}
+
+.pdf-force-light .text-green-700 {
+  color: #15803d !important;
+}
+
+.pdf-force-light .text-sky-700 {
+  color: #0369a1 !important;
+}
+
+.pdf-force-light .text-amber-500 {
+  color: #d97706 !important;
+}
+
+.pdf-force-light .text-amber-650 {
+  color: #b45309 !important;
+}
+
+.pdf-force-light .text-orange-600 {
+  color: #ea580c !important;
+}
+
+.pdf-force-light .text-red-500 {
+  color: #ef4444 !important;
+}
+
+/* Custom background color mappings for html2canvas compatibility in pdf-force-light */
+.pdf-force-light .bg-emerald-100\/30 {
+  background-color: rgba(209, 250, 229, 0.3) !important;
+}
+.pdf-force-light .bg-blue-50 {
+  background-color: #eff6ff !important;
+}
+.pdf-force-light .bg-emerald-100\/20 {
+  background-color: rgba(209, 250, 229, 0.2) !important;
+}
+.pdf-force-light .bg-slate-50\/20 {
+  background-color: rgba(248, 250, 252, 0.2) !important;
+}
+.pdf-force-light .bg-emerald-50\/10 {
+  background-color: rgba(236, 253, 245, 0.1) !important;
+}
+.pdf-force-light .bg-blue-50\/5 {
+  background-color: rgba(239, 246, 255, 0.05) !important;
+}
+.pdf-force-light .bg-slate-50\/40 {
+  background-color: rgba(248, 250, 252, 0.4) !important;
+}
+.pdf-force-light .bg-slate-50\/10 {
+  background-color: rgba(248, 250, 252, 0.1) !important;
+}
+.pdf-force-light .bg-\[\#FAF9F9\]\/90 {
+  background-color: rgba(250, 249, 249, 0.9) !important;
+}
+.pdf-force-light .bg-slate-100\/50 {
+  background-color: rgba(241, 245, 249, 0.5) !important;
+}
+.pdf-force-light .bg-emerald-50 {
+  background-color: #ecfdf5 !important;
+}
+.pdf-force-light .bg-green-50 {
+  background-color: #f0fdf4 !important;
+}
+.pdf-force-light .bg-sky-50 {
+  background-color: #f0f9ff !important;
+}
+.pdf-force-light .bg-amber-50 {
+  background-color: #fdfbeb !important;
+}
+.pdf-force-light .bg-orange-50 {
+  background-color: #fff7ed !important;
+}
+.pdf-force-light .bg-red-50 {
+  background-color: #fef2f2 !important;
+}
+.pdf-force-light .bg-slate-50 {
+  background-color: #f8fafc !important;
+}
+.pdf-force-light .bg-\[\#EAEAEA\] {
+  background-color: #eaeaea !important;
+}
+
+/* Custom border mappings for html2canvas compatibility in pdf-force-light */
+.pdf-force-light .border-slate-200 {
+  border-color: #e2e8f0 !important;
+}
+.pdf-force-light .border-slate-200\/80 {
+  border-color: rgba(226, 232, 240, 0.8) !important;
+}
+.pdf-force-light .border-slate-200\/50 {
+  border-color: rgba(226, 232, 240, 0.5) !important;
+}
+.pdf-force-light .border-slate-150 {
+  border-color: #e2e8f0 !important;
+}
+.pdf-force-light .border-slate-100 {
+  border-color: #f1f5f9 !important;
+}
+.pdf-force-light .border-slate-100\/50 {
+  border-color: rgba(241, 245, 249, 0.5) !important;
+}
+.pdf-force-light .border-slate-300 {
+  border-color: #cbd5e1 !important;
+}
+.pdf-force-light .border-slate-205 {
+  border-color: #cbd5e1 !important;
 }
 
 /* Table header styling */
@@ -148,32 +265,32 @@
   .report-card-printable td,
   .report-card-printable th,
   .report-card-printable p {
-    font-size: 13.5pt !important;
+    font-size: 10pt !important;
   }
-  .report-card-printable .text-\[13px\] { font-size: 13.5pt !important; }
-  .report-card-printable .text-\[12px\] { font-size: 12.5pt !important; }
-  .report-card-printable .text-xs { font-size: 12.5pt !important; }
-  .report-card-printable .text-\[11px\] { font-size: 11.5pt !important; }
-  .report-card-printable .text-\[10.5px\] { font-size: 11pt !important; }
-  .report-card-printable .text-\[10px\] { font-size: 10.5pt !important; }
-  .report-card-printable .text-\[9.5px\] { font-size: 10pt !important; }
-  .report-card-printable .text-\[9px\] { font-size: 9.5pt !important; }
-  .report-card-printable .text-\[8.5px\] { font-size: 9pt !important; }
-  .report-card-printable .text-\[8px\] { font-size: 8.5pt !important; }
-  .report-card-printable .text-\[7.5px\] { font-size: 8pt !important; }
-  .report-card-printable .text-\[2.5px\] { font-size: 4.5pt !important; }
-  .report-card-printable .text-\[3.5px\] { font-size: 5.5pt !important; }
-  .report-card-printable .text-sm { font-size: 14pt !important; }
-  .report-card-printable .text-base { font-size: 16pt !important; }
-  .report-card-printable .text-lg { font-size: 18pt !important; }
-  .report-card-printable .text-xl { font-size: 20pt !important; }
+  .report-card-printable .text-\[13px\] { font-size: 10pt !important; }
+  .report-card-printable .text-\[12px\] { font-size: 9pt !important; }
+  .report-card-printable .text-xs { font-size: 9pt !important; }
+  .report-card-printable .text-\[11px\] { font-size: 8.25pt !important; }
+  .report-card-printable .text-\[10.5px\] { font-size: 7.8pt !important; }
+  .report-card-printable .text-\[10px\] { font-size: 7.5pt !important; }
+  .report-card-printable .text-\[9.5px\] { font-size: 7.1pt !important; }
+  .report-card-printable .text-\[9px\] { font-size: 6.75pt !important; }
+  .report-card-printable .text-\[8.5px\] { font-size: 6.35pt !important; }
+  .report-card-printable .text-\[8px\] { font-size: 6pt !important; }
+  .report-card-printable .text-\[7.5px\] { font-size: 5.6pt !important; }
+  .report-card-printable .text-\[2.5px\] { font-size: 2pt !important; }
+  .report-card-printable .text-\[3.5px\] { font-size: 2.6pt !important; }
+  .report-card-printable .text-sm { font-size: 10.5pt !important; }
+  .report-card-printable .text-base { font-size: 12pt !important; }
+  .report-card-printable .text-lg { font-size: 13.5pt !important; }
+  .report-card-printable .text-xl { font-size: 15pt !important; }
 
   /* Headings proportionally larger */
-  .report-card-printable h1 { font-size: 28pt !important; font-weight: 950 !important; }
-  .report-card-printable h2 { font-size: 16pt !important; font-weight: 900 !important; }
-  .report-card-printable h3 { font-size: 15pt !important; font-weight: 900 !important; }
-  .report-card-printable h4 { font-size: 14pt !important; font-weight: 900 !important; }
-  .report-card-printable h5 { font-size: 12.5pt !important; font-weight: 800 !important; }
+  .report-card-printable h1 { font-size: 20pt !important; font-weight: 950 !important; }
+  .report-card-printable h2 { font-size: 12pt !important; font-weight: 900 !important; }
+  .report-card-printable h3 { font-size: 11pt !important; font-weight: 900 !important; }
+  .report-card-printable h4 { font-size: 10pt !important; font-weight: 900 !important; }
+  .report-card-printable h5 { font-size: 9.5pt !important; font-weight: 800 !important; }
 
   /* Set balanced padding for table cells to let content fit comfortably */
   .report-card-printable table th,
@@ -185,7 +302,7 @@
 }
 
 .pdf-force-light {
-  font-size: 13.5pt !important;
+  font-size: 10pt !important;
   line-height: 1.35 !important;
   width: 1024px !important;
   min-width: 1024px !important;
@@ -205,33 +322,33 @@
 .pdf-force-light td,
 .pdf-force-light th,
 .pdf-force-light p {
-  font-size: 13.5pt !important;
+  font-size: 10pt !important;
 }
 
-.pdf-force-light .text-\[13px\] { font-size: 13.5pt !important; }
-.pdf-force-light .text-\[12px\] { font-size: 12.5pt !important; }
-.pdf-force-light .text-xs { font-size: 12.5pt !important; }
-.pdf-force-light .text-\[11px\] { font-size: 11.5pt !important; }
-.pdf-force-light .text-\[10.5px\] { font-size: 11pt !important; }
-.pdf-force-light .text-\[10px\] { font-size: 10.5pt !important; }
-.pdf-force-light .text-\[9.5px\] { font-size: 10pt !important; }
-.pdf-force-light .text-\[9px\] { font-size: 9.5pt !important; }
-.pdf-force-light .text-\[8.5px\] { font-size: 9pt !important; }
-.pdf-force-light .text-\[8px\] { font-size: 8.5pt !important; }
-.pdf-force-light .text-\[7.5px\] { font-size: 8pt !important; }
-.pdf-force-light .text-\[2.5px\] { font-size: 4.5pt !important; }
-.pdf-force-light .text-\[3.5px\] { font-size: 5.5pt !important; }
-.pdf-force-light .text-sm { font-size: 14pt !important; }
-.pdf-force-light .text-base { font-size: 16pt !important; }
-.pdf-force-light .text-lg { font-size: 18pt !important; }
-.pdf-force-light .text-xl { font-size: 20pt !important; }
+.pdf-force-light .text-\[13px\] { font-size: 10pt !important; }
+.pdf-force-light .text-\[12px\] { font-size: 9pt !important; }
+.pdf-force-light .text-xs { font-size: 9pt !important; }
+.pdf-force-light .text-\[11px\] { font-size: 8.25pt !important; }
+.pdf-force-light .text-\[10.5px\] { font-size: 7.8pt !important; }
+.pdf-force-light .text-\[10px\] { font-size: 7.5pt !important; }
+.pdf-force-light .text-\[9.5px\] { font-size: 7.1pt !important; }
+.pdf-force-light .text-\[9px\] { font-size: 6.75pt !important; }
+.pdf-force-light .text-\[8.5px\] { font-size: 6.35pt !important; }
+.pdf-force-light .text-\[8px\] { font-size: 6pt !important; }
+.pdf-force-light .text-\[7.5px\] { font-size: 5.6pt !important; }
+.pdf-force-light .text-\[2.5px\] { font-size: 2pt !important; }
+.pdf-force-light .text-\[3.5px\] { font-size: 2.6pt !important; }
+.pdf-force-light .text-sm { font-size: 10.5pt !important; }
+.pdf-force-light .text-base { font-size: 12pt !important; }
+.pdf-force-light .text-lg { font-size: 13.5pt !important; }
+.pdf-force-light .text-xl { font-size: 15pt !important; }
 
 /* Headings proportionally larger */
-.pdf-force-light h1 { font-size: 28pt !important; font-weight: 950 !important; }
-.pdf-force-light h2 { font-size: 16pt !important; font-weight: 900 !important; }
-.pdf-force-light h3 { font-size: 15pt !important; font-weight: 900 !important; }
-.pdf-force-light h4 { font-size: 14pt !important; font-weight: 900 !important; }
-.pdf-force-light h5 { font-size: 12.5pt !important; font-weight: 800 !important; }
+.pdf-force-light h1 { font-size: 20pt !important; font-weight: 950 !important; }
+.pdf-force-light h2 { font-size: 12pt !important; font-weight: 900 !important; }
+.pdf-force-light h3 { font-size: 11pt !important; font-weight: 900 !important; }
+.pdf-force-light h4 { font-size: 10pt !important; font-weight: 900 !important; }
+.pdf-force-light h5 { font-size: 9.5pt !important; font-weight: 800 !important; }
 
 .pdf-force-light table th,
 .pdf-force-light table td {
