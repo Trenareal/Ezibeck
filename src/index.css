@@ -34,7 +34,7 @@
     height: 297mm !important;
     min-height: 297mm !important;
     max-height: 297mm !important;
-    padding: 24px !important;
+    padding: 14px !important;
     margin: 0 !important;
     box-shadow: none !important;
     border: none !important;
@@ -42,7 +42,7 @@
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
-    gap: 12px !important;
+    gap: 6px !important;
     overflow: hidden !important;
     background-color: white !important;
   }
@@ -415,11 +415,11 @@
   min-height: 1448px !important;
   max-height: 1448px !important;
   box-sizing: border-box !important;
-  padding: 32px !important;
+  padding: 18px !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: space-between !important;
-  gap: 12px !important;
+  gap: 6px !important;
   overflow: hidden !important;
 }
 
