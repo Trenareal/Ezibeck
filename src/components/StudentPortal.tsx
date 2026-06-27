@@ -171,7 +171,14 @@ export default function StudentPortal({
     if (isGeneratingPdf || !printAreaRef.current || !selectedStudent) return;
     setIsGeneratingPdf(true);
 
+    // Wait for React to apply the state update and render 'pdf-force-light' class to the DOM
+    await new Promise((resolve) => setTimeout(resolve, 250));
+
     const element = printAreaRef.current;
+    if (!element) {
+      setIsGeneratingPdf(false);
+      return;
+    }
     
     // Store original scroll & style to safely restore in case of success or failure
     const originalStyle = element.getAttribute('style') || '';

@@ -147,9 +147,7 @@
 @media print {
   .report-card-printable td,
   .report-card-printable th,
-  .report-card-printable p,
-  .report-card-printable span,
-  .report-card-printable div {
+  .report-card-printable p {
     font-size: 13.5pt !important;
   }
   .report-card-printable .text-\[13px\] { font-size: 13.5pt !important; }
@@ -206,9 +204,7 @@
 
 .pdf-force-light td,
 .pdf-force-light th,
-.pdf-force-light p,
-.pdf-force-light span,
-.pdf-force-light div {
+.pdf-force-light p {
   font-size: 13.5pt !important;
 }
 
