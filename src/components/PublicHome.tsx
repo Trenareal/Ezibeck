@@ -603,7 +603,7 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
               <div className="lg:col-span-5 grid grid-cols-2 gap-3 sm:gap-4 w-full">
                 <div className="bg-slate-955/80 border border-slate-800/80 p-5 rounded-3xl backdrop-blur-md shadow-2xl hover:border-slate-700 transition-all">
                   <Award className="w-5 h-5 text-amber-400 mb-2" />
-                  <div className="text-xl sm:text-2xl font-black text-white">45+ Years</div>
+                  <div className="text-xl sm:text-2xl font-black text-white">18+ Years</div>
                   <div className="text-[9px] uppercase tracking-wider text-slate-400 font-bold mt-1">Excellent Pedigree</div>
                 </div>
                 <div className="bg-slate-955/80 border border-slate-800/80 p-5 rounded-3xl backdrop-blur-md shadow-2xl hover:border-slate-700 transition-all">
@@ -633,7 +633,7 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
               {/* Statistics Grid */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                 <div className="bg-white border border-slate-100 p-5 sm:p-7 rounded-3xl text-center shadow-3xs transition-all hover:shadow-xs hover:border-slate-200">
-                  <span className="text-2xl sm:text-4xl font-black text-emerald-700 block mb-1">JSS1 - SS3</span>
+                  <span className="text-xl sm:text-2xl font-black text-emerald-700 block mb-1">Pre-Nursery - SS3</span>
                   <span className="text-slate-400 font-bold text-[9px] sm:text-[10px] tracking-wider uppercase block">Classes Available</span>
                 </div>
                 <div className="bg-white border border-slate-100 p-5 sm:p-7 rounded-3xl text-center shadow-3xs transition-all hover:shadow-xs hover:border-slate-200">
