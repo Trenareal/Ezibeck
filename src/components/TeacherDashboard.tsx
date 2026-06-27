@@ -330,13 +330,13 @@ export default function TeacherDashboard({
         clone.classList.add('pdf-force-light');
       }
 
-      // 2. Set desktop-optimized dimensions on the clone to prevent text folding/clipping
-      clone.style.width = '1024px';
-      clone.style.minWidth = '1024px';
-      clone.style.maxWidth = '1024px';
-      clone.style.height = '1448px';
-      clone.style.minHeight = '1448px';
-      clone.style.maxHeight = '1448px';
+      // 2. Set desktop-optimized dimensions on the clone to prevent text folding/clipping (forced with !important for mobile)
+      clone.style.setProperty('width', '1024px', 'important');
+      clone.style.setProperty('min-width', '1024px', 'important');
+      clone.style.setProperty('max-width', '1024px', 'important');
+      clone.style.setProperty('height', '1448px', 'important');
+      clone.style.setProperty('min-height', '1448px', 'important');
+      clone.style.setProperty('max-height', '1448px', 'important');
       clone.style.boxSizing = 'border-box';
       clone.style.overflow = 'hidden';
       clone.style.position = 'relative';
@@ -345,9 +345,9 @@ export default function TeacherDashboard({
       const cloneOverflows = clone.querySelectorAll('.overflow-x-auto');
       cloneOverflows.forEach((el) => {
         const htmlEl = el as HTMLElement;
-        htmlEl.style.overflowX = 'visible';
-        htmlEl.style.overflowY = 'visible';
-        htmlEl.style.width = '100%';
+        htmlEl.style.setProperty('overflow-x', 'visible', 'important');
+        htmlEl.style.setProperty('overflow-y', 'visible', 'important');
+        htmlEl.style.setProperty('width', '100%', 'important');
       });
 
       // 3. Mount clone inside a hidden, absolute-positioned off-screen wrapper at the root level (document.body)
@@ -355,8 +355,8 @@ export default function TeacherDashboard({
       container.style.position = 'absolute';
       container.style.left = '-9999px';
       container.style.top = '-9999px';
-      container.style.width = '1024px';
-      container.style.height = '1448px';
+      container.style.setProperty('width', '1024px', 'important');
+      container.style.setProperty('height', '1448px', 'important');
       container.style.overflow = 'hidden';
       container.style.backgroundColor = '#ffffff';
       
@@ -364,10 +364,11 @@ export default function TeacherDashboard({
       document.body.appendChild(container);
 
       // 4. Generate high-DPI razor sharp canvas using html2canvas targeting the off-screen sandbox
+      // Using scale: 2.0 and allowTaint: false is extremely safe for mobile memory/canvas size limits and CORS
       const canvas = await html2canvas(clone, {
-        scale: 3.0, // Razor sharp 3x scaling for high-quality vectors/text
+        scale: 2.0, 
         useCORS: true,
-        allowTaint: true,
+        allowTaint: false,
         logging: false,
         backgroundColor: '#ffffff',
         scrollX: 0,

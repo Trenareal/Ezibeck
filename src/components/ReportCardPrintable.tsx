@@ -140,7 +140,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
         <span>/</span>
         <span className="text-slate-700 font-semibold">📄 {student.name}</span>
       </div>
-      <div className="relative flex items-center justify-center border-b border-slate-200/50 pb-1.5 mt-0 select-none">
+      <div className="school-header-block relative flex items-center justify-center border-b border-slate-200/50 pb-1.5 mt-0 select-none">
         {/* School Badge on the left side */}
         <div className="absolute left-0 flex-shrink-0">
           <div className="w-10 h-10 bg-white rounded-lg border border-slate-200 shadow-3xs flex items-center justify-center overflow-hidden">
@@ -155,7 +155,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
 
         {/* Centered header details */}
         <div className="text-center space-y-0 max-w-xl">
-          <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-none uppercase">
+          <h1 className="school-title-text text-base sm:text-lg font-black text-slate-900 tracking-tight leading-none uppercase">
             {template.schoolName}
           </h1>
           <p className="text-[8px] uppercase tracking-wider text-emerald-750 font-extrabold flex items-center justify-center gap-1 select-none">
@@ -169,7 +169,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
       </div>
 
       {/* Dynamic Official Page Heading */}
-      <div className="relative z-10 py-0.5 flex items-center justify-between border-b border-slate-100 select-none">
+      <div className="official-status-row relative z-10 py-0.5 flex items-center justify-between border-b border-slate-100 select-none">
         <h2 className="text-[10px] font-extrabold text-slate-900 tracking-tight leading-none uppercase flex items-center gap-1.5">
           <span className="inline-block px-1.5 py-0.5 bg-slate-900 text-slate-100 text-[7.5px] font-black rounded tracking-wider">OFFICIAL STATUS</span>
           STUDENT’S TERMLY REPORT SHEET FOR {

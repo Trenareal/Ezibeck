@@ -292,6 +292,23 @@
   .report-card-printable h4 { font-size: 10pt !important; font-weight: 900 !important; }
   .report-card-printable h5 { font-size: 9.5pt !important; font-weight: 800 !important; }
 
+  /* Increase EZIBECK ACADEMY text by 40% (20pt * 1.4 = 28pt) */
+  .report-card-printable .school-title-text {
+    font-size: 28pt !important;
+    line-height: 1.1 !important;
+  }
+
+  /* Reduce spacing around school header block and official status row */
+  .report-card-printable .school-header-block {
+    padding-bottom: 2px !important;
+    margin-bottom: 0px !important;
+  }
+  .report-card-printable .official-status-row {
+    padding-top: 1px !important;
+    padding-bottom: 1px !important;
+    margin-top: 2px !important;
+  }
+
   /* Set balanced padding for table cells to let content fit comfortably */
   .report-card-printable table th,
   .report-card-printable table td {
@@ -437,6 +454,23 @@
 .pdf-force-light h4 { font-size: 10pt !important; font-weight: 900 !important; }
 .pdf-force-light h5 { font-size: 9.5pt !important; font-weight: 800 !important; }
 
+/* Increase EZIBECK ACADEMY text by 40% (20pt * 1.4 = 28pt) */
+.pdf-force-light .school-title-text {
+  font-size: 28pt !important;
+  line-height: 1.1 !important;
+}
+
+/* Reduce spacing around school header block and official status row */
+.pdf-force-light .school-header-block {
+  padding-bottom: 2px !important;
+  margin-bottom: 0px !important;
+}
+.pdf-force-light .official-status-row {
+  padding-top: 1px !important;
+  padding-bottom: 1px !important;
+  margin-top: 2px !important;
+}
+
 .pdf-force-light table th,
 .pdf-force-light table td {
   padding-top: 4px !important;
@@ -529,6 +563,11 @@
 }
 .pdf-force-light .grade-key-conduct-box span {
   font-size: 6.8pt !important;
+}
+
+/* Base styling for school title to increase it by 40% globally on screen layouts */
+.school-title-text {
+  font-size: 1.4em !important;
 }
 
 

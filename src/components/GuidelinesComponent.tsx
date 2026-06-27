@@ -98,7 +98,7 @@ export default function GuidelinesComponent({ onClose, inlineOnly = false, isPub
             <div className="space-y-1">
               <h5 className="text-xs font-extrabold text-slate-850">Authenticate into the Portal</h5>
               <p className="text-[11px] text-slate-500 leading-relaxed">
-                Navigate to the **Report Portal**. Select your active class (JSS1 to SS3). Click on your name in the directory, type in your unique 6-digit passcode/PIN, and hit **Access Report**.
+                Navigate to the **Report Portal**. Select your active class (PRE-NURSERY to SS3). Click on your name in the directory, type in your unique 6-digit passcode/PIN, and hit **Access Report**.
               </p>
             </div>
           </div>
