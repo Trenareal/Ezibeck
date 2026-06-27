@@ -443,6 +443,37 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
         </div>
       </div>
 
+      {/* Part B: Academic Performance Summary (Moved before character and skill grading) */}
+      <div className="relative z-10 bg-[#FAF9F9] border border-slate-200/85 rounded-xl p-2 shadow-3xs text-slate-800 text-[12px] print:text-[12px] mb-2">
+        <div className="flex items-center justify-between gap-x-4 gap-y-1">
+          <div className="flex items-center gap-1">
+            <span className="font-extrabold text-slate-900 uppercase tracking-wider text-[10.5px] select-none">📊 Academic Summary:</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <div className="flex items-center gap-1">
+              <span className="text-slate-500 font-semibold select-none">Cumulative Total:</span>
+              <span className="font-black text-slate-900">{stats.totalScore} / {stats.maxPossibleScore}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-slate-500 font-semibold select-none">Termly Average:</span>
+              <span className="font-black text-emerald-800 font-mono">{stats.avgScore.toFixed(1)}%</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-slate-500 font-semibold select-none">Total Subjects:</span>
+              <span className="font-bold text-slate-800">{student.subjects.length}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-slate-500 font-semibold select-none">Passed:</span>
+              <span className="font-bold text-emerald-700">{stats.creditsAndAbove + stats.passes}</span>
+            </div>
+            <div className="flex items-center gap-1 border-l border-slate-200 pl-3">
+              <span className="text-slate-500 font-semibold select-none">Verdict:</span>
+              <span className="font-black text-emerald-855 bg-emerald-50 px-1.5 py-0.2 rounded text-[10.5px]">{stats.avgScore >= (template.passThreshold || 50) ? "PASS" : "FAIL"}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Ratings & Grade Scale Row */}
       <div className="grid grid-cols-12 gap-3 relative z-10 pt-2 border-t border-dashed border-slate-200">
         {/* Column 1: Character & Behavioral Conduct Ratings (takes 8/12 width) */}
@@ -621,37 +652,6 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                   <span className="text-[3.5px] leading-none">STAMP</span>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Part B: Academic Performance Summary (Moved to Bottom of Table/Page, above status bar) */}
-      <div className="relative z-10 bg-[#FAF9F9] border border-slate-200/85 rounded-xl p-2 shadow-3xs text-slate-800 text-[12px] print:text-[12px]">
-        <div className="flex items-center justify-between gap-x-4 gap-y-1">
-          <div className="flex items-center gap-1">
-            <span className="font-extrabold text-slate-900 uppercase tracking-wider text-[10.5px] select-none">📊 Academic Summary:</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <div className="flex items-center gap-1">
-              <span className="text-slate-500 font-semibold select-none">Cumulative Total:</span>
-              <span className="font-black text-slate-900">{stats.totalScore} / {stats.maxPossibleScore}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-slate-500 font-semibold select-none">Termly Average:</span>
-              <span className="font-black text-emerald-800 font-mono">{stats.avgScore.toFixed(1)}%</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-slate-500 font-semibold select-none">Total Subjects:</span>
-              <span className="font-bold text-slate-800">{student.subjects.length}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-slate-500 font-semibold select-none">Passed:</span>
-              <span className="font-bold text-emerald-700">{stats.creditsAndAbove + stats.passes}</span>
-            </div>
-            <div className="flex items-center gap-1 border-l border-slate-200 pl-3">
-              <span className="text-slate-500 font-semibold select-none">Verdict:</span>
-              <span className="font-black text-emerald-855 bg-emerald-50 px-1.5 py-0.2 rounded text-[10.5px]">{stats.avgScore >= (template.passThreshold || 50) ? "PASS" : "FAIL"}</span>
             </div>
           </div>
         </div>
