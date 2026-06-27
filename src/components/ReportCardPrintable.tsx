@@ -446,7 +446,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
       {/* Ratings & Grade Scale Row */}
       <div className="grid grid-cols-12 gap-3 relative z-10 pt-2 border-t border-dashed border-slate-200">
         {/* Column 1: Character & Behavioral Conduct Ratings (takes 8/12 width) */}
-        <div className="col-span-8 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between">
+        <div className="col-span-8 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between character-skills-ratings-box">
           <div>
             <h4 className="font-extrabold text-slate-900 text-[10.5px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
               <span>🌟</span> Character & Skills Ratings
@@ -501,7 +501,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
         </div>
 
         {/* Column 2: Grades Index & Conduct Scale (takes 4/12 width, very compact) */}
-        <div className="col-span-4 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between">
+        <div className="col-span-4 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between grade-key-conduct-box">
           <div>
             <h4 className="font-extrabold text-slate-900 text-[10.5px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
               <span>📋</span> Grade Key & Conduct Scale

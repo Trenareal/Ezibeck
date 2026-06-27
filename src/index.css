@@ -334,6 +334,58 @@
   .report-card-printable .academic-evaluation-table .text-\[8px\] {
     font-size: 4.8pt !important;
   }
+
+  /* Reduce the character and skill rating table by 25% horizontally and 20% vertically */
+  .report-card-printable .character-skills-ratings-box {
+    padding: 4px 6px !important;
+  }
+  .report-card-printable .character-skills-ratings-box h4 {
+    font-size: 8pt !important;
+    margin-bottom: 2px !important;
+    padding-bottom: 2px !important;
+  }
+  .report-card-printable .character-skills-ratings-box .grid {
+    gap-x: 8px !important;
+    max-width: 75% !important; /* 25% horizontal reduction of rating columns */
+  }
+  .report-card-printable .character-skills-ratings-box .py-0.2 {
+    padding-top: 1px !important;
+    padding-bottom: 1px !important;
+    line-height: 1.05 !important;
+  }
+  .report-card-printable .character-skills-ratings-box span {
+    font-size: 7.5pt !important;
+  }
+  .report-card-printable .character-skills-ratings-box .font-mono {
+    font-size: 7pt !important;
+  }
+
+  /* Reduce the grade key and conduct scale by 20% */
+  .report-card-printable .grade-key-conduct-box {
+    padding: 4px 6px !important;
+  }
+  .report-card-printable .grade-key-conduct-box h4 {
+    font-size: 8pt !important;
+    margin-bottom: 2px !important;
+    padding-bottom: 2px !important;
+  }
+  .report-card-printable .grade-key-conduct-box .grid {
+    gap: 6px !important;
+    max-width: 80% !important; /* 20% horizontal reduction */
+  }
+  .report-card-printable .grade-key-conduct-box td {
+    padding-top: 1px !important;
+    padding-bottom: 1px !important;
+    font-size: 6.8pt !important;
+  }
+  .report-card-printable .grade-key-conduct-box .space-y-0 > div {
+    padding-top: 1.5px !important;
+    padding-bottom: 1.5px !important;
+    font-size: 6.8pt !important;
+  }
+  .report-card-printable .grade-key-conduct-box span {
+    font-size: 6.8pt !important;
+  }
 }
 
 .pdf-force-light {
@@ -425,6 +477,58 @@
 }
 .pdf-force-light .academic-evaluation-table .text-\[8px\] {
   font-size: 4.8pt !important;
+}
+
+/* Reduce the character and skill rating table by 25% horizontally and 20% vertically on high-DPI PDF generation */
+.pdf-force-light .character-skills-ratings-box {
+  padding: 4px 6px !important;
+}
+.pdf-force-light .character-skills-ratings-box h4 {
+  font-size: 8pt !important;
+  margin-bottom: 2px !important;
+  padding-bottom: 2px !important;
+}
+.pdf-force-light .character-skills-ratings-box .grid {
+  gap-x: 8px !important;
+  max-width: 75% !important; /* 25% horizontal reduction of rating columns */
+}
+.pdf-force-light .character-skills-ratings-box .py-0.2 {
+  padding-top: 1px !important;
+  padding-bottom: 1px !important;
+  line-height: 1.05 !important;
+}
+.pdf-force-light .character-skills-ratings-box span {
+  font-size: 7.5pt !important;
+}
+.pdf-force-light .character-skills-ratings-box .font-mono {
+  font-size: 7pt !important;
+}
+
+/* Reduce the grade key and conduct scale by 20% on high-DPI PDF generation */
+.pdf-force-light .grade-key-conduct-box {
+  padding: 4px 6px !important;
+}
+.pdf-force-light .grade-key-conduct-box h4 {
+  font-size: 8pt !important;
+  margin-bottom: 2px !important;
+  padding-bottom: 2px !important;
+}
+.pdf-force-light .grade-key-conduct-box .grid {
+  gap: 6px !important;
+  max-width: 80% !important; /* 20% horizontal reduction */
+}
+.pdf-force-light .grade-key-conduct-box td {
+  padding-top: 1px !important;
+  padding-bottom: 1px !important;
+  font-size: 6.8pt !important;
+}
+.pdf-force-light .grade-key-conduct-box .space-y-0 > div {
+  padding-top: 1.5px !important;
+  padding-bottom: 1.5px !important;
+  font-size: 6.8pt !important;
+}
+.pdf-force-light .grade-key-conduct-box span {
+  font-size: 6.8pt !important;
 }
 
 
