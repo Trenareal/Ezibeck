@@ -122,7 +122,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
   return (
     <div 
       ref={ref}
-      className={`report-card-printable bg-white border border-slate-200 rounded-xl shadow-md p-3 sm:p-4 space-y-2 relative print:border-none print:shadow-none print:p-0 print:m-0 animate-fade-in text-slate-800 text-[13px] leading-tight ${isGeneratingPdf ? 'pdf-force-light' : ''}`}
+      className={`report-card-printable bg-white border border-slate-200 rounded-xl shadow-md p-3 sm:p-4 space-y-2 relative print:border-none print:shadow-none print:p-6 print:m-0 print:w-[210mm] print:h-[297mm] print:flex print:flex-col print:justify-between animate-fade-in text-slate-800 text-[13px] leading-tight ${isGeneratingPdf ? 'pdf-force-light' : ''}`}
     >
       {/* Diagonal tiled watermark background */}
       <ReportCardWatermark />
