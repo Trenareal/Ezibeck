@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { Student, Workspace15Template, ClassName, FacultyProfile } from '../types';
-import { compareSubjects, getDefaultSubjectsForClass } from '../utils/academicUtils';
+import { compareSubjects, getDefaultSubjectsForClass, adjustBehaviourIfRequired } from '../utils/academicUtils';
 import { safeStorage } from '../utils/safeStorage';
 
 const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
@@ -61,10 +61,13 @@ export const mapDbStudentToFrontend = (dbStudent: any): Student => {
           isPositionManual: sub.is_position_manual
         })).sort((a: any, b: any) => compareSubjects(a.name, b.name))
       : getDefaultSubjectsForClass(dbStudent.class_name as ClassName, dbStudent.term || 'Third Term'),
-    behaviour: (dbStudent.behaviour || []).map((b: any) => ({
-      name: b.name,
-      rating: b.rating
-    }))
+    behaviour: adjustBehaviourIfRequired(
+      (dbStudent.behaviour || []).map((b: any) => ({
+        name: b.name,
+        rating: b.rating
+      })),
+      dbStudent.class_name as ClassName
+    )
   };
 };
 

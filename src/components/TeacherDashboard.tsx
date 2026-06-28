@@ -9,7 +9,7 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
 import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile, DbStatus, AuditLogEntry, ALL_CLASSES } from '../types';
-import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, NURSERY_SUBJECTS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal, generateUnique6DigitPassword, getDeterministicPasscode, getStudentPasscodesFromOtherTerms } from '../utils/academicUtils';
+import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, NURSERY_SUBJECTS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal, generateUnique6DigitPassword, getDeterministicPasscode, getStudentPasscodesFromOtherTerms, adjustBehaviourIfRequired } from '../utils/academicUtils';
 import { logPasscodeEvent, getAuditLogs, clearAuditLogs } from '../utils/auditLogger';
 import { dbService, mapDbFacultyToFrontend, mapDbStudentToFrontend } from '../lib/supabase';
 import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
@@ -1516,7 +1516,7 @@ export default function TeacherDashboard({
             }
 
             setEditSubjects(subjectsListToEdit);
-            setEditBehaviour([...freshStudent.behaviour]);
+            setEditBehaviour(adjustBehaviourIfRequired(freshStudent.behaviour, freshStudent.className));
             setEditFormComment(freshStudent.formTeacherRemark);
             setEditPrincipalRemark(freshStudent.principalRemark || '');
             setEditTeacherName(freshStudent.formTeacherName);
@@ -1913,7 +1913,7 @@ export default function TeacherDashboard({
     }
 
     setEditSubjects(subjectsListToEdit);
-    setEditBehaviour([...student.behaviour]);
+    setEditBehaviour(adjustBehaviourIfRequired(student.behaviour, student.className));
     setEditFormComment(student.formTeacherRemark);
     setEditPrincipalRemark((student as any).principalRemark || '');
     setEditTeacherName(student.formTeacherName);
