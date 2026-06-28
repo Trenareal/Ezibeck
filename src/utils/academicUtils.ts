@@ -201,7 +201,8 @@ export function calculateStudentStats(s: Student): StudentStats {
       failures: 0
     };
   }
-  const subjects = Array.isArray(s.subjects) ? s.subjects : [];
+  let subjects = Array.isArray(s.subjects) ? s.subjects : [];
+  subjects = subjects.filter(g => !g.name.startsWith('__'));
   const totalScore = subjects.reduce((sum, g) => sum + calculateSubjectTotal(g), 0);
   const subjectCount = subjects.length || 1;
   const avgScore = totalScore / subjectCount;
@@ -258,7 +259,8 @@ export function calculateStudentStatsForTerm(s: Student, term: string): StudentS
       failures: 0
     };
   }
-  const subjects = Array.isArray(s.subjects) ? s.subjects : [];
+  let subjects = Array.isArray(s.subjects) ? s.subjects : [];
+  subjects = subjects.filter(g => !g.name.startsWith('__'));
   const isThirdTerm = term === 'Third Term';
   const totalScore = subjects.reduce((sum, g) => {
     if (isThirdTerm) {

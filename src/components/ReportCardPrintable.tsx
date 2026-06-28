@@ -37,6 +37,44 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
   const isNursery = ['Pre-Nursery', 'Nursery1', 'Nursery2', 'Nursery3'].includes(cleanClassName);
   const isBasic = ['Basic1', 'Basic2', 'Basic3', 'Basic4', 'Basic5', 'Basic6'].includes(cleanClassName);
 
+  const getNurseryTermStats = (termName: 'First Term' | 'Second Term' | 'Third Term') => {
+    let subjectsToUse: any[] = [];
+    
+    if (term === termName) {
+      subjectsToUse = student.subjects || [];
+    } else {
+      const termKey = `ezibeck_students_${termName.toLowerCase().replace(/\s+/g, '_')}`;
+      const data = typeof window !== 'undefined' ? safeStorage.getItem(termKey) : null;
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          if (Array.isArray(parsed)) {
+            const baseId = student.id.split('_')[0];
+            const matchedStud = parsed.find((s: any) => s && s.id && typeof s.id === 'string' && s.id.split('_')[0] === baseId);
+            if (matchedStud && Array.isArray(matchedStud.subjects)) {
+              subjectsToUse = matchedStud.subjects;
+            }
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+
+    if (subjectsToUse.length === 0) {
+      return { cumulative: 0, average: 0, available: false };
+    }
+
+    const cumulative = subjectsToUse.reduce((sum: number, s: any) => {
+      const test = s.testScore || 0;
+      const exam = s.examScore || 0;
+      return sum + (test + exam);
+    }, 0);
+    const average = cumulative / subjectsToUse.length;
+
+    return { cumulative, average, available: true };
+  };
+
   // Load first term students from storage for average column in second term
   let firstTermStuds: Student[] = [];
   try {
@@ -284,7 +322,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                     <span className="flex items-center justify-center">1ST T AVG</span>
                   </th>
                 )}
-                {term === 'Third Term' && (
+                {term === 'Third Term' && !isNursery && (
                   <>
                     <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
                       <span className="flex items-center justify-center">1ST T (20)</span>
@@ -353,7 +391,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                         })()}
                       </td>
                     )}
-                    {term === 'Third Term' && (
+                    {term === 'Third Term' && !isNursery && (
                       <>
                         <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{firstTerm}</td>
                         <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{secondTerm}</td>
@@ -399,7 +437,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                 {term === 'Second Term' && isSecondaryClass && (
                   <td className="py-1 px-2 text-center font-bold text-slate-400">-</td>
                 )}
-                {term === 'Third Term' && (
+                {term === 'Third Term' && !isNursery && (
                   <>
                     <td className="py-1 px-1 text-center font-bold">
                       Avg: {(() => {
@@ -443,7 +481,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
         </div>
       </div>
 
-      {/* Part B: Academic Performance Summary (Moved before character and skill grading) */}
+       {/* Part B: Academic Performance Summary (Moved before character and skill grading) */}
       <div className="relative z-10 bg-[#FAF9F9] border border-slate-200/85 rounded-xl p-2 shadow-3xs text-slate-800 text-[12px] print:text-[12px] mb-2">
         <div className="flex items-center justify-between gap-x-4 gap-y-1">
           <div className="flex items-center gap-1">
@@ -473,6 +511,56 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
           </div>
         </div>
       </div>
+
+      {/* Nursery Term Averages & Performance Catalog Table */}
+      {isNursery && (
+        <div className="relative z-10 bg-white border border-slate-200 rounded-xl p-2.5 shadow-3xs text-slate-800 text-[11px] print:text-[11px] mb-2">
+          <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider mb-2 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
+            <span>📊</span> Term Averages & Performance Catalog
+          </h4>
+          <div className="overflow-hidden border border-slate-150 rounded-lg">
+            <table className="w-full text-left text-[11px] border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-150 text-[9px] font-black uppercase text-slate-500 tracking-wider">
+                  <th className="py-1.5 px-3 font-black">Term Period</th>
+                  <th className="py-1.5 px-3 text-center font-black">Cumulative Score</th>
+                  <th className="py-1.5 px-3 text-center font-black">Overall Subject Average (%)</th>
+                  <th className="py-1.5 px-3 text-center font-black">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                {(['First Term', 'Second Term', 'Third Term'] as const).map(termName => {
+                  const statsVal = getNurseryTermStats(termName);
+                  const isCurrentActive = term === termName;
+                  
+                  return (
+                    <tr key={termName} className={`hover:bg-slate-50/50 ${isCurrentActive ? 'bg-emerald-50/20 font-bold' : ''}`}>
+                      <td className="py-1 px-3 font-extrabold text-slate-900">
+                        {termName} Average
+                      </td>
+                      <td className="py-1 px-3 text-center font-mono text-slate-800">
+                        {statsVal.available ? statsVal.cumulative : '-'}
+                      </td>
+                      <td className="py-1 px-3 text-center font-mono font-bold text-emerald-800">
+                        {statsVal.available ? `${statsVal.average.toFixed(1)}%` : '-'}
+                      </td>
+                      <td className="py-1 px-3 text-center text-[9px]">
+                        {isCurrentActive ? (
+                          <span className="font-bold text-emerald-700">Current Term</span>
+                        ) : statsVal.available ? (
+                          <span className="text-slate-500">Recorded</span>
+                        ) : (
+                          <span className="text-slate-400 italic">Pending</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Ratings & Grade Scale Row */}
       <div className="grid grid-cols-12 gap-3 relative z-10 pt-2 border-t border-dashed border-slate-200">

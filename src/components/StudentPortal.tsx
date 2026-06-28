@@ -872,6 +872,45 @@ export default function StudentPortal({
             }
             const cleanClassName = selectedStudent.className.replace(/\s+/g, '');
             const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes(cleanClassName);
+            const isNurseryClass = ['Pre-Nursery', 'Nursery1', 'Nursery2', 'Nursery3'].includes(cleanClassName);
+
+            const getNurseryTermStats = (termName: 'First Term' | 'Second Term' | 'Third Term') => {
+              let subjectsToUse: any[] = [];
+              
+              if (viewingTerm === termName) {
+                subjectsToUse = selectedStudent.subjects || [];
+              } else {
+                const termKey = `ezibeck_students_${termName.toLowerCase().replace(/\s+/g, '_')}`;
+                const data = typeof window !== 'undefined' ? safeStorage.getItem(termKey) : null;
+                if (data) {
+                  try {
+                    const parsed = JSON.parse(data);
+                    if (Array.isArray(parsed)) {
+                      const baseId = selectedStudent.id.split('_')[0];
+                      const matchedStud = parsed.find((s: any) => s && s.id && typeof s.id === 'string' && s.id.split('_')[0] === baseId);
+                      if (matchedStud && Array.isArray(matchedStud.subjects)) {
+                        subjectsToUse = matchedStud.subjects;
+                      }
+                    }
+                  } catch (e) {
+                    console.error(e);
+                  }
+                }
+              }
+
+              if (subjectsToUse.length === 0) {
+                return { cumulative: 0, average: 0, available: false };
+              }
+
+              const cumulative = subjectsToUse.reduce((sum: number, s: any) => {
+                const test = s.testScore || 0;
+                const exam = s.examScore || 0;
+                return sum + (test + exam);
+              }, 0);
+              const average = cumulative / subjectsToUse.length;
+
+              return { cumulative, average, available: true };
+            };
 
             if (viewTab === 'charts') {
               return (
@@ -883,7 +922,7 @@ export default function StudentPortal({
                     <p className="text-xs text-slate-400 mt-1">Graphical breakdown of subject score aggregates (Total 100 points per subject, split into 30% Test and 70% Exam)</p>
                     
                     <div className="space-y-5 pt-6">
-                      {selectedStudent.subjects.map(subj => {
+                      {selectedStudent.subjects.filter(s => !s.name.startsWith('__')).map(subj => {
                         const tot = calculateSubjectTotal(subj);
                         const { letter } = getLetterAndRemark(tot);
                         let barColor = 'bg-emerald-700';
@@ -1238,7 +1277,7 @@ export default function StudentPortal({
                               <span className="flex items-center justify-center gap-1">1st Term Avg</span>
                             </th>
                           )}
-                          {viewingTerm === 'Third Term' && (
+                          {viewingTerm === 'Third Term' && !isNurseryClass && (
                             <>
                               <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
                                 <span className="flex items-center justify-center gap-1"># 1ST TERM (20)</span>
@@ -1305,7 +1344,7 @@ export default function StudentPortal({
                                    {firstTermAvgStr !== "-" ? `${firstTermAvgStr}%` : "-"}
                                  </td>
                                )}
-                              {viewingTerm === 'Third Term' && (
+                              {viewingTerm === 'Third Term' && !isNurseryClass && (
                                 <>
                                   <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{firstTerm}</td>
                                   <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{secondTerm}</td>
@@ -1349,7 +1388,7 @@ export default function StudentPortal({
                           {viewingTerm === 'Second Term' && (
                             <td className="py-2 px-3 text-center bg-slate-50/20 text-slate-400 font-bold">-</td>
                           )}
-                          {viewingTerm === 'Third Term' && (
+                          {viewingTerm === 'Third Term' && !isNurseryClass && (
                             <>
                               <td className="py-2 px-3 text-center font-bold">
                                 Average: {(() => {
@@ -1407,6 +1446,55 @@ export default function StudentPortal({
                     </table>
                   </div>
                 </div>
+
+                {isNurseryClass && (
+                  <div className="mt-4 border border-emerald-200/50 rounded-2xl p-4 bg-emerald-50/10 shadow-3xs select-none">
+                    <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider mb-2 select-none flex items-center gap-1">
+                      <span>📊</span> Term Averages & Cumulative Performance Catalog
+                    </h4>
+                    <div className="overflow-hidden border border-slate-200 rounded-xl bg-white shadow-3xs">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-150 text-[10px] font-black uppercase text-slate-500 tracking-wider">
+                            <th className="py-2.5 px-4 font-black">Term Period</th>
+                            <th className="py-2.5 px-4 text-center font-black">Cumulative Score</th>
+                            <th className="py-2.5 px-4 text-center font-black">Overall Subject Average (%)</th>
+                            <th className="py-2.5 px-4 text-center font-black">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-bold text-slate-700">
+                          {(['First Term', 'Second Term', 'Third Term'] as const).map(termName => {
+                            const statsVal = getNurseryTermStats(termName);
+                            const isCurrentActive = viewingTerm === termName;
+                            
+                            return (
+                              <tr key={termName} className={`hover:bg-slate-50/50 ${isCurrentActive ? 'bg-emerald-50/30 font-extrabold text-slate-900' : ''}`}>
+                                <td className="py-2 px-4 font-extrabold">
+                                  {termName} Average
+                                </td>
+                                <td className="py-2 px-4 text-center font-mono">
+                                  {statsVal.available ? statsVal.cumulative : <span className="text-slate-440 font-normal">-</span>}
+                                </td>
+                                <td className="py-2 px-4 text-center font-mono text-emerald-800">
+                                  {statsVal.available ? `${statsVal.average.toFixed(1)}%` : <span className="text-slate-440 font-normal">-</span>}
+                                </td>
+                                <td className="py-2 px-4 text-center text-[10px]">
+                                  {isCurrentActive ? (
+                                    <span className="font-black text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-full uppercase tracking-wider">Current Term</span>
+                                  ) : statsVal.available ? (
+                                    <span className="text-slate-505 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold">Recorded</span>
+                                  ) : (
+                                    <span className="text-slate-400 italic font-normal">Pending</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
 
                 {/* Sub-Score KPI Dashboard metrics - optimized to single row with reduced size */}
                 <div className="flex flex-wrap sm:flex-nowrap print:flex-nowrap gap-1.5 sm:gap-2 relative z-10 w-full select-none text-slate-800">

@@ -997,6 +997,73 @@ export default function TeacherDashboard({
   const isTermReadOnly = activeTermTab !== template.currentTerm;
   const editingIsSecondary = editingStudent ? ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes((editingStudent.className || '').replace(/\s+/g, '')) : false;
 
+  const getNurseryTermStats = (termName: 'First Term' | 'Second Term' | 'Third Term') => {
+    if (!editingStudent) return { cumulative: 0, average: 0, available: false };
+
+    // 1. Check if we have an override row in the active subjects we are editing or the student's subjects
+    const overrideSub = editSubjects?.find(s => s.name === `__nursery_term_stats_${termName}`) ||
+                        editingStudent.subjects?.find(s => s.name === `__nursery_term_stats_${termName}`);
+
+    if (overrideSub) {
+      const cumulative = overrideSub.firstTermSummary || 0;
+      const average = (overrideSub.secondTermSummary || 0) / 10;
+      return { cumulative, average, available: true };
+    }
+
+    // 2. If this is the active term, calculate live from editSubjects (excluding helper rows)
+    if (activeTermTab === termName) {
+      const subjectsToUse = (editSubjects || []).filter(s => !s.name.startsWith('__'));
+      if (subjectsToUse.length === 0) {
+        return { cumulative: 0, average: 0, available: false };
+      }
+      const cumulative = subjectsToUse.reduce((sum: number, s: any) => {
+        const test = s.testScore || 0;
+        const exam = s.examScore || 0;
+        return sum + (test + exam);
+      }, 0);
+      const average = cumulative / subjectsToUse.length;
+      return { cumulative, average, available: true };
+    }
+
+    // 3. Otherwise, fetch from localStorage of that term
+    let subjectsToUse: any[] = [];
+    const termKey = `ezibeck_students_${termName.toLowerCase().replace(/\s+/g, '_')}`;
+    const data = typeof window !== 'undefined' ? safeStorage.getItem(termKey) : null;
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) {
+          const baseId = editingStudent.id.split('_')[0];
+          const matchedStud = parsed.find((s: any) => s && s.id && typeof s.id === 'string' && s.id.split('_')[0] === baseId);
+          if (matchedStud && Array.isArray(matchedStud.subjects)) {
+            const matchOverride = matchedStud.subjects.find((s: any) => s.name === `__nursery_term_stats_${termName}`);
+            if (matchOverride) {
+              const cumulative = matchOverride.firstTermSummary || 0;
+              const average = (matchOverride.secondTermSummary || 0) / 10;
+              return { cumulative, average, available: true };
+            }
+            subjectsToUse = matchedStud.subjects.filter((s: any) => !s.name.startsWith('__'));
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    if (subjectsToUse.length === 0) {
+      return { cumulative: 0, average: 0, available: false };
+    }
+
+    const cumulative = subjectsToUse.reduce((sum: number, s: any) => {
+      const test = s.testScore || 0;
+      const exam = s.examScore || 0;
+      return sum + (test + exam);
+    }, 0);
+    const average = cumulative / subjectsToUse.length;
+
+    return { cumulative, average, available: true };
+  };
+
   // Print latest database issues or status to the system console when they occur
   useEffect(() => {
     if (dbStatus && dbStatus.error) {
@@ -2000,6 +2067,42 @@ export default function TeacherDashboard({
     }));
   };
 
+  // Handle Nursery Override Change for previous terms
+  const handleNurseryOverrideChange = (
+    termName: 'First Term' | 'Second Term' | 'Third Term',
+    type: 'cumulative' | 'average',
+    value: string
+  ) => {
+    const numVal = parseFloat(value);
+    const cleanVal = isNaN(numVal) ? 0 : numVal;
+
+    setEditSubjects(prev => {
+      const subjectName = `__nursery_term_stats_${termName}`;
+      const existing = prev.find(s => s.name === subjectName);
+      
+      if (existing) {
+        return prev.map(s => {
+          if (s.name !== subjectName) return s;
+          if (type === 'cumulative') {
+            return { ...s, firstTermSummary: cleanVal };
+          } else {
+            return { ...s, secondTermSummary: Math.round(cleanVal * 10) };
+          }
+        });
+      } else {
+        const newOverride = {
+          id: "subj_override_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+          name: subjectName,
+          testScore: 0,
+          examScore: 0,
+          firstTermSummary: type === 'cumulative' ? cleanVal : 0,
+          secondTermSummary: type === 'average' ? Math.round(cleanVal * 10) : 0,
+        };
+        return [...prev, newOverride];
+      }
+    });
+  };
+
   // Save Student Academic updates
   const saveStudentChanges = async () => {
     if (!editingStudent) return;
@@ -2833,7 +2936,7 @@ export default function TeacherDashboard({
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
-                          {viewingReportStudent.subjects.map(subj => {
+                          {viewingReportStudent.subjects.filter(s => !s.name.startsWith('__')).map(subj => {
                             const tot = calculateSubjectTotal(subj);
                             
                             // Formulate annual / session average data realistically matching the 20/20/60 formula of Ezibeck
@@ -3319,217 +3422,318 @@ export default function TeacherDashboard({
                   </div>
                 </div>
 
-                <div className="space-y-2 border rounded-2xl overflow-x-auto shadow-inner">
-                  <div className="bg-slate-100 border-b p-3 grid grid-cols-12 text-[10px] font-bold uppercase text-slate-500 tracking-wider min-w-[850px] items-center">
-                    <span className={(activeTermTab === 'Third Term' || (activeTermTab === 'Second Term' && editingIsSecondary)) ? "col-span-3" : "col-span-4"}>Subject Course Title</span>
-                    <span className={(activeTermTab === 'Third Term' || (activeTermTab === 'Second Term' && editingIsSecondary)) ? "col-span-1 text-center font-bold" : "col-span-2 text-center font-bold"}>Test (30)</span>
-                    <span className={(activeTermTab === 'Third Term' || (activeTermTab === 'Second Term' && editingIsSecondary)) ? "col-span-1 text-center font-bold" : "col-span-2 text-center font-bold"}>Exam (70)</span>
-                    <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-indigo-900 bg-indigo-50 border border-slate-200">
-                      Live Total
-                    </span>
-                    {activeTermTab === 'Second Term' && editingIsSecondary && (
-                      <span className="col-span-2 text-center font-bold font-sans py-1 rounded text-emerald-800 bg-emerald-100/70 border border-emerald-300">
-                        1st Term Avg (100)
-                      </span>
-                    )}
-                    {activeTermTab === 'Third Term' && (
-                      <>
-                        <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-emerald-800 bg-emerald-100/70 border border-emerald-300">
-                          1st Term# (20)
-                        </span>
-                        <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300">
-                          2nd Term# (20)
-                        </span>
-                        <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300">
-                          3rd Term# (60)
-                        </span>
-                      </>
-                    )}
-                    <span className={(activeTermTab === 'Second Term' && editingIsSecondary) ? "col-span-3 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300" : "col-span-2 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300"} title="Automatically calculated from Student grades list ranking">
-                      Subject Position (Auto)
-                    </span>
-                    <span className="col-span-1 text-center font-bold text-slate-400">Action</span>
-                  </div>
-
-                  <div className="divide-y max-h-96 overflow-y-auto min-w-[850px]">
-                    {editSubjects.map(subj => {
-                      const subjTotal = subj.testScore + subj.examScore;
-                      const fTermVal = subj.firstTermSummary !== undefined ? subj.firstTermSummary : 0;
-                      const sTermVal = subj.secondTermSummary !== undefined ? subj.secondTermSummary : 0;
-                      const tTermVal = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
-                      return (
-                        <div key={subj.id} className="p-3 grid grid-cols-12 items-center text-xs font-semibold text-slate-800 hover:bg-slate-50">
-                          <div className={(activeTermTab === 'Third Term' || (activeTermTab === 'Second Term' && editingIsSecondary)) ? "col-span-3 flex items-center pr-2" : "col-span-4 flex items-center pr-2"}>
-                            {(() => {
-                              const isKgClass = editingStudent && (editingStudent.className === 'Pre-Nursery' || editingStudent.className.startsWith('Nursery'));
-                              const isPermanentKgSubject = !!(isKgClass && NURSERY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase()));
-                              return (
-                                <input
-                                  type="text"
-                                  required
-                                  disabled={isTermReadOnly || isPermanentKgSubject}
-                                  value={subj.name}
-                                  onChange={(e) => handleSubjectNameChange(subj.id, e.target.value)}
-                                  placeholder="e.g. Mathematics"
-                                  className={`w-full py-1 px-1.5 rounded text-xs font-bold outline-none transition-all font-sans ${
-                                    isTermReadOnly || isPermanentKgSubject
-                                      ? "bg-slate-100 border border-slate-200 text-slate-500 cursor-not-allowed"
-                                      : "bg-white border border-slate-300 text-slate-800 hover:border-slate-400 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/30 font-extrabold"
-                                  }`}
-                                />
-                              );
-                            })()}
-                          </div>
-                          <span className={(activeTermTab === 'Third Term' || (activeTermTab === 'Second Term' && editingIsSecondary)) ? "col-span-1 flex justify-center px-1" : "col-span-2 flex justify-center px-1"}>
-                            <input
-                              type="number"
-                              min={0}
-                              max={30}
-                              disabled={isTermReadOnly}
-                              value={focusedInputs[`${subj.id}_test`] && subj.testScore === 0 ? '' : subj.testScore}
-                              onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_test`]: true }))}
-                              onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_test`]: false }))}
-                              onChange={(e) => handleScoreChange(subj.id, 'test', parseInt(e.target.value) || 0)}
-                              className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-emerald-600 font-bold font-mono text-slate-800 disabled:opacity-75 disabled:cursor-not-allowed"
-                            />
+                {(() => {
+                  const isNurseryClass = editingStudent && (editingStudent.className === 'Pre-Nursery' || editingStudent.className.startsWith('Nursery'));
+                  const showPrevTermCols = (activeTermTab === 'Third Term' && !isNurseryClass) || (activeTermTab === 'Second Term' && editingIsSecondary);
+                  return (
+                    <>
+                      <div className="space-y-2 border rounded-2xl overflow-x-auto shadow-inner">
+                        <div className="bg-slate-100 border-b p-3 grid grid-cols-12 text-[10px] font-bold uppercase text-slate-500 tracking-wider min-w-[850px] items-center">
+                          <span className={showPrevTermCols ? "col-span-3" : "col-span-4"}>Subject Course Title</span>
+                          <span className={showPrevTermCols ? "col-span-1 text-center font-bold" : "col-span-2 text-center font-bold"}>Test (30)</span>
+                          <span className={showPrevTermCols ? "col-span-1 text-center font-bold" : "col-span-2 text-center font-bold"}>Exam (70)</span>
+                          <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-indigo-900 bg-indigo-50 border border-slate-200">
+                            Live Total
                           </span>
-                          <span className={(activeTermTab === 'Third Term' || (activeTermTab === 'Second Term' && editingIsSecondary)) ? "col-span-1 flex justify-center px-1" : "col-span-2 flex justify-center px-1"}>
-                            <input
-                              type="number"
-                              min={0}
-                              max={70}
-                              disabled={isTermReadOnly}
-                              value={focusedInputs[`${subj.id}_exam`] && subj.examScore === 0 ? '' : subj.examScore}
-                              onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_exam`]: true }))}
-                              onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_exam`]: false }))}
-                              onChange={(e) => handleScoreChange(subj.id, 'exam', parseInt(e.target.value) || 0)}
-                              className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-emerald-600 font-bold font-mono text-slate-800 disabled:opacity-75 disabled:cursor-not-allowed"
-                            />
-                          </span>
-                          <span className="col-span-1 text-center font-extrabold font-mono text-emerald-900 bg-emerald-50/40 py-1 rounded border font-sans select-none">
-                            {subjTotal}
-                          </span>
-                          
                           {activeTermTab === 'Second Term' && editingIsSecondary && (
-                            <span className="col-span-2 flex justify-center px-1">
-                              <input
-                                type="number"
-                                min={0}
-                                max={100}
-                                disabled={isTermReadOnly}
-                                value={focusedInputs[`${subj.id}_firstTerm`] && fTermVal === 0 ? '' : fTermVal}
-                                onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: true }))}
-                                onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: false }))}
-                                onChange={(e) => handleScoreChange(subj.id, 'firstTerm', parseInt(e.target.value) || 0)}
-                                className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50/50 border border-emerald-200 focus:border-emerald-500 text-emerald-800 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
-                              />
+                            <span className="col-span-2 text-center font-bold font-sans py-1 rounded text-emerald-800 bg-emerald-100/70 border border-emerald-300">
+                              1st Term Avg (100)
                             </span>
                           )}
-
-                          {activeTermTab === 'Third Term' && (
+                          {activeTermTab === 'Third Term' && !isNurseryClass && (
                             <>
-                              {/* First Term Summary */}
-                              <span className="col-span-1 flex justify-center px-1">
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={100}
-                                  disabled={isTermReadOnly}
-                                  value={focusedInputs[`${subj.id}_firstTerm`] && fTermVal === 0 ? '' : fTermVal}
-                                  onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: true }))}
-                                  onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: false }))}
-                                  onChange={(e) => handleScoreChange(subj.id, 'firstTerm', parseInt(e.target.value) || 0)}
-                                  className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50/50 border border-emerald-200 focus:border-emerald-500 text-emerald-800 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
-                                />
+                              <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-emerald-800 bg-emerald-100/70 border border-emerald-300">
+                                1st Term# (20)
                               </span>
-
-                              {/* Second Term Summary */}
-                              <span className="col-span-1 flex justify-center px-1">
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={100}
-                                  disabled={isTermReadOnly}
-                                  value={focusedInputs[`${subj.id}_secondTerm`] && sTermVal === 0 ? '' : sTermVal}
-                                  onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_secondTerm`]: true }))}
-                                  onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_secondTerm`]: false }))}
-                                  onChange={(e) => handleScoreChange(subj.id, 'secondTerm', parseInt(e.target.value) || 0)}
-                                  className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50 border border-emerald-200 focus:border-emerald-505 text-emerald-990 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
-                                />
+                              <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300">
+                                2nd Term# (20)
                               </span>
-
-                              {/* Third Term Summary */}
-                              <span className="col-span-1 flex justify-center px-1">
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={100}
-                                  disabled={isTermReadOnly}
-                                  value={focusedInputs[`${subj.id}_thirdTerm`] && tTermVal === 0 ? '' : tTermVal}
-                                  onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_thirdTerm`]: true }))}
-                                  onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_thirdTerm`]: false }))}
-                                  onChange={(e) => handleScoreChange(subj.id, 'thirdTerm', parseInt(e.target.value) || 0)}
-                                  className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50 border border-emerald-200 focus:border-indigo-500 text-emerald-900 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
-                                />
+                              <span className="col-span-1 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300">
+                                3rd Term# (60)
                               </span>
                             </>
                           )}
-
-                          {/* Position (Auto calculated Rank) */}
-                          <span className={(activeTermTab === 'Second Term' && editingIsSecondary) ? "col-span-3 flex justify-center px-2" : "col-span-2 flex justify-center px-2"}>
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-700 rounded font-mono font-bold text-xs" title="Position is automatically calculated based on class subject ranking">
-                              {formatOrdinal(subj.position || 1)}
-                            </span>
+                          <span className={(activeTermTab === 'Second Term' && editingIsSecondary) ? "col-span-3 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300" : "col-span-2 text-center font-bold font-sans py-1 rounded text-emerald-900 bg-emerald-150 border border-emerald-300"} title="Automatically calculated from Student grades list ranking">
+                            Subject Position (Auto)
                           </span>
+                          <span className="col-span-1 text-center font-bold text-slate-400">Action</span>
+                        </div>
 
-                          {/* Action Button */}
-                          <div className="col-span-1 flex justify-center">
-                            {(() => {
-                              const isKgClass = editingStudent && (editingStudent.className === 'Pre-Nursery' || editingStudent.className.startsWith('Nursery'));
-                              const isPermanentKgSubject = !!(isKgClass && NURSERY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase()));
-                              
-                              if (isPermanentKgSubject) {
-                                return <span className="text-slate-450 select-none text-[10px]">📌 Fixed</span>;
-                              }
-                              
-                              return !isTermReadOnly ? (
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteSubject(subj.id, subj.name)}
-                                  title={`Delete ${subj.name}`}
-                                  className="p-1.5 text-slate-450 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all cursor-pointer flex-shrink-0"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              ) : (
-                                <span className="text-slate-350 select-none text-[10px]">🔒 Locked</span>
-                              );
-                            })()}
+                        <div className="divide-y max-h-96 overflow-y-auto min-w-[850px]">
+                          {editSubjects.map(subj => {
+                            const subjTotal = subj.testScore + subj.examScore;
+                            const fTermVal = subj.firstTermSummary !== undefined ? subj.firstTermSummary : 0;
+                            const sTermVal = subj.secondTermSummary !== undefined ? subj.secondTermSummary : 0;
+                            const tTermVal = subj.thirdTermSummary !== undefined ? subj.thirdTermSummary : 0;
+                            return (
+                              <div key={subj.id} className="p-3 grid grid-cols-12 items-center text-xs font-semibold text-slate-800 hover:bg-slate-50">
+                                <div className={showPrevTermCols ? "col-span-3 flex items-center pr-2" : "col-span-4 flex items-center pr-2"}>
+                                  {(() => {
+                                    const isKgClass = editingStudent && (editingStudent.className === 'Pre-Nursery' || editingStudent.className.startsWith('Nursery'));
+                                    const isPermanentKgSubject = !!(isKgClass && NURSERY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase()));
+                                    return (
+                                      <input
+                                        type="text"
+                                        required
+                                        disabled={isTermReadOnly || isPermanentKgSubject}
+                                        value={subj.name}
+                                        onChange={(e) => handleSubjectNameChange(subj.id, e.target.value)}
+                                        placeholder="e.g. Mathematics"
+                                        className={`w-full py-1 px-1.5 rounded text-xs font-bold outline-none transition-all font-sans ${
+                                          isTermReadOnly || isPermanentKgSubject
+                                            ? "bg-slate-100 border border-slate-200 text-slate-500 cursor-not-allowed"
+                                            : "bg-white border border-slate-300 text-slate-800 hover:border-slate-400 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600/30 font-extrabold"
+                                        }`}
+                                      />
+                                    );
+                                  })()}
+                                </div>
+                                <span className={showPrevTermCols ? "col-span-1 flex justify-center px-1" : "col-span-2 flex justify-center px-1"}>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    max={30}
+                                    disabled={isTermReadOnly}
+                                    value={focusedInputs[`${subj.id}_test`] && subj.testScore === 0 ? '' : subj.testScore}
+                                    onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_test`]: true }))}
+                                    onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_test`]: false }))}
+                                    onChange={(e) => handleScoreChange(subj.id, 'test', parseInt(e.target.value) || 0)}
+                                    className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-emerald-600 font-bold font-mono text-slate-800 disabled:opacity-75 disabled:cursor-not-allowed"
+                                  />
+                                </span>
+                                <span className={showPrevTermCols ? "col-span-1 flex justify-center px-1" : "col-span-2 flex justify-center px-1"}>
+                                  <input
+                                    type="number"
+                                    min={0}
+                                    max={70}
+                                    disabled={isTermReadOnly}
+                                    value={focusedInputs[`${subj.id}_exam`] && subj.examScore === 0 ? '' : subj.examScore}
+                                    onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_exam`]: true }))}
+                                    onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_exam`]: false }))}
+                                    onChange={(e) => handleScoreChange(subj.id, 'exam', parseInt(e.target.value) || 0)}
+                                    className="w-14 bg-white border border-slate-200 py-1 rounded text-center outline-none focus:border-emerald-600 font-bold font-mono text-slate-800 disabled:opacity-75 disabled:cursor-not-allowed"
+                                  />
+                                </span>
+                                <span className="col-span-1 text-center font-extrabold font-mono text-emerald-900 bg-emerald-50/40 py-1 rounded border font-sans select-none">
+                                  {subjTotal}
+                                </span>
+                                
+                                {activeTermTab === 'Second Term' && editingIsSecondary && (
+                                  <span className="col-span-2 flex justify-center px-1">
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      max={100}
+                                      disabled={isTermReadOnly}
+                                      value={focusedInputs[`${subj.id}_firstTerm`] && fTermVal === 0 ? '' : fTermVal}
+                                      onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: true }))}
+                                      onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: false }))}
+                                      onChange={(e) => handleScoreChange(subj.id, 'firstTerm', parseInt(e.target.value) || 0)}
+                                      className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50/50 border border-emerald-200 focus:border-emerald-500 text-emerald-800 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
+                                    />
+                                  </span>
+                                )}
+
+                                {activeTermTab === 'Third Term' && !isNurseryClass && (
+                                  <>
+                                    {/* First Term Summary */}
+                                    <span className="col-span-1 flex justify-center px-1">
+                                      <input
+                                        type="number"
+                                        min={0}
+                                        max={100}
+                                        disabled={isTermReadOnly}
+                                        value={focusedInputs[`${subj.id}_firstTerm`] && fTermVal === 0 ? '' : fTermVal}
+                                        onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: true }))}
+                                        onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_firstTerm`]: false }))}
+                                        onChange={(e) => handleScoreChange(subj.id, 'firstTerm', parseInt(e.target.value) || 0)}
+                                        className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50/50 border border-emerald-200 focus:border-emerald-500 text-emerald-800 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
+                                      />
+                                    </span>
+
+                                    {/* Second Term Summary */}
+                                    <span className="col-span-1 flex justify-center px-1">
+                                      <input
+                                        type="number"
+                                        min={0}
+                                        max={100}
+                                        disabled={isTermReadOnly}
+                                        value={focusedInputs[`${subj.id}_secondTerm`] && sTermVal === 0 ? '' : sTermVal}
+                                        onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_secondTerm`]: true }))}
+                                        onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_secondTerm`]: false }))}
+                                        onChange={(e) => handleScoreChange(subj.id, 'secondTerm', parseInt(e.target.value) || 0)}
+                                        className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50 border border-emerald-200 focus:border-emerald-505 text-emerald-990 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
+                                      />
+                                    </span>
+
+                                    {/* Third Term Summary */}
+                                    <span className="col-span-1 flex justify-center px-1">
+                                      <input
+                                        type="number"
+                                        min={0}
+                                        max={100}
+                                        disabled={isTermReadOnly}
+                                        value={focusedInputs[`${subj.id}_thirdTerm`] && tTermVal === 0 ? '' : tTermVal}
+                                        onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_thirdTerm`]: true }))}
+                                        onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_thirdTerm`]: false }))}
+                                        onChange={(e) => handleScoreChange(subj.id, 'thirdTerm', parseInt(e.target.value) || 0)}
+                                        className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50 border border-emerald-200 focus:border-indigo-500 text-emerald-900 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
+                                      />
+                                    </span>
+                                  </>
+                                )}
+
+                                {/* Position (Auto calculated Rank) */}
+                                <span className={(activeTermTab === 'Second Term' && editingIsSecondary) ? "col-span-3 flex justify-center px-2" : "col-span-2 flex justify-center px-2"}>
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-700 rounded font-mono font-bold text-xs" title="Position is automatically calculated based on class subject ranking">
+                                    {formatOrdinal(subj.position || 1)}
+                                  </span>
+                                </span>
+
+                                {/* Action Button */}
+                                <div className="col-span-1 flex justify-center">
+                                  {(() => {
+                                    const isKgClass = editingStudent && (editingStudent.className === 'Pre-Nursery' || editingStudent.className.startsWith('Nursery'));
+                                    const isPermanentKgSubject = !!(isKgClass && NURSERY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase()));
+                                    
+                                    if (isPermanentKgSubject) {
+                                      return <span className="text-slate-450 select-none text-[10px]">📌 Fixed</span>;
+                                    }
+                                    
+                                    return !isTermReadOnly ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteSubject(subj.id, subj.name)}
+                                        title={`Delete ${subj.name}`}
+                                        className="p-1.5 text-slate-450 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all cursor-pointer flex-shrink-0"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    ) : (
+                                      <span className="text-slate-350 select-none text-[10px]">🔒 Locked</span>
+                                    );
+                                  })()}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <div className="p-3 bg-slate-50 border-t flex justify-between items-center min-w-[850px]">
+                          <span className="text-[10px] text-slate-400 font-semibold italic">
+                            💡 Tip: Click on any Subject Course Title input to rename the course.
+                          </span>
+                          <button
+                            type="button"
+                            disabled={isTermReadOnly}
+                            onClick={handleAddNewSubject}
+                            className={`font-extrabold text-[10px] tracking-wider uppercase px-4 py-2 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer ${
+                              isTermReadOnly 
+                                ? 'bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed select-none' 
+                                : 'bg-emerald-600 hover:bg-emerald-750 text-white'
+                            }`}
+                          >
+                            {isTermReadOnly ? <Lock className="w-3.5 h-3.5 text-slate-400" /> : <Plus className="w-3.5 h-3.5" />} 
+                            Add New Subject Course Row
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Term Averages & Performance Catalog Table for Nursery */}
+                      {isNurseryClass && (
+                        <div className="mt-4 border border-emerald-200/50 rounded-2xl p-4 bg-emerald-50/10 shadow-3xs">
+                          <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider mb-1 select-none flex items-center gap-1">
+                            <span>📊</span> Term Averages & Cumulative Performance Catalog
+                          </h4>
+                          {!isTermReadOnly && (
+                            <p className="text-[10px] text-slate-500 mb-3 select-none">
+                              💡 Note: Previous terms' cumulative scores and overall averages can be inputted and edited directly below.
+                            </p>
+                          )}
+                          <div className="overflow-hidden border border-slate-200 rounded-xl bg-white shadow-3xs">
+                            <table className="w-full text-left text-xs border-collapse">
+                              <thead>
+                                <tr className="bg-slate-50 border-b border-slate-150 text-[10px] font-black uppercase text-slate-500 tracking-wider">
+                                  <th className="py-2.5 px-4 font-black">Term Period</th>
+                                  <th className="py-2.5 px-4 text-center font-black">Cumulative Score</th>
+                                  <th className="py-2.5 px-4 text-center font-black">Overall Subject Average (%)</th>
+                                  <th className="py-2.5 px-4 text-center font-black">Status</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100 font-bold text-slate-700">
+                                {(['First Term', 'Second Term', 'Third Term'] as const).map(termName => {
+                                  const statsVal = getNurseryTermStats(termName);
+                                  const isCurrentActive = activeTermTab === termName;
+                                  
+                                  const termIndices = { 'First Term': 1, 'Second Term': 2, 'Third Term': 3 };
+                                  const activeIndex = termIndices[activeTermTab];
+                                  const termIndex = termIndices[termName];
+                                  const isPreviousTerm = termIndex < activeIndex;
+                                  const isEditable = isPreviousTerm && !isTermReadOnly;
+                                  
+                                  return (
+                                    <tr key={termName} className={`hover:bg-slate-50/50 ${isCurrentActive ? 'bg-emerald-50/30 font-extrabold text-slate-900' : ''}`}>
+                                      <td className="py-2.5 px-4 font-extrabold">
+                                        {termName} Average
+                                      </td>
+                                      <td className="py-1.5 px-4 text-center font-mono">
+                                        {isEditable ? (
+                                          <div className="flex items-center justify-center gap-1">
+                                            <input
+                                              type="number"
+                                              value={statsVal.cumulative || ''}
+                                              onChange={(e) => handleNurseryOverrideChange(termName, 'cumulative', e.target.value)}
+                                              className="w-24 px-2 py-1 text-center font-mono border border-slate-250 rounded-lg focus:border-emerald-500 focus:outline-hidden bg-emerald-50/10 hover:bg-emerald-50/20 transition-all font-bold"
+                                              placeholder="Score"
+                                              min="0"
+                                            />
+                                          </div>
+                                        ) : (
+                                          statsVal.available ? statsVal.cumulative : <span className="text-slate-400 font-normal">-</span>
+                                        )}
+                                      </td>
+                                      <td className="py-1.5 px-4 text-center font-mono text-emerald-800">
+                                        {isEditable ? (
+                                          <div className="flex items-center justify-center gap-1">
+                                            <input
+                                              type="number"
+                                              step="0.1"
+                                              value={statsVal.average ? statsVal.average.toFixed(1) : ''}
+                                              onChange={(e) => handleNurseryOverrideChange(termName, 'average', e.target.value)}
+                                              className="w-24 px-2 py-1 text-center font-mono border border-slate-250 rounded-lg focus:border-emerald-500 focus:outline-hidden bg-emerald-50/10 hover:bg-emerald-50/20 transition-all text-emerald-800 font-bold"
+                                              placeholder="%"
+                                              min="0"
+                                              max="100"
+                                            />
+                                          </div>
+                                        ) : (
+                                          statsVal.available ? `${statsVal.average.toFixed(1)}%` : <span className="text-slate-400 font-normal">-</span>
+                                        )}
+                                      </td>
+                                      <td className="py-2.5 px-4 text-center text-[10px]">
+                                        {isCurrentActive ? (
+                                          <span className="font-black text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-full uppercase tracking-wider">Current Term</span>
+                                        ) : isEditable ? (
+                                          <span className="text-amber-700 bg-amber-100/60 px-2 py-0.5 rounded-full uppercase tracking-wider font-extrabold flex items-center justify-center gap-1 max-w-fit mx-auto">
+                                            ✍️ Editable
+                                          </span>
+                                        ) : statsVal.available ? (
+                                          <span className="text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold">Recorded</span>
+                                        ) : (
+                                          <span className="text-slate-400 italic font-normal">Pending</span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="p-3 bg-slate-50 border-t flex justify-between items-center min-w-[850px]">
-                    <span className="text-[10px] text-slate-400 font-semibold italic">
-                      💡 Tip: Click on any Subject Course Title input to rename the course.
-                    </span>
-                    <button
-                      type="button"
-                      disabled={isTermReadOnly}
-                      onClick={handleAddNewSubject}
-                      className={`font-extrabold text-[10px] tracking-wider uppercase px-4 py-2 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer ${
-                        isTermReadOnly 
-                          ? 'bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed select-none' 
-                          : 'bg-emerald-600 hover:bg-emerald-750 text-white'
-                      }`}
-                    >
-                      {isTermReadOnly ? <Lock className="w-3.5 h-3.5 text-slate-400" /> : <Plus className="w-3.5 h-3.5" />} 
-                      Add New Subject Course Row
-                    </button>
-                  </div>
-                </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
 
               {/* Right Column: Behavior scores & teacher remarks */}
@@ -3890,7 +4094,7 @@ export default function TeacherDashboard({
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                            {previewStudent.subjects.map(subj => {
+                            {previewStudent.subjects.filter(s => !s.name.startsWith('__')).map(subj => {
                               const tot = calculateSubjectTotal(subj);
                               
                               const firstTerm = subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0 ? subj.firstTermSummary : Math.round(tot * 0.2);
