@@ -1305,7 +1305,7 @@ export default function StudentPortal({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 font-medium text-slate-705">
-                        {selectedStudent.subjects.map(subj => {
+                        {selectedStudent.subjects.filter(s => !s.name.startsWith('__')).map(subj => {
                           const tot = calculateSubjectTotal(subj);
                           
                           // Formulate annual / session average data realistically matching the 20/20/60 formula of Ezibeck
@@ -1598,7 +1598,7 @@ export default function StudentPortal({
                     <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
                       <span className="text-sky-550 font-black">📚</span> Number of Subjects:
                     </span>
-                    <span className="font-black text-sky-850 text-xs">{selectedStudent.subjects.length} Total</span>
+                    <span className="font-black text-sky-850 text-xs">{selectedStudent.subjects.filter(s => !s.name.startsWith('__')).length} Total</span>
                   </div>
                   <div className="bg-emerald-50/40 border border-emerald-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-emerald-990 font-medium shadow-3xs">
                     <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">

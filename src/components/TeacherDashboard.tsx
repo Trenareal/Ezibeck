@@ -30,7 +30,7 @@ const safeConfirm = (message: string): boolean => {
   }
 };
 
-const getOverallAverageForTerm = (studId: string | undefined | null, termKey: 'ezibeck_students_first_term' | 'ezibeck_students_second_term'): number | null => {
+const getOverallAverageForTerm = (studId: string | undefined | null, termKey: 'ezibeck_students_first_term' | 'ezibeck_students_second_term' | 'ezibeck_students_third_term'): number | null => {
   try {
     if (!studId || typeof studId !== 'string') return null;
     const data = typeof window !== 'undefined' ? safeStorage.getItem(termKey) : null;
@@ -39,9 +39,26 @@ const getOverallAverageForTerm = (studId: string | undefined | null, termKey: 'e
     if (!Array.isArray(parsed)) return null;
     const baseId = studId.split('_')[0];
     const matchedStud = parsed.find((s: any) => s && s.id && typeof s.id === 'string' && s.id.split('_')[0] === baseId);
-    if (!matchedStud || !Array.isArray(matchedStud.subjects) || matchedStud.subjects.length === 0) return null;
-    const sum = matchedStud.subjects.reduce((acc: number, sub: any) => acc + (sub.testScore || 0) + (sub.examScore || 0), 0);
-    return sum / matchedStud.subjects.length;
+    if (!matchedStud || !Array.isArray(matchedStud.subjects)) return null;
+
+    // Check for nursery override row first
+    const termSuffixMap: Record<string, string> = {
+      'ezibeck_students_first_term': 'First Term',
+      'ezibeck_students_second_term': 'Second Term',
+      'ezibeck_students_third_term': 'Third Term'
+    };
+    const termName = termSuffixMap[termKey];
+    if (termName) {
+      const matchOverride = matchedStud.subjects.find((s: any) => s.name === `__nursery_term_stats_${termName}`);
+      if (matchOverride) {
+        return (matchOverride.secondTermSummary || 0) / 10;
+      }
+    }
+
+    const subjects = matchedStud.subjects.filter((s: any) => !s.name.startsWith('__'));
+    if (subjects.length === 0) return null;
+    const sum = subjects.reduce((acc: number, sub: any) => acc + (sub.testScore || 0) + (sub.examScore || 0), 0);
+    return sum / subjects.length;
   } catch (e) {
     console.error(`Error calculating average for ${termKey}`, e);
     return null;
@@ -2789,7 +2806,7 @@ export default function TeacherDashboard({
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-slate-400 font-semibold select-none">Total Subjects:</span>
-                            <span className="font-bold text-slate-800">{viewingReportStudent.subjects.length} Subjects</span>
+                            <span className="font-bold text-slate-800">{viewingReportStudent.subjects.filter(s => !s.name.startsWith('__')).length} Subjects</span>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-slate-400 font-semibold select-none">Subjects Passed:</span>
@@ -3007,19 +3024,21 @@ export default function TeacherDashboard({
                           {/* Calculation Footer */}
                           <tr className="bg-[#FAF9F9]/90 border-t border-slate-205 text-slate-400 font-semibold select-none text-[9px] uppercase tracking-wider divide-x divide-slate-100">
                             <td className="py-1 px-2 font-semibold text-slate-500">
-                              Count: {viewingReportStudent.subjects.length}
+                              Count: {viewingReportStudent.subjects.filter(s => !s.name.startsWith('__')).length}
                             </td>
                             <td className="py-1 px-2 text-center font-bold">
                               Avg: {(() => {
-                                const tCount = viewingReportStudent.subjects.length || 1;
-                                const testSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.testScore || 0), 0);
+                                const filtered = viewingReportStudent.subjects.filter(s => !s.name.startsWith('__'));
+                                const tCount = filtered.length || 1;
+                                const testSum = filtered.reduce((sum, s) => sum + (s.testScore || 0), 0);
                                 return (testSum / tCount).toFixed(1);
                               })()}
                             </td>
                             <td className="py-1 px-2 text-center font-bold">
                               Avg: {(() => {
-                                const tCount = viewingReportStudent.subjects.length || 1;
-                                const examSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.examScore || 0), 0);
+                                const filtered = viewingReportStudent.subjects.filter(s => !s.name.startsWith('__'));
+                                const tCount = filtered.length || 1;
+                                const examSum = filtered.reduce((sum, s) => sum + (s.examScore || 0), 0);
                                 return (examSum / tCount).toFixed(1);
                               })()}
                             </td>
@@ -3030,29 +3049,33 @@ export default function TeacherDashboard({
                               <>
                                 <td className="py-1 px-1 text-center font-bold">
                                   Avg: {(() => {
-                                    const tCount = viewingReportStudent.subjects.length || 1;
-                                    const fSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
+                                    const filtered = viewingReportStudent.subjects.filter(s => !s.name.startsWith('__'));
+                                    const tCount = filtered.length || 1;
+                                    const fSum = filtered.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
                                     return (fSum / tCount).toFixed(1);
                                   })()}
                                 </td>
                                 <td className="py-1 px-1 text-center font-bold">
                                   Avg: {(() => {
-                                    const tCount = viewingReportStudent.subjects.length || 1;
-                                    const sSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
+                                    const filtered = viewingReportStudent.subjects.filter(s => !s.name.startsWith('__'));
+                                    const tCount = filtered.length || 1;
+                                    const sSum = filtered.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
                                     return (sSum / tCount).toFixed(1);
                                   })()}
                                 </td>
                                 <td className="py-1 px-1 text-center font-bold">
                                   Avg: {(() => {
-                                    const tCount = viewingReportStudent.subjects.length || 1;
-                                    const thSum = viewingReportStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
+                                    const filtered = viewingReportStudent.subjects.filter(s => !s.name.startsWith('__'));
+                                    const tCount = filtered.length || 1;
+                                    const thSum = filtered.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
                                     return (thSum / tCount).toFixed(1);
                                   })()}
                                 </td>
                                 <td className="py-1 px-2 text-center font-black bg-slate-100/50 text-slate-800">
                                   Avg: {(() => {
-                                    const tCount = viewingReportStudent.subjects.length || 1;
-                                    const sessionSum = viewingReportStudent.subjects.reduce((sum, s) => {
+                                    const filtered = viewingReportStudent.subjects.filter(s => !s.name.startsWith('__'));
+                                    const tCount = filtered.length || 1;
+                                    const sessionSum = filtered.reduce((sum, s) => {
                                       const f = s.firstTermSummary !== undefined ? s.firstTermSummary : 0;
                                       const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : 0;
                                       const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0;
@@ -4159,19 +4182,21 @@ export default function TeacherDashboard({
                             {/* Calculation Footer styled exactly like Ezibeck database table calculation footer */}
                             <tr className="bg-[#FAF9F9]/90 border-t border-slate-205 text-slate-400 font-medium select-none text-[10px] uppercase tracking-wider divide-x divide-slate-100">
                               <td className="py-2 px-3 font-semibold text-slate-500">
-                                Count: {previewStudent.subjects.length}
+                                Count: {previewStudent.subjects.filter(s => !s.name.startsWith('__')).length}
                               </td>
                               <td className="py-2 px-3 text-center font-bold">
-                                Average: {(() => {
-                                  const tCount = previewStudent.subjects.length || 1;
-                                  const testSum = previewStudent.subjects.reduce((sum, s) => sum + (s.testScore || 0), 0);
+                               Average: {(() => {
+                                  const filtered = previewStudent.subjects.filter(s => !s.name.startsWith('__'));
+                                  const tCount = filtered.length || 1;
+                                  const testSum = filtered.reduce((sum, s) => sum + (s.testScore || 0), 0);
                                   return (testSum / tCount).toFixed(1);
                                 })()}
                               </td>
                               <td className="py-2 px-3 text-center font-bold">
                                 Average: {(() => {
-                                  const tCount = previewStudent.subjects.length || 1;
-                                  const examSum = previewStudent.subjects.reduce((sum, s) => sum + (s.examScore || 0), 0);
+                                  const filtered = previewStudent.subjects.filter(s => !s.name.startsWith('__'));
+                                  const tCount = filtered.length || 1;
+                                  const examSum = filtered.reduce((sum, s) => sum + (s.examScore || 0), 0);
                                   return (examSum / tCount).toFixed(1);
                                 })()}
                               </td>
@@ -4182,29 +4207,33 @@ export default function TeacherDashboard({
                                 <>
                                   <td className="py-2 px-3 text-center font-bold">
                                     Average: {(() => {
-                                      const tCount = previewStudent.subjects.length || 1;
-                                      const fSum = previewStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
+                                      const filtered = previewStudent.subjects.filter(s => !s.name.startsWith('__'));
+                                      const tCount = filtered.length || 1;
+                                      const fSum = filtered.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
                                       return (fSum / tCount).toFixed(1);
                                     })()}
                                   </td>
                                   <td className="py-2 px-3 text-center font-bold">
                                     Average: {(() => {
-                                      const tCount = previewStudent.subjects.length || 1;
-                                      const sSum = previewStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
+                                      const filtered = previewStudent.subjects.filter(s => !s.name.startsWith('__'));
+                                      const tCount = filtered.length || 1;
+                                      const sSum = filtered.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
                                       return (sSum / tCount).toFixed(1);
                                     })()}
                                   </td>
                                   <td className="py-2 px-3 text-center font-bold">
                                     Average: {(() => {
-                                      const tCount = previewStudent.subjects.length || 1;
-                                      const thSum = previewStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
+                                      const filtered = previewStudent.subjects.filter(s => !s.name.startsWith('__'));
+                                      const tCount = filtered.length || 1;
+                                      const thSum = filtered.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
                                       return (thSum / tCount).toFixed(1);
                                     })()}
                                   </td>
                                   <td className="py-2 px-3 text-center font-black bg-slate-100/50">
                                     Average: {(() => {
-                                      const tCount = previewStudent.subjects.length || 1;
-                                      const sessionSum = previewStudent.subjects.reduce((sum, s) => {
+                                      const filtered = previewStudent.subjects.filter(s => !s.name.startsWith('__'));
+                                      const tCount = filtered.length || 1;
+                                      const sessionSum = filtered.reduce((sum, s) => {
                                         const f = s.firstTermSummary !== undefined ? s.firstTermSummary : 0;
                                         const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : 0;
                                         const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0;
@@ -4279,8 +4308,9 @@ export default function TeacherDashboard({
                             <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">1st Term (20%)</span>
                             <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                               {(() => {
-                                const tCount = previewStudent.subjects.length || 1;
-                                const fSum = previewStudent.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
+                                const filtered = previewStudent.subjects.filter(s => !s.name.startsWith('__'));
+                                const tCount = filtered.length || 1;
+                                const fSum = filtered.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
                                 return (fSum / tCount).toFixed(1);
                               })()}<span className="text-[8px] text-slate-400 font-normal">/20</span>
                             </p>
@@ -4290,8 +4320,9 @@ export default function TeacherDashboard({
                             <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">2nd Term (20%)</span>
                             <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                               {(() => {
-                                const tCount = previewStudent.subjects.length || 1;
-                                const sSum = previewStudent.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
+                                const filtered = previewStudent.subjects.filter(s => !s.name.startsWith('__'));
+                                const tCount = filtered.length || 1;
+                                const sSum = filtered.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
                                 return (sSum / tCount).toFixed(1);
                               })()}<span className="text-[8px] text-slate-400 font-normal">/20</span>
                             </p>
@@ -4301,8 +4332,9 @@ export default function TeacherDashboard({
                             <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-400 uppercase tracking-widest block leading-none">3rd Term (60%)</span>
                             <p className="font-extrabold text-slate-900 text-[10.5px] sm:text-xs leading-none">
                               {(() => {
-                                const tCount = previewStudent.subjects.length || 1;
-                                const thSum = previewStudent.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
+                                const filtered = previewStudent.subjects.filter(s => !s.name.startsWith('__'));
+                                const tCount = filtered.length || 1;
+                                const thSum = filtered.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
                                 return (thSum / tCount).toFixed(1);
                               })()}<span className="text-[8px] text-slate-400 font-normal">/60</span>
                             </p>
@@ -4324,7 +4356,7 @@ export default function TeacherDashboard({
                         <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
                           <span className="text-sky-550 font-black">📚</span> Number of Subjects:
                         </span>
-                        <span className="font-black text-sky-850 text-xs">{previewStudent.subjects.length} Total</span>
+                        <span className="font-black text-sky-850 text-xs">{previewStudent.subjects.filter(s => !s.name.startsWith('__')).length} Total</span>
                       </div>
                       <div className="bg-emerald-50/40 border border-emerald-150 rounded-lg py-1.5 px-3 flex items-center justify-between text-[11px] text-emerald-990 font-medium shadow-3xs">
                         <span className="flex items-center gap-1.5 uppercase font-extrabold tracking-wider text-[9px] text-slate-500 flex-wrap sm:flex-nowrap">
@@ -6542,7 +6574,7 @@ export default function TeacherDashboard({
               <div className="space-y-1">
                 <span className="text-[9px] font-extrabold uppercase tracking-widest block text-slate-400">Current Integration Status</span>
                 <div className="flex items-center gap-2">
-                  <span className={`w-2.5 h-2.5 rounded-full ${(!dbStatus || !dbStatus.configured) ? 'bg-slate-400' : dbStatus.connected ? 'bg-emerald-5000' : 'bg-red-500 animate-pulse'}`}></span>
+                  <span className={`w-2.5 h-2.5 rounded-full ${(!dbStatus || !dbStatus.configured) ? 'bg-slate-400' : dbStatus.connected ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}`}></span>
                   <p className="text-xs font-black uppercase">
                     {(!dbStatus || !dbStatus.configured) ? 'Local Database Fallback' : dbStatus.connected ? 'Connected Live to Supabase' : 'Connection Blocked'}
                   </p>

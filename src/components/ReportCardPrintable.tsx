@@ -61,16 +61,17 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
       }
     }
 
-    if (subjectsToUse.length === 0) {
+    const filtered = subjectsToUse.filter((s: any) => s && s.name && !s.name.startsWith('__'));
+    if (filtered.length === 0) {
       return { cumulative: 0, average: 0, available: false };
     }
 
-    const cumulative = subjectsToUse.reduce((sum: number, s: any) => {
+    const cumulative = filtered.reduce((sum: number, s: any) => {
       const test = s.testScore || 0;
       const exam = s.examScore || 0;
       return sum + (test + exam);
     }, 0);
-    const average = cumulative / subjectsToUse.length;
+    const average = cumulative / filtered.length;
 
     return { cumulative, average, available: true };
   };
@@ -221,23 +222,24 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
         </span>
       </div>
 
-      {/* Top Compact Cards: 2 Columns Grid */}
-      <div className="relative z-10 grid grid-cols-2 gap-3">
-        {/* Card 1: Student Profile */}
-        <div className="bg-[#FAF9F9] border border-slate-200/80 rounded-xl p-2 shadow-3xs text-slate-800 text-[12px] flex flex-col justify-between">
-          <div>
-            <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
-              <span>👤</span> Student Profile
-            </h4>
-            <div className="space-y-0">
+      {/* Top Compact Card: Student Profile (Full Width) */}
+      <div className="relative z-10">
+        <div className="bg-[#FAF9F9] border border-slate-200/80 rounded-xl p-2 shadow-3xs text-slate-800 text-[12px]">
+          <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider mb-1.5 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
+            <span>👤</span> Student Profile
+          </h4>
+          <div className="grid grid-cols-3 gap-x-6 gap-y-1">
+            <div className="space-y-0.5">
               <div className="flex justify-between items-center gap-1">
                 <span className="text-slate-400 font-semibold select-none">Name:</span>
-                <span className="font-extrabold text-slate-900 truncate max-w-[220px]">{student.name}</span>
+                <span className="font-extrabold text-slate-900 truncate max-w-[180px]">{student.name}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 font-semibold select-none">Access ID:</span>
                 <span className="font-mono font-bold text-slate-750">{student.id}</span>
               </div>
+            </div>
+            <div className="space-y-0.5">
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 font-semibold select-none">Class:</span>
                 <span className="font-extrabold text-slate-900">{student.className}</span>
@@ -246,240 +248,417 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                 <span className="text-slate-400 font-semibold select-none">Sex / Gender:</span>
                 <span className="font-bold text-slate-800">{student.sex}</span>
               </div>
+            </div>
+            <div className="space-y-0.5 col-span-1">
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 font-semibold select-none">Age Profile:</span>
                 <span className="font-bold text-slate-800">{student.age} Years</span>
               </div>
-            </div>
-          </div>
-          <div className="border-t border-slate-200/50 pt-0.5 mt-0.5 flex justify-between items-center text-[10.5px]">
-            <span className="text-slate-400 font-semibold select-none">Attendance:</span>
-            <span className="font-bold text-slate-800">{student.attendancePresent} / {student.attendanceTotal} sessions ({Math.round((student.attendancePresent || 0) / (student.attendanceTotal || 1) * 105)}%)</span>
-          </div>
-        </div>
-
-        {/* Card 2: Next Term & Fees Summary */}
-        <div className="bg-[#FAF9F9] border border-slate-200/80 rounded-xl p-2 shadow-3xs text-slate-855 text-[12px] flex flex-col justify-between">
-          <div>
-            <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
-              <span>💰</span> Next Term Fees Summary
-            </h4>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-0 text-[11px]">
               <div className="flex justify-between items-center">
-                <span className="text-slate-400 font-medium">School Fees:</span>
-                <span className="font-bold text-slate-700">{sFee}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 font-medium">Party Fee:</span>
-                <span className="font-bold text-slate-700">{pFee}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 font-medium">Enrollment:</span>
-                <span className="font-bold text-slate-700">{eFee}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 font-medium">Book Fees:</span>
-                <span className="font-bold text-slate-700">{bFee}</span>
+                <span className="text-slate-400 font-semibold select-none">Attendance:</span>
+                <span className="font-bold text-slate-800">{student.attendancePresent} / {student.attendanceTotal} ({Math.round((student.attendancePresent || 0) / (student.attendanceTotal || 1) * 105)}%)</span>
               </div>
             </div>
-          </div>
-          <div className="border-t border-dashed border-emerald-300 pt-0.5 mt-0.5 flex justify-between items-center text-[11px]">
-            <span className="font-extrabold text-emerald-855">Total Invoice:</span>
-            <span className="font-black text-emerald-855 font-mono">{totalFormatted}</span>
-          </div>
-          <div className="flex justify-between items-center mt-0.5 text-[10.5px] text-slate-400 leading-none">
-            <span>Resumption:</span>
-            <span className="font-extrabold text-slate-600">{template.resumptionDate}</span>
           </div>
         </div>
       </div>
 
       {/* Part A: Academic Course Evaluation */}
-      <div className="relative z-10 space-y-1">
-        <h3 className="text-slate-900 font-black text-[10.5px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 py-0.5 flex items-center justify-between select-none">
-          <span>Part A: Academic Course Evaluation</span>
-          <span className="text-[8.5px] text-slate-450 normal-case font-bold">Standard Formula Matrix Layout</span>
-        </h3>
-        {/* Ezibeck-style database table */}
-        <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white shadow-3xs">
-          <table className="academic-evaluation-table w-full text-left text-[13px] border-collapse">
-            <thead>
-              <tr className="bg-[#EAEAEA] border-b border-slate-300 text-slate-955 font-black select-none text-[9px] uppercase tracking-wider">
-                <th className="py-1 px-2 border-r border-slate-300 min-w-[130px]">
-                  <span className="flex items-center gap-1">📝 Subjects</span>
-                </th>
-                <th className="py-1 px-2 border-r border-slate-300 text-center w-16">
-                  <span className="flex items-center justify-center">TEST (30)</span>
-                </th>
-                <th className="py-1 px-2 border-r border-slate-300 text-center w-16">
-                  <span className="flex items-center justify-center">EXAM (70)</span>
-                </th>
-                <th className="py-1 px-2 border-r border-slate-300 text-center bg-emerald-100/30 w-18">
-                  <span className="flex items-center justify-center text-emerald-955 font-black">TERM (100)</span>
-                </th>
-                {term === 'Second Term' && isSecondaryClass && (
-                  <th className="py-1 px-2 border-r border-slate-300 text-center text-[8.5px] w-20 bg-blue-50 text-blue-900 font-black">
-                    <span className="flex items-center justify-center">1ST T AVG</span>
+      {isNursery ? (
+        <div className="grid grid-cols-10 gap-3 relative z-10 items-stretch mb-2">
+          {/* Left Column (80% / col-span-8): Part A Table */}
+          <div className="col-span-8 flex flex-col space-y-1 h-full">
+            <h3 className="text-slate-900 font-black text-[10.5px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 py-0.5 flex items-center justify-between select-none">
+              <span>Part A: Academic Course Evaluation</span>
+              <span className="text-[8.5px] text-slate-450 normal-case font-bold">Standard Formula Matrix Layout</span>
+            </h3>
+            <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white shadow-3xs flex-grow">
+              <table className="academic-evaluation-table w-full text-left text-[11px] border-collapse">
+                <thead>
+                  <tr className="bg-[#EAEAEA] border-b border-slate-300 text-slate-955 font-black select-none text-[9px] uppercase tracking-wider">
+                    <th className="py-1 px-2 border-r border-slate-300 min-w-[130px]">
+                      <span className="flex items-center gap-1">📝 Subjects</span>
+                    </th>
+                    <th className="py-1 px-2 border-r border-slate-300 text-center w-16">
+                      <span className="flex items-center justify-center">TEST (30)</span>
+                    </th>
+                    <th className="py-1 px-2 border-r border-slate-300 text-center w-16">
+                      <span className="flex items-center justify-center">EXAM (70)</span>
+                    </th>
+                    <th className="py-1 px-2 border-r border-slate-300 text-center bg-emerald-100/30 w-18">
+                      <span className="flex items-center justify-center text-emerald-955 font-black">TERM (100)</span>
+                    </th>
+                    <th className="py-1 px-2 border-r border-slate-300 text-center w-16">
+                      <span className="flex items-center justify-center">GRADE</span>
+                    </th>
+                    <th className="py-1 px-1 border-r border-slate-300 text-center w-14">
+                      <span className="flex items-center justify-center">POSITION</span>
+                    </th>
+                    <th className="py-1 px-2 font-black text-slate-955">
+                      <span className="flex items-center gap-1">💬 REMARK</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                  {student.subjects.filter(s => !s.name.startsWith('__')).map(subj => {
+                    const tot = calculateSubjectTotal(subj);
+                    const { letter, remark, ratingClass } = getLetterAndRemark(tot);
+
+                    return (
+                      <tr key={subj.id} className="hover:bg-slate-50/50 border-b border-slate-150">
+                        <td className="py-1 px-2 border-r border-slate-150 font-extrabold text-slate-900 bg-slate-50/20">{subj.name}</td>
+                        <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{subj.testScore}</td>
+                        <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{subj.examScore}</td>
+                        <td className="py-1 px-2 border-r border-slate-150 text-center font-black font-mono text-emerald-850 bg-emerald-50/10">{tot}</td>
+                        <td className="py-1 px-2 border-r border-slate-150 text-center">
+                          <span className={`px-1.5 py-0.5 text-[11px] font-black rounded-sm tracking-wider ${ratingClass}`}>
+                            {letter}
+                          </span>
+                        </td>
+                        <td className="py-1 px-1 border-r border-slate-150 text-center font-black text-slate-900 bg-slate-50/10">
+                          -
+                        </td>
+                        <td className="py-1 px-2 italic text-slate-700 text-[12px] font-bold leading-tight bg-[#FCFCFC]">{remark}</td>
+                      </tr>
+                    );
+                  })}
+                  {/* Calculation Footer for Nursery */}
+                  <tr className="bg-[#FAF9F9]/90 border-t border-slate-205 text-slate-400 font-semibold select-none text-[12px] uppercase tracking-wider divide-x divide-slate-100">
+                    <td className="py-1 px-2 font-semibold text-slate-500">
+                      Count: {student.subjects.filter(s => !s.name.startsWith('__')).length}
+                    </td>
+                    <td className="py-1 px-2 text-center font-bold">
+                      Avg: {(() => {
+                        const subjs = student.subjects.filter(s => !s.name.startsWith('__'));
+                        const tCount = subjs.length || 1;
+                        const testSum = subjs.reduce((sum, s) => sum + (s.testScore || 0), 0);
+                        return (testSum / tCount).toFixed(1);
+                      })()}
+                    </td>
+                    <td className="py-1 px-2 text-center font-bold">
+                      Avg: {(() => {
+                        const subjs = student.subjects.filter(s => !s.name.startsWith('__'));
+                        const tCount = subjs.length || 1;
+                        const examSum = subjs.reduce((sum, s) => sum + (s.examScore || 0), 0);
+                        return (examSum / tCount).toFixed(1);
+                      })()}
+                    </td>
+                    <td className="py-1 px-2 text-center font-black text-emerald-855 bg-emerald-50/10">
+                      Avg: {stats.avgScore.toFixed(1)}%
+                    </td>
+                    <td className="py-1 px-2" colSpan={3}></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Right Column (20% / col-span-2): Grading Scale, Conduct Scale, and Term Averages */}
+          <div className="col-span-2 flex flex-col justify-between space-y-2 h-full">
+            {/* Grading Scale */}
+            <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between">
+              <div>
+                <h4 className="font-extrabold text-slate-900 text-[9px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1 leading-none">
+                  <span>📋</span> Grading Scale
+                </h4>
+                <div className="border border-slate-150 rounded-lg overflow-hidden shadow-3xs">
+                  <table className="w-full text-[7.5px] text-left border-collapse text-slate-600">
+                    <tbody className="divide-y divide-slate-100 font-semibold">
+                      <tr>
+                        <td className="py-0.2 px-1 font-black text-emerald-700 bg-emerald-50 w-6">A+</td>
+                        <td className="py-0.2 px-1 font-black text-slate-500">Distinction</td>
+                        <td className="py-0.2 px-1 text-right text-[7px] font-mono">90-100</td>
+                      </tr>
+                      <tr>
+                        <td className="py-0.2 px-1 font-black text-green-700 bg-green-50 w-6">A</td>
+                        <td className="py-0.2 px-1 font-black text-slate-500">Excellent</td>
+                        <td className="py-0.2 px-1 text-right text-[7px] font-mono">80-89</td>
+                      </tr>
+                      <tr>
+                        <td className="py-0.2 px-1 font-black text-sky-700 bg-sky-50 w-6">B</td>
+                        <td className="py-0.2 px-1 font-black text-slate-500">Very Good</td>
+                        <td className="py-0.2 px-1 text-right text-[7px] font-mono">70-79</td>
+                      </tr>
+                      <tr>
+                        <td className="py-0.2 px-1 font-black text-amber-500 bg-amber-50 w-6">C</td>
+                        <td className="py-0.2 px-1 font-black text-slate-500">Good</td>
+                        <td className="py-0.2 px-1 text-right text-[7px] font-mono">60-69</td>
+                      </tr>
+                      <tr>
+                        <td className="py-0.2 px-1 font-black text-orange-600 bg-orange-50 w-6">D</td>
+                        <td className="py-0.2 px-1 font-black text-slate-500">Fair</td>
+                        <td className="py-0.2 px-1 text-right text-[7px] font-mono">50-59</td>
+                      </tr>
+                      <tr>
+                        <td className="py-0.2 px-1 font-black text-red-500 bg-red-50 w-6">F</td>
+                        <td className="py-0.2 px-1 font-black text-slate-500">Fail</td>
+                        <td className="py-0.2 px-1 text-right text-[7px] font-mono">&lt; 50</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Conduct Scale */}
+            <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between">
+              <div>
+                <h4 className="font-extrabold text-slate-900 text-[9px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1 leading-none">
+                  <span>🌟</span> Conduct Scale
+                </h4>
+                <div className="space-y-0.5 text-slate-600 font-semibold text-[7.5px] leading-tight">
+                  <div className="flex items-start gap-1">
+                    <span className="w-2.5 h-2.5 shrink-0 rounded bg-emerald-50 text-emerald-700 text-[7px] flex items-center justify-center font-mono font-black mt-0.5">5</span>
+                    <span>Maintain excellet degree for observable trait</span>
+                  </div>
+                  <div className="flex items-start gap-1">
+                    <span className="w-2.5 h-2.5 shrink-0 rounded bg-green-50 text-green-700 text-[7px] flex items-center justify-center font-mono font-black mt-0.5">4</span>
+                    <span>maintain high level of observable trait</span>
+                  </div>
+                  <div className="flex items-start gap-1">
+                    <span className="w-2.5 h-2.5 shrink-0 rounded bg-sky-50 text-sky-700 text-[7px] flex items-center justify-center font-mono font-black mt-0.5">3</span>
+                    <span>acceptable level of observable trait</span>
+                  </div>
+                  <div className="flex items-start gap-1">
+                    <span className="w-2.5 h-2.5 shrink-0 rounded bg-amber-50 text-amber-650 text-[7px] flex items-center justify-center font-mono font-black mt-0.5">2</span>
+                    <span>show minimaal regard for observable trait</span>
+                  </div>
+                  <div className="flex items-start gap-1">
+                    <span className="w-2.5 h-2.5 shrink-0 rounded bg-slate-50 text-slate-500 text-[7px] flex items-center justify-center font-mono font-black mt-0.5">1</span>
+                    <span>No regard for obsevable trait</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Term Averages & Performance Catalog Table */}
+            <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs text-slate-800 flex flex-col justify-between flex-grow">
+              <div>
+                <h4 className="font-extrabold text-slate-900 text-[9px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1 leading-none">
+                  <span>📊</span> Term Averages
+                </h4>
+                <div className="overflow-hidden border border-slate-150 rounded-lg">
+                  <table className="w-full text-left text-[8.5px] border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-150 text-[7px] font-black uppercase text-slate-505 tracking-wider">
+                        <th className="py-0.5 px-1 font-black">Term</th>
+                        <th className="py-0.5 px-1 text-center font-black">Cum</th>
+                        <th className="py-0.5 px-1 text-center font-black">Avg</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-bold text-slate-700">
+                      {(['First Term', 'Second Term', 'Third Term'] as const).map(termName => {
+                        const statsVal = getNurseryTermStats(termName);
+                        const isCurrentActive = term === termName;
+                        
+                        return (
+                          <tr key={termName} className={`hover:bg-slate-50/50 ${isCurrentActive ? 'bg-emerald-50/20 font-black text-slate-955 text-[8.5px]' : 'text-[8.5px]'}`}>
+                            <td className="py-0.5 px-1 font-black text-slate-900">
+                              {termName.split(' ')[0]}
+                            </td>
+                            <td className="py-0.5 px-1 text-center font-mono text-slate-800">
+                              {statsVal.available ? statsVal.cumulative : '-'}
+                            </td>
+                            <td className="py-0.5 px-1 text-center font-mono font-black text-emerald-800">
+                              {statsVal.available ? `${statsVal.average.toFixed(0)}%` : '-'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="relative z-10 space-y-1">
+          <h3 className="text-slate-900 font-black text-[10.5px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 py-0.5 flex items-center justify-between select-none">
+            <span>Part A: Academic Course Evaluation</span>
+            <span className="text-[8.5px] text-slate-450 normal-case font-bold">Standard Formula Matrix Layout</span>
+          </h3>
+          {/* Ezibeck-style database table */}
+          <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white shadow-3xs">
+            <table className="academic-evaluation-table w-full text-left text-[13px] border-collapse">
+              <thead>
+                <tr className="bg-[#EAEAEA] border-b border-slate-300 text-slate-955 font-black select-none text-[9px] uppercase tracking-wider">
+                  <th className="py-1 px-2 border-r border-slate-300 min-w-[130px]">
+                    <span className="flex items-center gap-1">📝 Subjects</span>
                   </th>
-                )}
-                {term === 'Third Term' && !isNursery && (
-                  <>
-                    <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
-                      <span className="flex items-center justify-center">1ST T (20)</span>
+                  <th className="py-1 px-2 border-r border-slate-300 text-center w-16">
+                    <span className="flex items-center justify-center">TEST (30)</span>
+                  </th>
+                  <th className="py-1 px-2 border-r border-slate-300 text-center w-16">
+                    <span className="flex items-center justify-center">EXAM (70)</span>
+                  </th>
+                  <th className="py-1 px-2 border-r border-slate-300 text-center bg-emerald-100/30 w-18">
+                    <span className="flex items-center justify-center text-emerald-955 font-black">TERM (100)</span>
+                  </th>
+                  {term === 'Second Term' && isSecondaryClass && (
+                    <th className="py-1 px-2 border-r border-slate-300 text-center text-[8.5px] w-20 bg-blue-50 text-blue-900 font-black">
+                      <span className="flex items-center justify-center">1ST T AVG</span>
                     </th>
-                    <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
-                      <span className="flex items-center justify-center">2ND T (20)</span>
-                    </th>
-                    <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
-                      <span className="flex items-center justify-center">3RD T (60)</span>
-                    </th>
-                    <th className="py-1 px-2 border-r border-slate-300 text-center bg-emerald-100/20 w-22 text-slate-950 font-black">
-                      <span className="flex items-center justify-center font-black">SESS AVG</span>
-                    </th>
-                  </>
-                )}
-                <th className="py-1 px-2 border-r border-slate-300 text-center w-16">
-                  <span className="flex items-center justify-center">GRADE</span>
-                </th>
-                <th className="py-1 px-1 border-r border-slate-300 text-center w-14">
-                  <span className="flex items-center justify-center">POSITION</span>
-                </th>
-                <th className="py-1 px-2 font-black text-slate-955">
-                  <span className="flex items-center gap-1">💬 REMARK</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
-              {student.subjects.map(subj => {
-                const tot = calculateSubjectTotal(subj);
-                
-                // Formulate annual / session average data realistically matching the 20/20/60 formula of Ezibeck
-                const firstTerm = subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0 ? subj.firstTermSummary : Math.round(tot * 0.2);
-                const secondTerm = subj.secondTermSummary !== undefined && subj.secondTermSummary !== 0 ? subj.secondTermSummary : Math.round(tot * 0.2);
-                const thirdTerm = subj.thirdTermSummary !== undefined && subj.thirdTermSummary !== 0 ? subj.thirdTermSummary : Math.round(tot * 0.6);
-                const sessionAvg = firstTerm + secondTerm + thirdTerm;
+                  )}
+                  {term === 'Third Term' && !isNursery && (
+                    <>
+                      <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
+                        <span className="flex items-center justify-center">1ST T (20)</span>
+                      </th>
+                      <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
+                        <span className="flex items-center justify-center">2ND T (20)</span>
+                      </th>
+                      <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
+                        <span className="flex items-center justify-center">3RD T (60)</span>
+                      </th>
+                      <th className="py-1 px-2 border-r border-slate-300 text-center bg-emerald-100/20 w-22 text-slate-955 font-black">
+                        <span className="flex items-center justify-center font-black">SESS AVG</span>
+                      </th>
+                    </>
+                  )}
+                  <th className="py-1 px-2 border-r border-slate-300 text-center w-16">
+                    <span className="flex items-center justify-center">GRADE</span>
+                  </th>
+                  <th className="py-1 px-1 border-r border-slate-300 text-center w-14">
+                    <span className="flex items-center justify-center">POSITION</span>
+                  </th>
+                  <th className="py-1 px-2 font-black text-slate-955">
+                    <span className="flex items-center gap-1">💬 REMARK</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                {student.subjects.map(subj => {
+                  const tot = calculateSubjectTotal(subj);
+                  
+                  // Formulate annual / session average data realistically matching the 20/20/60 formula of Ezibeck
+                  const firstTerm = subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0 ? subj.firstTermSummary : Math.round(tot * 0.2);
+                  const secondTerm = subj.secondTermSummary !== undefined && subj.secondTermSummary !== 0 ? subj.secondTermSummary : Math.round(tot * 0.2);
+                  const thirdTerm = subj.thirdTermSummary !== undefined && subj.thirdTermSummary !== 0 ? subj.thirdTermSummary : Math.round(tot * 0.6);
+                  const sessionAvg = firstTerm + secondTerm + thirdTerm;
 
-                const { letter, remark, ratingClass } = getLetterAndRemark(
-                  term === 'Third Term' ? sessionAvg : tot
-                );
+                  const { letter, remark, ratingClass } = getLetterAndRemark(
+                    term === 'Third Term' ? sessionAvg : tot
+                  );
 
-                return (
-                  <tr key={subj.id} className="hover:bg-slate-50/50 border-b border-slate-150">
-                    <td className="py-1 px-2 border-r border-slate-150 font-extrabold text-slate-900 bg-slate-50/20">{subj.name}</td>
-                    <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{subj.testScore}</td>
-                    <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{subj.examScore}</td>
-                    <td className="py-1 px-2 border-r border-slate-150 text-center font-black font-mono text-emerald-850 bg-emerald-50/10">{tot}</td>
-                    {term === 'Second Term' && isSecondaryClass && (
-                      <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800 bg-blue-50/5">
-                        {(() => {
-                          let firstTermAvgStr = "-";
-                          const baseId = student.id.split('_')[0];
-                          try {
-                            const matchMatch = firstTermStuds.find(s => s.id.startsWith(baseId));
-                            const matchSubj = matchMatch?.subjects.find(s => s.name.toLowerCase() === subj.name.toLowerCase());
-                            if (subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0) {
-                              firstTermAvgStr = String(subj.firstTermSummary) + "%";
-                            } else if (matchSubj) {
-                              firstTermAvgStr = String((matchSubj.testScore || 0) + (matchSubj.examScore || 0)) + "%";
-                            } else {
-                              firstTermAvgStr = String(Math.round(tot * 0.75)) + "%";
+                  return (
+                    <tr key={subj.id} className="hover:bg-slate-50/50 border-b border-slate-150">
+                      <td className="py-1 px-2 border-r border-slate-150 font-extrabold text-slate-900 bg-slate-50/20">{subj.name}</td>
+                      <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{subj.testScore}</td>
+                      <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{subj.examScore}</td>
+                      <td className="py-1 px-2 border-r border-slate-150 text-center font-black font-mono text-emerald-855 bg-emerald-50/10">{tot}</td>
+                      {term === 'Second Term' && isSecondaryClass && (
+                        <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800 bg-blue-50/5">
+                          {(() => {
+                            let firstTermAvgStr = "-";
+                            const baseId = student.id.split('_')[0];
+                            try {
+                              const matchMatch = firstTermStuds.find(s => s.id.startsWith(baseId));
+                              const matchSubj = matchMatch?.subjects.find(s => s.name.toLowerCase() === subj.name.toLowerCase());
+                              if (subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0) {
+                                firstTermAvgStr = String(subj.firstTermSummary) + "%";
+                              } else if (matchSubj) {
+                                firstTermAvgStr = String((matchSubj.testScore || 0) + (matchSubj.examScore || 0)) + "%";
+                              } else {
+                                firstTermAvgStr = String(Math.round(tot * 0.75)) + "%";
+                              }
+                            } catch (e) {
+                              console.error(e);
                             }
-                          } catch (e) {
-                            console.error(e);
-                          }
-                          return firstTermAvgStr;
+                            return firstTermAvgStr;
+                          })()}
+                        </td>
+                      )}
+                      {term === 'Third Term' && !isNursery && (
+                        <>
+                          <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{firstTerm}</td>
+                          <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{secondTerm}</td>
+                          <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{thirdTerm}</td>
+                          <td className="py-1 px-2 border-r border-slate-150 text-center font-black font-mono text-emerald-850 bg-slate-50/40">{sessionAvg}</td>
+                        </>
+                      )}
+                      <td className="py-1 px-2 border-r border-slate-150 text-center">
+                        <span className={`px-1.5 py-0.5 text-[11px] font-black rounded-sm tracking-wider ${ratingClass}`}>
+                          {letter}
+                        </span>
+                      </td>
+                      <td className="py-1 px-1 border-r border-slate-150 text-center font-black text-slate-900 bg-slate-50/10">
+                        {isNursery || isBasic ? '-' : formatOrdinal(subj.position)}
+                      </td>
+                      <td className="py-1 px-2 italic text-slate-700 text-[12px] font-bold leading-tight bg-[#FCFCFC]">{remark}</td>
+                    </tr>
+                  );
+                })}
+
+                {/* Calculation Footer */}
+                <tr className="bg-[#FAF9F9]/90 border-t border-slate-205 text-slate-400 font-semibold select-none text-[12px] uppercase tracking-wider divide-x divide-slate-100">
+                  <td className="py-1 px-2 font-semibold text-slate-500">
+                    Count: {student.subjects.length}
+                  </td>
+                  <td className="py-1 px-2 text-center font-bold">
+                    Avg: {(() => {
+                      const tCount = student.subjects.length || 1;
+                      const testSum = student.subjects.reduce((sum, s) => sum + (s.testScore || 0), 0);
+                      return (testSum / tCount).toFixed(1);
+                    })()}
+                  </td>
+                  <td className="py-1 px-2 text-center font-bold">
+                    Avg: {(() => {
+                      const tCount = student.subjects.length || 1;
+                      const examSum = student.subjects.reduce((sum, s) => sum + (s.examScore || 0), 0);
+                      return (examSum / tCount).toFixed(1);
+                    })()}
+                  </td>
+                  <td className="py-1 px-2 text-center font-black text-emerald-855 bg-emerald-50/10">
+                    Avg: {stats.avgScore.toFixed(1)}%
+                  </td>
+                  {term === 'Second Term' && isSecondaryClass && (
+                    <td className="py-1 px-2 text-center font-bold text-slate-400">-</td>
+                  )}
+                  {term === 'Third Term' && !isNursery && (
+                    <>
+                      <td className="py-1 px-1 text-center font-bold">
+                        Avg: {(() => {
+                          const tCount = student.subjects.length || 1;
+                          const fSum = student.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
+                          return (fSum / tCount).toFixed(1);
                         })()}
                       </td>
-                    )}
-                    {term === 'Third Term' && !isNursery && (
-                      <>
-                        <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{firstTerm}</td>
-                        <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{secondTerm}</td>
-                        <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{thirdTerm}</td>
-                        <td className="py-1 px-2 border-r border-slate-150 text-center font-black font-mono text-emerald-850 bg-slate-50/40">{sessionAvg}</td>
-                      </>
-                    )}
-                    <td className="py-1 px-2 border-r border-slate-150 text-center">
-                      <span className={`px-1.5 py-0.5 text-[11px] font-black rounded-sm tracking-wider ${ratingClass}`}>
-                        {letter}
-                      </span>
-                    </td>
-                    <td className="py-1 px-1 border-r border-slate-150 text-center font-black text-slate-900 bg-slate-50/10">
-                      {isNursery || isBasic ? '-' : formatOrdinal(subj.position)}
-                    </td>
-                    <td className="py-1 px-2 italic text-slate-700 text-[12px] font-bold leading-tight bg-[#FCFCFC]">{remark}</td>
-                  </tr>
-                );
-              })}
-
-              {/* Calculation Footer */}
-              <tr className="bg-[#FAF9F9]/90 border-t border-slate-205 text-slate-400 font-semibold select-none text-[12px] uppercase tracking-wider divide-x divide-slate-100">
-                <td className="py-1 px-2 font-semibold text-slate-500">
-                  Count: {student.subjects.length}
-                </td>
-                <td className="py-1 px-2 text-center font-bold">
-                  Avg: {(() => {
-                    const tCount = student.subjects.length || 1;
-                    const testSum = student.subjects.reduce((sum, s) => sum + (s.testScore || 0), 0);
-                    return (testSum / tCount).toFixed(1);
-                  })()}
-                </td>
-                <td className="py-1 px-2 text-center font-bold">
-                  Avg: {(() => {
-                    const tCount = student.subjects.length || 1;
-                    const examSum = student.subjects.reduce((sum, s) => sum + (s.examScore || 0), 0);
-                    return (examSum / tCount).toFixed(1);
-                  })()}
-                </td>
-                <td className="py-1 px-2 text-center font-black text-emerald-850 bg-emerald-50/10">
-                  Avg: {stats.avgScore.toFixed(1)}%
-                </td>
-                {term === 'Second Term' && isSecondaryClass && (
-                  <td className="py-1 px-2 text-center font-bold text-slate-400">-</td>
-                )}
-                {term === 'Third Term' && !isNursery && (
-                  <>
-                    <td className="py-1 px-1 text-center font-bold">
-                      Avg: {(() => {
-                        const tCount = student.subjects.length || 1;
-                        const fSum = student.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
-                        return (fSum / tCount).toFixed(1);
-                      })()}
-                    </td>
-                    <td className="py-1 px-1 text-center font-bold">
-                      Avg: {(() => {
-                        const tCount = student.subjects.length || 1;
-                        const sSum = student.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
-                        return (sSum / tCount).toFixed(1);
-                      })()}
-                    </td>
-                    <td className="py-1 px-1 text-center font-bold">
-                      Avg: {(() => {
-                        const tCount = student.subjects.length || 1;
-                        const thSum = student.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
-                        return (thSum / tCount).toFixed(1);
-                      })()}
-                    </td>
-                    <td className="py-1 px-2 text-center font-black bg-slate-100/50 text-slate-800">
-                      Avg: {(() => {
-                        const tCount = student.subjects.length || 1;
-                        const sessionSum = student.subjects.reduce((sum, s) => {
-                          const f = s.firstTermSummary !== undefined ? s.firstTermSummary : 0;
-                          const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : 0;
-                          const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0;
-                          return sum + (f + sec + th);
-                        }, 0);
-                        return (sessionSum / tCount).toFixed(1);
-                      })()}%
-                    </td>
-                  </>
-                )}
-                <td className="py-1 px-2" colSpan={3}></td>
-              </tr>
-            </tbody>
-          </table>
+                      <td className="py-1 px-1 text-center font-bold">
+                        Avg: {(() => {
+                          const tCount = student.subjects.length || 1;
+                          const sSum = student.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
+                          return (sSum / tCount).toFixed(1);
+                        })()}
+                      </td>
+                      <td className="py-1 px-1 text-center font-bold">
+                        Avg: {(() => {
+                          const tCount = student.subjects.length || 1;
+                          const thSum = student.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
+                          return (thSum / tCount).toFixed(1);
+                        })()}
+                      </td>
+                      <td className="py-1 px-2 text-center font-black bg-slate-100/50 text-slate-800">
+                        Avg: {(() => {
+                          const tCount = student.subjects.length || 1;
+                          const sessionSum = student.subjects.reduce((sum, s) => {
+                            const f = s.firstTermSummary !== undefined ? s.firstTermSummary : 0;
+                            const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : 0;
+                            const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0;
+                            return sum + (f + sec + th);
+                          }, 0);
+                          return (sessionSum / tCount).toFixed(1);
+                        })()}%
+                      </td>
+                    </>
+                  )}
+                  <td className="py-1 px-2" colSpan={3}></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
        {/* Part B: Academic Performance Summary (Moved before character and skill grading) */}
       <div className="relative z-10 bg-[#FAF9F9] border border-slate-200/85 rounded-xl p-2 shadow-3xs text-slate-800 text-[12px] print:text-[12px] mb-2">
@@ -511,56 +690,6 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
           </div>
         </div>
       </div>
-
-      {/* Nursery Term Averages & Performance Catalog Table */}
-      {isNursery && (
-        <div className="relative z-10 bg-white border border-slate-200 rounded-xl p-2.5 shadow-3xs text-slate-800 text-[11px] print:text-[11px] mb-2">
-          <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider mb-2 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
-            <span>📊</span> Term Averages & Performance Catalog
-          </h4>
-          <div className="overflow-hidden border border-slate-150 rounded-lg">
-            <table className="w-full text-left text-[11px] border-collapse">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-150 text-[9px] font-black uppercase text-slate-500 tracking-wider">
-                  <th className="py-1.5 px-3 font-black">Term Period</th>
-                  <th className="py-1.5 px-3 text-center font-black">Cumulative Score</th>
-                  <th className="py-1.5 px-3 text-center font-black">Overall Subject Average (%)</th>
-                  <th className="py-1.5 px-3 text-center font-black">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
-                {(['First Term', 'Second Term', 'Third Term'] as const).map(termName => {
-                  const statsVal = getNurseryTermStats(termName);
-                  const isCurrentActive = term === termName;
-                  
-                  return (
-                    <tr key={termName} className={`hover:bg-slate-50/50 ${isCurrentActive ? 'bg-emerald-50/20 font-bold' : ''}`}>
-                      <td className="py-1 px-3 font-extrabold text-slate-900">
-                        {termName} Average
-                      </td>
-                      <td className="py-1 px-3 text-center font-mono text-slate-800">
-                        {statsVal.available ? statsVal.cumulative : '-'}
-                      </td>
-                      <td className="py-1 px-3 text-center font-mono font-bold text-emerald-800">
-                        {statsVal.available ? `${statsVal.average.toFixed(1)}%` : '-'}
-                      </td>
-                      <td className="py-1 px-3 text-center text-[9px]">
-                        {isCurrentActive ? (
-                          <span className="font-bold text-emerald-700">Current Term</span>
-                        ) : statsVal.available ? (
-                          <span className="text-slate-500">Recorded</span>
-                        ) : (
-                          <span className="text-slate-400 italic">Pending</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
 
       {/* Ratings & Grade Scale Row */}
       <div className="grid grid-cols-12 gap-3 relative z-10 pt-2 border-t border-dashed border-slate-200">
@@ -619,68 +748,39 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
           </div>
         </div>
 
-        {/* Column 2: Grades Index & Conduct Scale (takes 4/12 width, very compact) */}
-        <div className="col-span-4 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between grade-key-conduct-box">
+        {/* Column 2: Next Term Fee Summary (takes 4/12 width, beautifully styled) */}
+        <div className="col-span-4 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2.5 shadow-3xs flex flex-col justify-between next-term-fee-box">
           <div>
-            <h4 className="font-extrabold text-slate-900 text-[10.5px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
-              <span>📋</span> Grade Key & Conduct Scale
+            <h4 className="font-extrabold text-slate-900 text-[10.5px] uppercase tracking-wider mb-2 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
+              <span>💰</span> Next Term Fee Summary
             </h4>
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-              {/* Grades Index table */}
-              <div className="border border-slate-150 rounded-lg overflow-hidden shadow-3xs">
-                <table className="w-full text-[8.5px] text-left border-collapse text-slate-600">
-                  <tbody className="divide-y divide-slate-100 font-semibold">
-                    <tr>
-                      <td className="py-0 px-1 font-black text-emerald-700 bg-emerald-50">A+</td>
-                      <td className="py-0 px-1">90-100</td>
-                    </tr>
-                    <tr>
-                      <td className="py-0 px-1 font-black text-green-700 bg-green-50">A</td>
-                      <td className="py-0 px-1">80-89</td>
-                    </tr>
-                    <tr>
-                      <td className="py-0 px-1 font-black text-sky-700 bg-sky-50">B</td>
-                      <td className="py-0 px-1">70-79</td>
-                    </tr>
-                    <tr>
-                      <td className="py-0 px-1 font-black text-amber-500 bg-amber-50">C</td>
-                      <td className="py-0 px-1">60-69</td>
-                    </tr>
-                    <tr>
-                      <td className="py-0 px-1 font-black text-orange-600 bg-orange-50">D</td>
-                      <td className="py-0 px-1">50-59</td>
-                    </tr>
-                    <tr>
-                      <td className="py-0 px-1 font-black text-red-500 bg-red-50">F</td>
-                      <td className="py-0 px-1">&lt; 50</td>
-                    </tr>
-                  </tbody>
-                </table>
+            <div className="space-y-1.5 text-[11px] text-slate-700">
+              <div className="flex justify-between items-center py-0.5 border-b border-dashed border-slate-100">
+                <span className="text-slate-400 font-semibold select-none">School Fees:</span>
+                <span className="font-extrabold text-slate-800">{sFee}</span>
               </div>
-
-              {/* Conduct Scale list */}
-              <div className="space-y-0 text-slate-500 font-bold text-[8.5px]">
-                <div className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded bg-emerald-50 text-emerald-700 text-[7.5px] flex items-center justify-center font-mono font-black">5</span>
-                  <span>Excellent</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded bg-green-50 text-green-700 text-[7.5px] flex items-center justify-center font-mono font-black">4</span>
-                  <span>Very Good</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded bg-sky-50 text-sky-700 text-[7.5px] flex items-center justify-center font-mono font-black">3</span>
-                  <span>Good</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded bg-amber-50 text-amber-650 text-[7.5px] flex items-center justify-center font-mono font-black">2</span>
-                  <span>Fair</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded bg-slate-50 text-slate-500 text-[7.5px] flex items-center justify-center font-mono font-black">1</span>
-                  <span>Needs Work</span>
-                </div>
+              <div className="flex justify-between items-center py-0.5 border-b border-dashed border-slate-100">
+                <span className="text-slate-400 font-semibold select-none">Party Fee:</span>
+                <span className="font-extrabold text-slate-800">{pFee}</span>
               </div>
+              <div className="flex justify-between items-center py-0.5 border-b border-dashed border-slate-100">
+                <span className="text-slate-400 font-semibold select-none">Enrollment:</span>
+                <span className="font-extrabold text-slate-800">{eFee}</span>
+              </div>
+              <div className="flex justify-between items-center py-0.5 border-b border-dashed border-slate-100">
+                <span className="text-slate-400 font-semibold select-none">Book Fees:</span>
+                <span className="font-extrabold text-slate-800">{bFee}</span>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-1.5 mt-2 pt-1.5 border-t border-dashed border-emerald-300">
+            <div className="flex justify-between items-center text-[11.5px]">
+              <span className="font-black text-emerald-800">Total Invoice:</span>
+              <span className="font-black text-emerald-800 font-mono text-[12px]">{totalFormatted}</span>
+            </div>
+            <div className="flex justify-between items-center text-[10.5px] text-slate-550 leading-none">
+              <span className="font-semibold">Resumption:</span>
+              <span className="font-extrabold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{template.resumptionDate}</span>
             </div>
           </div>
         </div>
