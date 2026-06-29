@@ -224,7 +224,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
 
       {/* Top Compact Card: Student Profile (Full Width) */}
       <div className="relative z-10">
-        <div className="bg-[#FAF9F9] border border-slate-200/80 rounded-xl p-2 shadow-3xs text-slate-800 text-[12px]">
+        <div className="student-profile-card bg-[#FAF9F9] border border-slate-200/80 rounded-xl p-2 shadow-3xs text-slate-800 text-[12px]">
           <h4 className="font-extrabold text-slate-900 text-[10px] uppercase tracking-wider mb-1.5 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
             <span>👤</span> Student Profile
           </h4>
@@ -878,7 +878,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
       )}
 
        {/* Part B: Academic Performance Summary (Moved before character and skill grading) */}
-      <div className="relative z-10 bg-[#FAF9F9] border border-slate-200/85 rounded-xl p-2 shadow-3xs text-slate-800 text-[12px] print:text-[12px] mb-2">
+      <div className="relative z-10 academic-summary-card bg-[#FAF9F9] border border-slate-200/85 rounded-xl p-2 shadow-3xs text-slate-800 text-[12px] print:text-[12px] mb-2">
         <div className="flex items-center justify-between gap-x-4 gap-y-1">
           <div className="flex items-center gap-1">
             <span className="font-extrabold text-slate-900 uppercase tracking-wider text-[10.5px] select-none">📊 Academic Summary:</span>
