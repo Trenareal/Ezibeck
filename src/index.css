@@ -565,6 +565,35 @@
   font-size: 6.8pt !important;
 }
 
+/* Reduce the Term Averages and Grading Scale on PDF document of pre-nursery to Nursery 3 by 30% */
+.pdf-force-light .nursery-term-averages-card,
+.pdf-force-light .nursery-grading-scale-card {
+  padding: 4px !important;
+}
+
+.pdf-force-light .nursery-term-averages-card h4,
+.pdf-force-light .nursery-grading-scale-card h4 {
+  font-size: 5.6pt !important;
+  margin-bottom: 2px !important;
+  padding-bottom: 1px !important;
+}
+
+.pdf-force-light .nursery-term-averages-card th,
+.pdf-force-light .nursery-grading-scale-card th {
+  font-size: 4.2pt !important;
+  padding: 0.5px 2px !important;
+}
+
+.pdf-force-light .nursery-term-averages-card td,
+.pdf-force-light .nursery-grading-scale-card td {
+  font-size: 4.8pt !important;
+  padding-top: 0.5px !important;
+  padding-bottom: 0.5px !important;
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+  line-height: 1 !important;
+}
+
 /* Base styling for school title to increase it by 40% globally on screen layouts */
 .school-title-text {
   font-size: 1.4em !important;

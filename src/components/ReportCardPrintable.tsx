@@ -356,7 +356,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
           {/* Right Column (20% / col-span-2): Grading Scale, Conduct Scale, and Term Averages */}
           <div className="col-span-2 flex flex-col space-y-2 h-full">
             {/* Term Averages & Performance Catalog Table */}
-            <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs text-slate-800 flex flex-col justify-between flex-1 min-h-0">
+            <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs text-slate-800 flex flex-col justify-between flex-1 min-h-0 nursery-term-averages-card">
               <div>
                 <h4 
                   className="font-extrabold text-slate-900 uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1 leading-none"
@@ -405,7 +405,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
             </div>
 
             {/* Grading Scale */}
-            <div className={`bg-[#FCFCFC]/60 border border-slate-200 rounded-xl shadow-3xs flex flex-col justify-between flex-1 min-h-0 ${isNursery ? 'p-1 w-[90%] mx-auto' : 'p-2'}`}>
+            <div className={`bg-[#FCFCFC]/60 border border-slate-200 rounded-xl shadow-3xs flex flex-col justify-between flex-1 min-h-0 nursery-grading-scale-card ${isNursery ? 'p-1 w-[90%] mx-auto' : 'p-2'}`}>
               <div>
                 <h4 
                   className="font-extrabold text-slate-900 uppercase tracking-wider select-none border-b border-slate-200/50 flex items-center gap-1 leading-none"

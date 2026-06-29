@@ -438,8 +438,97 @@ export default function TeacherDashboard({
       return;
     }
 
+    // Color converter helper to transform oklch(...) to rgb(...)/rgba(...)
+    const convertOklchToRgb = (oklchStr: string | null | undefined): string => {
+      if (!oklchStr || typeof oklchStr !== 'string') return oklchStr || '';
+      if (!oklchStr.includes('oklch')) return oklchStr;
+
+      return oklchStr.replace(/oklch\(([^)]+)\)/g, (match, content) => {
+        // Normalize commas to spaces
+        const normalizedContent = content.replace(/,/g, ' ');
+        const parts = normalizedContent.trim().split(/\s+/);
+        if (parts.length < 3) return match;
+
+        const l = parseFloat(parts[0]);
+        const c = parseFloat(parts[1]);
+        const h = parseFloat(parts[2]);
+
+        let a = 1;
+        const slashIdx = parts.indexOf('/');
+        if (slashIdx !== -1 && parts[slashIdx + 1]) {
+          const alphaStr = parts[slashIdx + 1];
+          if (alphaStr.endsWith('%')) {
+            a = parseFloat(alphaStr) / 100;
+          } else {
+            a = parseFloat(alphaStr);
+          }
+        } else if (parts.length >= 4 && parts[3] !== '/') {
+          const alphaStr = parts[3];
+          if (alphaStr.endsWith('%')) {
+            a = parseFloat(alphaStr) / 100;
+          } else {
+            a = parseFloat(alphaStr);
+          }
+        }
+
+        // Convert h to radians
+        const hRad = (h * Math.PI) / 180;
+        const L = l;
+        const a_ = c * Math.cos(hRad);
+        const b_ = c * Math.sin(hRad);
+
+        const l_ = L + 0.3963377774 * a_ + 0.2158037573 * b_;
+        const m_ = L - 0.1055613458 * a_ - 0.0638541728 * b_;
+        const s_ = L - 0.0894841775 * a_ - 1.2914855480 * b_;
+
+        const l3 = l_ * l_ * l_;
+        const m3 = m_ * m_ * m_;
+        const s3 = s_ * s_ * s_;
+
+        const rL = +4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699292 * s3;
+        const gL = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3;
+        const bL = -0.0041960863 * l3 - 0.7034186147 * m3 + 1.7076147010 * s3;
+
+        const toSRGB = (x: number) => {
+          const v = x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055;
+          return Math.max(0, Math.min(255, Math.round(v * 255)));
+        };
+
+        const r = toSRGB(rL);
+        const g = toSRGB(gL);
+        const b = toSRGB(bL);
+
+        if (a !== 1) {
+          return `rgba(${r}, ${g}, ${b}, ${a})`;
+        }
+        return `rgb(${r}, ${g}, ${b})`;
+      });
+    };
+
+    let originalGetComputedStyle: typeof window.getComputedStyle | null = null;
     let container: HTMLDivElement | null = null;
     try {
+      // Intercept and convert oklch colors in computed styles to prevent html2canvas crash
+      originalGetComputedStyle = window.getComputedStyle;
+      window.getComputedStyle = function (elt: Element, pseudoElt?: string) {
+        const style = originalGetComputedStyle!(elt, pseudoElt);
+        return new Proxy(style, {
+          get(target, prop, receiver) {
+            if (prop === 'getPropertyValue') {
+              return function(propertyName: string) {
+                const val = target.getPropertyValue(propertyName);
+                return convertOklchToRgb(val);
+              };
+            }
+            const val = Reflect.get(target, prop, receiver);
+            if (typeof prop === 'string' && typeof val === 'string' && val.includes('oklch')) {
+              return convertOklchToRgb(val);
+            }
+            return val;
+          }
+        }) as CSSStyleDeclaration;
+      };
+
       // 1. Clone the element to render in an isolated, off-screen sandbox
       const clone = element.cloneNode(true) as HTMLElement;
       
@@ -541,6 +630,9 @@ export default function TeacherDashboard({
       // Fallback: Trigger native printing
       window.print();
     } finally {
+      if (originalGetComputedStyle) {
+        window.getComputedStyle = originalGetComputedStyle;
+      }
       setIsGeneratingPdf(false);
     }
   };
