@@ -276,7 +276,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
               <span className="text-[8.5px] text-slate-450 normal-case font-bold">Standard Formula Matrix Layout</span>
             </h3>
             <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white shadow-3xs flex-grow w-full">
-              <table className="academic-evaluation-table w-full text-left text-[11px] border-collapse">
+              <table className="academic-evaluation-table nursery-academic-evaluation-table w-full text-left text-[11px] border-collapse">
                 <thead>
                   <tr className="bg-[#EAEAEA] border-b border-slate-300 text-slate-955 font-black select-none text-[9px] uppercase tracking-wider">
                     <th className="py-1 px-2 border-r border-slate-300 min-w-[130px]">
