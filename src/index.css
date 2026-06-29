@@ -566,36 +566,52 @@
 }
 
 /* Reduce the Term Averages and Grading Scale on PDF document of pre-nursery to Nursery 3 by 30% */
-.pdf-force-light .nursery-term-averages-card,
-.pdf-force-light .nursery-grading-scale-card {
+.pdf-force-light .nursery-term-averages-card {
   padding: 4px !important;
+}
+
+.pdf-force-light .nursery-grading-scale-card {
+  padding: 1.5px 2px !important;
+  flex: 0 0 auto !important;
+  max-height: 52px !important;
+  height: 52px !important;
 }
 
 .pdf-force-light .nursery-term-averages-card h4,
 .pdf-force-light .nursery-grading-scale-card h4 {
-  font-size: 5.6pt !important;
-  margin-bottom: 2px !important;
-  padding-bottom: 1px !important;
+  font-size: 3.9pt !important;
+  margin-bottom: 1.5px !important;
+  padding-bottom: 0.5px !important;
   letter-spacing: -0.04em !important;
   word-spacing: -1.2px !important;
 }
 
 .pdf-force-light .nursery-term-averages-card th,
 .pdf-force-light .nursery-grading-scale-card th {
-  font-size: 4.2pt !important;
-  padding: 0.5px 2px !important;
+  font-size: 2.9pt !important;
+  padding: 0.25px 1.5px !important;
   letter-spacing: -0.04em !important;
   word-spacing: -1.2px !important;
 }
 
-.pdf-force-light .nursery-term-averages-card td,
+.pdf-force-light .nursery-term-averages-card td {
+  font-size: 3.3pt !important;
+  padding-top: 0.25px !important;
+  padding-bottom: 0.25px !important;
+  padding-left: 1.5px !important;
+  padding-right: 1.5px !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.04em !important;
+  word-spacing: -1.2px !important;
+}
+
 .pdf-force-light .nursery-grading-scale-card td {
-  font-size: 4.8pt !important;
-  padding-top: 0.5px !important;
-  padding-bottom: 0.5px !important;
-  padding-left: 2px !important;
-  padding-right: 2px !important;
-  line-height: 1 !important;
+  font-size: 3.3pt !important;
+  padding-top: 0px !important;
+  padding-bottom: 0px !important;
+  padding-left: 1.5px !important;
+  padding-right: 1.5px !important;
+  line-height: 0.8 !important;
   letter-spacing: -0.04em !important;
   word-spacing: -1.2px !important;
 }
