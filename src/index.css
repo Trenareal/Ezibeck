@@ -568,13 +568,18 @@
 /* Reduce the Term Averages and Grading Scale on PDF document of pre-nursery to Nursery 3 by 30% and additional 20% for grading scale */
 .pdf-force-light .nursery-term-averages-card {
   padding: 4px !important;
+  margin-bottom: 4px !important;
 }
 
 .pdf-force-light .nursery-grading-scale-card {
-  padding: 0.5px 1.5px !important;
+  padding: 1px 2px !important;
   flex: 0 0 auto !important;
-  max-height: 26px !important;
-  height: 26px !important;
+  margin-bottom: 6px !important; /* Spacing between grading scale and conduct scale */
+}
+
+.pdf-force-light .nursery-conduct-scale-card {
+  padding: 2px 3px !important;
+  margin-top: 6px !important; /* Space/padding between grading scale and conduct scale */
 }
 
 .pdf-force-light .nursery-term-averages-card h4 {
@@ -586,8 +591,16 @@
 }
 
 .pdf-force-light .nursery-grading-scale-card h4 {
-  font-size: 3.0pt !important;
+  font-size: 2.4pt !important; /* Decreased text size in grading scale by 20% more */
   margin-bottom: 0.5px !important;
+  padding-bottom: 0.25px !important;
+  letter-spacing: -0.04em !important;
+  word-spacing: -1.2px !important;
+}
+
+.pdf-force-light .nursery-conduct-scale-card h4 {
+  font-size: 2.6pt !important;
+  margin-bottom: 1px !important;
   padding-bottom: 0.25px !important;
   letter-spacing: -0.04em !important;
   word-spacing: -1.2px !important;
@@ -601,7 +614,7 @@
 }
 
 .pdf-force-light .nursery-grading-scale-card th {
-  font-size: 2.1pt !important;
+  font-size: 1.7pt !important; /* Decreased text size in grading scale by 20% more */
   padding: 0.1px 1px !important;
   letter-spacing: -0.04em !important;
   word-spacing: -1.2px !important;
@@ -619,7 +632,7 @@
 }
 
 .pdf-force-light .nursery-grading-scale-card td {
-  font-size: 2.4pt !important;
+  font-size: 1.9pt !important; /* Decreased text size in grading scale by 20% more */
   padding-top: 0px !important;
   padding-bottom: 0px !important;
   padding-left: 1px !important;
@@ -629,12 +642,19 @@
   word-spacing: -1.2px !important;
 }
 
-/* Increase the height of nursery academic course evaluation table by 20% on generated PDF preview */
+.pdf-force-light .nursery-conduct-scale-card div,
+.pdf-force-light .nursery-conduct-scale-card span {
+  font-size: 2.0pt !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.03em !important;
+}
+
+/* Increase the height of nursery academic course evaluation table by another 20% on generated PDF preview */
 .pdf-force-light .nursery-academic-evaluation-table th,
 .pdf-force-light .nursery-academic-evaluation-table td {
-  padding-top: 3.5px !important;
-  padding-bottom: 3.5px !important;
-  line-height: 1.35 !important;
+  padding-top: 4.5px !important; /* Increased from 3.5px */
+  padding-bottom: 4.5px !important; /* Increased from 3.5px */
+  line-height: 1.55 !important; /* Increased from 1.35 */
 }
 
 /* Base styling for school title to increase it by 40% globally on screen layouts */

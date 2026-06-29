@@ -658,7 +658,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
             </div>
 
             {/* Conduct Scale */}
-            <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between flex-1 min-h-0">
+            <div className={`bg-[#FCFCFC]/60 border border-slate-200 rounded-xl shadow-3xs flex flex-col justify-between flex-1 min-h-0 nursery-conduct-scale-card ${isNursery ? 'p-1' : 'p-2'}`}>
               <div>
                 <h4 className="font-extrabold text-slate-900 text-[9px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1 leading-none">
                   <span>🌟</span> Conduct Scale
