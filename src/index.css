@@ -576,12 +576,16 @@
   font-size: 5.6pt !important;
   margin-bottom: 2px !important;
   padding-bottom: 1px !important;
+  letter-spacing: -0.04em !important;
+  word-spacing: -1.2px !important;
 }
 
 .pdf-force-light .nursery-term-averages-card th,
 .pdf-force-light .nursery-grading-scale-card th {
   font-size: 4.2pt !important;
   padding: 0.5px 2px !important;
+  letter-spacing: -0.04em !important;
+  word-spacing: -1.2px !important;
 }
 
 .pdf-force-light .nursery-term-averages-card td,
@@ -592,6 +596,8 @@
   padding-left: 2px !important;
   padding-right: 2px !important;
   line-height: 1 !important;
+  letter-spacing: -0.04em !important;
+  word-spacing: -1.2px !important;
 }
 
 /* Base styling for school title to increase it by 40% globally on screen layouts */

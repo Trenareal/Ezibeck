@@ -3868,8 +3868,8 @@ export default function TeacherDashboard({
                               💡 Note: Previous terms' cumulative scores and overall averages can be inputted and edited directly below.
                             </p>
                           )}
-                          <div className="overflow-hidden border border-slate-200 rounded-xl bg-white shadow-3xs">
-                            <table className="w-full text-left text-xs border-collapse">
+                          <div className="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-3xs">
+                            <table className="w-full min-w-[550px] sm:min-w-0 text-left text-xs border-collapse">
                               <thead>
                                 <tr className="bg-slate-50 border-b border-slate-150 text-[10px] font-black uppercase text-slate-500 tracking-wider">
                                   <th className="py-2.5 px-4 font-black">Term Period</th>

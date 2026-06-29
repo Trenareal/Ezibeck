@@ -265,14 +265,17 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
 
       {/* Part A: Academic Course Evaluation */}
       {isNursery ? (
-        <div className="grid grid-cols-10 gap-3 relative z-10 items-stretch mb-2">
-          {/* Left Column (80% / col-span-8): Part A Table */}
-          <div className="col-span-8 flex flex-col space-y-1 h-full">
+        <div 
+          className="grid gap-3 relative z-10 items-stretch mb-2"
+          style={{ gridTemplateColumns: '75% 25%' }}
+        >
+          {/* Left Column (75%): Part A Table */}
+          <div className="flex flex-col space-y-1 h-full">
             <h3 className="text-slate-900 font-black text-[10.5px] uppercase tracking-wider border-l-4 border-slate-900 pl-2 py-0.5 flex items-center justify-between select-none">
               <span>Part A: Academic Course Evaluation</span>
               <span className="text-[8.5px] text-slate-450 normal-case font-bold">Standard Formula Matrix Layout</span>
             </h3>
-            <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white shadow-3xs flex-grow w-[95%] mx-auto">
+            <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white shadow-3xs flex-grow w-full">
               <table className="academic-evaluation-table w-full text-left text-[11px] border-collapse">
                 <thead>
                   <tr className="bg-[#EAEAEA] border-b border-slate-300 text-slate-955 font-black select-none text-[9px] uppercase tracking-wider">
@@ -353,8 +356,8 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
             </div>
           </div>
 
-          {/* Right Column (20% / col-span-2): Grading Scale, Conduct Scale, and Term Averages */}
-          <div className="col-span-2 flex flex-col space-y-2 h-full">
+          {/* Right Column (25%): Grading Scale, Conduct Scale, and Term Averages */}
+          <div className="flex flex-col space-y-2 h-full">
             {/* Term Averages & Performance Catalog Table */}
             <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs text-slate-800 flex flex-col justify-between flex-1 min-h-0 nursery-term-averages-card">
               <div>
@@ -405,7 +408,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
             </div>
 
             {/* Grading Scale */}
-            <div className={`bg-[#FCFCFC]/60 border border-slate-200 rounded-xl shadow-3xs flex flex-col justify-between flex-1 min-h-0 nursery-grading-scale-card ${isNursery ? 'p-1 w-[90%] mx-auto' : 'p-2'}`}>
+            <div className={`bg-[#FCFCFC]/60 border border-slate-200 rounded-xl shadow-3xs flex flex-col justify-between flex-1 min-h-0 nursery-grading-scale-card ${isNursery ? 'p-1 w-full' : 'p-2'}`}>
               <div>
                 <h4 
                   className="font-extrabold text-slate-900 uppercase tracking-wider select-none border-b border-slate-200/50 flex items-center gap-1 leading-none"

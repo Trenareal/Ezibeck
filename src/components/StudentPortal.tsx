@@ -1647,8 +1647,8 @@ export default function StudentPortal({
                     <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider mb-2 select-none flex items-center gap-1">
                       <span>📊</span> Term Averages & Cumulative Performance Catalog
                     </h4>
-                    <div className="overflow-hidden border border-slate-200 rounded-xl bg-white shadow-3xs">
-                      <table className="w-full text-left text-xs border-collapse">
+                    <div className="overflow-x-auto border border-slate-200 rounded-xl bg-white shadow-3xs">
+                      <table className="w-full min-w-[550px] sm:min-w-0 text-left text-xs border-collapse">
                         <thead>
                           <tr className="bg-slate-50 border-b border-slate-150 text-[10px] font-black uppercase text-slate-500 tracking-wider">
                             <th className="py-2.5 px-4 font-black">Term Period</th>
