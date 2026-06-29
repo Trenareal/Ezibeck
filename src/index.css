@@ -267,9 +267,11 @@
   .report-card-printable p {
     font-size: 10pt !important;
   }
+  .report-card-printable .text-\[14px\] { font-size: 10.5pt !important; }
   .report-card-printable .text-\[13px\] { font-size: 10pt !important; }
   .report-card-printable .text-\[12px\] { font-size: 9pt !important; }
   .report-card-printable .text-xs { font-size: 9pt !important; }
+  .report-card-printable .text-\[11.5px\] { font-size: 8.6pt !important; }
   .report-card-printable .text-\[11px\] { font-size: 8.25pt !important; }
   .report-card-printable .text-\[10.5px\] { font-size: 7.8pt !important; }
   .report-card-printable .text-\[10px\] { font-size: 7.5pt !important; }
@@ -315,6 +317,17 @@
     padding-top: 4px !important;
     padding-bottom: 4px !important;
     line-height: 1.25 !important;
+  }
+
+  /* Student profile card: consistent, slightly larger, readable text on print */
+  .report-card-printable .student-profile-card {
+    padding: 10px !important;
+  }
+  .report-card-printable .student-profile-card h4 {
+    font-size: 8.6pt !important;
+  }
+  .report-card-printable .student-profile-card span {
+    font-size: 9.5pt !important;
   }
 
   /* Reduce academic course evaluation table size by 20% on print */
@@ -403,6 +416,34 @@
   .report-card-printable .grade-key-conduct-box span {
     font-size: 6.8pt !important;
   }
+
+  /* Nursery right-rail cards: keep proportional and readable instead of micro-sized */
+  .report-card-printable .nursery-term-averages-card,
+  .report-card-printable .nursery-grading-scale-card,
+  .report-card-printable .nursery-conduct-scale-card {
+    padding: 5px 6px !important;
+  }
+  .report-card-printable .nursery-term-averages-card h4,
+  .report-card-printable .nursery-grading-scale-card h4,
+  .report-card-printable .nursery-conduct-scale-card h4 {
+    font-size: 6.5pt !important;
+    margin-bottom: 2px !important;
+    padding-bottom: 1px !important;
+  }
+  .report-card-printable .nursery-term-averages-card th,
+  .report-card-printable .nursery-grading-scale-card th {
+    font-size: 5.6pt !important;
+  }
+  .report-card-printable .nursery-term-averages-card td,
+  .report-card-printable .nursery-grading-scale-card td {
+    font-size: 6.2pt !important;
+    line-height: 1.2 !important;
+  }
+  .report-card-printable .nursery-conduct-scale-card div,
+  .report-card-printable .nursery-conduct-scale-card span {
+    font-size: 5.6pt !important;
+    line-height: 1.2 !important;
+  }
 }
 
 .pdf-force-light {
@@ -429,9 +470,11 @@
   font-size: 10pt !important;
 }
 
+.pdf-force-light .text-\[14px\] { font-size: 10.5pt !important; }
 .pdf-force-light .text-\[13px\] { font-size: 10pt !important; }
 .pdf-force-light .text-\[12px\] { font-size: 9pt !important; }
 .pdf-force-light .text-xs { font-size: 9pt !important; }
+.pdf-force-light .text-\[11.5px\] { font-size: 8.6pt !important; }
 .pdf-force-light .text-\[11px\] { font-size: 8.25pt !important; }
 .pdf-force-light .text-\[10.5px\] { font-size: 7.8pt !important; }
 .pdf-force-light .text-\[10px\] { font-size: 7.5pt !important; }
@@ -476,6 +519,17 @@
   padding-top: 4px !important;
   padding-bottom: 4px !important;
   line-height: 1.25 !important;
+}
+
+/* Student profile card: consistent, slightly larger, readable text on generated PDF */
+.pdf-force-light .student-profile-card {
+  padding: 10px !important;
+}
+.pdf-force-light .student-profile-card h4 {
+  font-size: 8.6pt !important;
+}
+.pdf-force-light .student-profile-card span {
+  font-size: 9.5pt !important;
 }
 
 /* Reduce academic course evaluation table size by 20% on generated PDF preview */
@@ -565,101 +619,62 @@
   font-size: 6.8pt !important;
 }
 
-/* Reduce the Term Averages and Grading Scale on PDF document of pre-nursery to Nursery 3 by 30% and additional 20% for grading scale */
-.pdf-force-light .nursery-term-averages-card {
-  padding: 4px !important;
-  margin-bottom: 4px !important;
-}
-
-.pdf-force-light .nursery-grading-scale-card {
-  padding: 1px 2px !important;
-  flex: 0 0 auto !important;
-  margin-bottom: 6px !important; /* Spacing between grading scale and conduct scale */
-}
-
+/* Nursery right-rail cards (Term Averages / Grading Scale / Conduct Scale):
+   previously forced down to 2-5px illegible sizes. Now kept proportional
+   and readable, matching the rest of the report card on high-DPI PDF generation. */
+.pdf-force-light .nursery-term-averages-card,
+.pdf-force-light .nursery-grading-scale-card,
 .pdf-force-light .nursery-conduct-scale-card {
-  padding: 2px 3px !important;
-  margin-top: 6px !important; /* Space/padding between grading scale and conduct scale */
+  padding: 6px 7px !important;
+  margin-bottom: 6px !important;
 }
 
-.pdf-force-light .nursery-term-averages-card h4 {
-  font-size: 2.7pt !important;
-  margin-bottom: 1px !important;
-  padding-bottom: 0.25px !important;
-  letter-spacing: -0.04em !important;
-  word-spacing: -1.2px !important;
-}
-
-.pdf-force-light .nursery-grading-scale-card h4 {
-  font-size: 2.4pt !important; /* Decreased text size in grading scale by 20% more */
-  margin-bottom: 0.5px !important;
-  padding-bottom: 0.25px !important;
-  letter-spacing: -0.04em !important;
-  word-spacing: -1.2px !important;
-}
-
+.pdf-force-light .nursery-term-averages-card h4,
+.pdf-force-light .nursery-grading-scale-card h4,
 .pdf-force-light .nursery-conduct-scale-card h4 {
-  font-size: 2.6pt !important;
-  margin-bottom: 1px !important;
-  padding-bottom: 0.25px !important;
-  letter-spacing: -0.04em !important;
-  word-spacing: -1.2px !important;
+  font-size: 7pt !important;
+  margin-bottom: 3px !important;
+  padding-bottom: 2px !important;
+  letter-spacing: normal !important;
+  word-spacing: normal !important;
 }
 
-.pdf-force-light .nursery-term-averages-card th {
-  font-size: 2.0pt !important;
-  padding: 0.2px 1px !important;
-  letter-spacing: -0.04em !important;
-  word-spacing: -1.2px !important;
-}
-
+.pdf-force-light .nursery-term-averages-card th,
 .pdf-force-light .nursery-grading-scale-card th {
-  font-size: 1.7pt !important; /* Decreased text size in grading scale by 20% more */
-  padding: 0.1px 1px !important;
-  letter-spacing: -0.04em !important;
-  word-spacing: -1.2px !important;
+  font-size: 6pt !important;
+  padding: 2px 3px !important;
+  letter-spacing: normal !important;
+  word-spacing: normal !important;
 }
 
-.pdf-force-light .nursery-term-averages-card td {
-  font-size: 2.3pt !important;
-  padding-top: 0.15px !important;
-  padding-bottom: 0.15px !important;
-  padding-left: 1px !important;
-  padding-right: 1px !important;
-  line-height: 0.9 !important;
-  letter-spacing: -0.04em !important;
-  word-spacing: -1.2px !important;
-}
-
+.pdf-force-light .nursery-term-averages-card td,
 .pdf-force-light .nursery-grading-scale-card td {
-  font-size: 1.9pt !important; /* Decreased text size in grading scale by 20% more */
-  padding-top: 0px !important;
-  padding-bottom: 0px !important;
-  padding-left: 1px !important;
-  padding-right: 1px !important;
-  line-height: 0.75 !important;
-  letter-spacing: -0.04em !important;
-  word-spacing: -1.2px !important;
+  font-size: 6.5pt !important;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+  padding-left: 3px !important;
+  padding-right: 3px !important;
+  line-height: 1.2 !important;
+  letter-spacing: normal !important;
+  word-spacing: normal !important;
 }
 
 .pdf-force-light .nursery-conduct-scale-card div,
 .pdf-force-light .nursery-conduct-scale-card span {
-  font-size: 2.0pt !important;
-  line-height: 0.95 !important;
-  letter-spacing: -0.03em !important;
+  font-size: 6pt !important;
+  line-height: 1.2 !important;
+  letter-spacing: normal !important;
 }
 
 /* Increase the height of nursery academic course evaluation table by another 20% on generated PDF preview */
 .pdf-force-light .nursery-academic-evaluation-table th,
 .pdf-force-light .nursery-academic-evaluation-table td {
-  padding-top: 4.5px !important; /* Increased from 3.5px */
-  padding-bottom: 4.5px !important; /* Increased from 3.5px */
-  line-height: 1.55 !important; /* Increased from 1.35 */
+  padding-top: 4.5px !important;
+  padding-bottom: 4.5px !important;
+  line-height: 1.55 !important;
 }
 
 /* Base styling for school title to increase it by 40% globally on screen layouts */
 .school-title-text {
   font-size: 1.4em !important;
 }
-
-
