@@ -21,6 +21,107 @@ import { safeStorage } from '../utils/safeStorage';
 
 const localStorage = safeStorage;
 
+const ReportCardScaleWrapper = ({ children, elementRef }: { children: React.ReactNode, elementRef: React.RefObject<HTMLDivElement | null> }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  const [height, setHeight] = useState<number | string>('auto');
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('print');
+    const handleChange = (m: MediaQueryListEvent | MediaQueryList) => {
+      setIsPrinting(m.matches);
+    };
+    handleChange(mediaQuery);
+    try {
+      mediaQuery.addEventListener('change', handleChange);
+    } catch (e) {
+      try {
+        mediaQuery.addListener(handleChange);
+      } catch (err) {}
+    }
+    return () => {
+      try {
+        mediaQuery.removeEventListener('change', handleChange);
+      } catch (e) {
+        try {
+          mediaQuery.removeListener(handleChange);
+        } catch (err) {}
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isPrinting) {
+      setScale(1);
+      setHeight('auto');
+      return;
+    }
+
+    const handleResize = () => {
+      if (!containerRef.current || !elementRef.current) return;
+      const parentWidth = containerRef.current.getBoundingClientRect().width;
+      
+      const targetWidth = 1024;
+      if (parentWidth < targetWidth && parentWidth > 0) {
+        const s = parentWidth / targetWidth;
+        setScale(s);
+        const unscaledHeight = elementRef.current.offsetHeight || 1448;
+        setHeight(unscaledHeight * s);
+      } else {
+        setScale(1);
+        setHeight('auto');
+      }
+    };
+
+    handleResize();
+
+    let resizeObserver: ResizeObserver | null = null;
+    try {
+      resizeObserver = new ResizeObserver(() => {
+        requestAnimationFrame(handleResize);
+      });
+      if (containerRef.current) resizeObserver.observe(containerRef.current);
+      if (elementRef.current) resizeObserver.observe(elementRef.current);
+    } catch (e) {
+      console.warn('ResizeObserver failed:', e);
+    }
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      if (resizeObserver) resizeObserver.disconnect();
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [elementRef, isPrinting]);
+
+  const activeScale = isPrinting ? 1 : scale;
+
+  return (
+    <div 
+      ref={containerRef} 
+      className="w-full relative overflow-hidden print:overflow-visible print:h-auto" 
+      style={{ height: activeScale < 1 ? height : 'auto' }}
+    >
+      <div 
+        style={activeScale < 1 ? {
+          width: '1024px',
+          transform: `scale(${activeScale})`,
+          transformOrigin: 'top left',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+        } : {
+          width: '100%',
+          position: 'relative',
+        }}
+        className="print:w-full print:position-relative print:transform-none"
+      >
+        {children}
+      </div>
+    </div>
+  );
+};
+
 const safeConfirm = (message: string): boolean => {
   try {
     return window.confirm(message);
@@ -2677,14 +2778,16 @@ export default function TeacherDashboard({
               const isSecondary = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes((viewingReportStudent?.className || '').replace(/\s+/g, ''));
               return (
                 <>
-                  <ReportCardPrintable 
-                    ref={teacherPrintAreaRef}
-                    student={viewingReportStudent}
-                    term={activeTermTab}
-                    template={template}
-                    studentsRoster={students}
-                    isGeneratingPdf={isGeneratingPdf}
-                  />
+                  <ReportCardScaleWrapper elementRef={teacherPrintAreaRef}>
+                    <ReportCardPrintable 
+                      ref={teacherPrintAreaRef}
+                      student={viewingReportStudent}
+                      term={activeTermTab}
+                      template={template}
+                      studentsRoster={students}
+                      isGeneratingPdf={isGeneratingPdf}
+                    />
+                  </ReportCardScaleWrapper>
                   <div className="hidden print:hidden">
                   {/* Diagonal tiled watermark background */}
                   <ReportCardWatermark />

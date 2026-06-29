@@ -272,7 +272,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
               <span>Part A: Academic Course Evaluation</span>
               <span className="text-[8.5px] text-slate-450 normal-case font-bold">Standard Formula Matrix Layout</span>
             </h3>
-            <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white shadow-3xs flex-grow">
+            <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white shadow-3xs flex-grow w-[95%] mx-auto">
               <table className="academic-evaluation-table w-full text-left text-[11px] border-collapse">
                 <thead>
                   <tr className="bg-[#EAEAEA] border-b border-slate-300 text-slate-955 font-black select-none text-[9px] uppercase tracking-wider">
@@ -356,43 +356,248 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
           {/* Right Column (20% / col-span-2): Grading Scale, Conduct Scale, and Term Averages */}
           <div className="col-span-2 flex flex-col justify-between space-y-2 h-full">
             {/* Grading Scale */}
-            <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between">
+            <div className={`bg-[#FCFCFC]/60 border border-slate-200 rounded-xl shadow-3xs flex flex-col justify-between ${isNursery ? 'p-1 w-[90%] mx-auto' : 'p-2'}`}>
               <div>
-                <h4 className="font-extrabold text-slate-900 text-[9px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1 leading-none">
+                <h4 
+                  className="font-extrabold text-slate-900 uppercase tracking-wider select-none border-b border-slate-200/50 flex items-center gap-1 leading-none"
+                  style={{ 
+                    fontSize: isNursery ? '6.5px' : '9px', 
+                    marginBottom: isNursery ? '2px' : '4px',
+                    paddingBottom: isNursery ? '1px' : '2px'
+                  }}
+                >
                   <span>📋</span> Grading Scale
                 </h4>
-                <div className="border border-slate-150 rounded-lg overflow-hidden shadow-3xs">
-                  <table className="w-full text-[7.5px] text-left border-collapse text-slate-600">
-                    <tbody className="divide-y divide-slate-100 font-semibold">
+                <div className={`border border-slate-150 rounded-lg overflow-hidden shadow-3xs ${isNursery ? 'rounded-md' : 'rounded-lg'}`}>
+                  <table 
+                    className="w-full text-left border-collapse text-slate-600"
+                    style={{ 
+                      fontSize: isNursery ? '5px' : '7.5px',
+                      lineHeight: isNursery ? '1' : 'inherit'
+                    }}
+                  >
+                    <tbody className={`divide-slate-100 font-semibold ${isNursery ? 'divide-y-[0.5px]' : 'divide-y'}`}>
                       <tr>
-                        <td className="py-0.2 px-1 font-black text-emerald-700 bg-emerald-50 w-6">A+</td>
-                        <td className="py-0.2 px-1 font-black text-slate-500">Distinction</td>
-                        <td className="py-0.2 px-1 text-right text-[7px] font-mono">90-100</td>
+                        <td 
+                          className="font-black text-emerald-700 bg-emerald-50"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px',
+                            width: isNursery ? '15px' : '24px'
+                          }}
+                        >
+                          A+
+                        </td>
+                        <td 
+                          className="font-black text-slate-500"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px'
+                          }}
+                        >
+                          Distinction
+                        </td>
+                        <td 
+                          className="text-right font-mono"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px',
+                            fontSize: isNursery ? '4.5px' : '7px'
+                          }}
+                        >
+                          90-100
+                        </td>
                       </tr>
                       <tr>
-                        <td className="py-0.2 px-1 font-black text-green-700 bg-green-50 w-6">A</td>
-                        <td className="py-0.2 px-1 font-black text-slate-500">Excellent</td>
-                        <td className="py-0.2 px-1 text-right text-[7px] font-mono">80-89</td>
+                        <td 
+                          className="font-black text-green-700 bg-green-50"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px',
+                            width: isNursery ? '15px' : '24px'
+                          }}
+                        >
+                          A
+                        </td>
+                        <td 
+                          className="font-black text-slate-500"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px'
+                          }}
+                        >
+                          Excellent
+                        </td>
+                        <td 
+                          className="text-right font-mono"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px',
+                            fontSize: isNursery ? '4.5px' : '7px'
+                          }}
+                        >
+                          80-89
+                        </td>
                       </tr>
                       <tr>
-                        <td className="py-0.2 px-1 font-black text-sky-700 bg-sky-50 w-6">B</td>
-                        <td className="py-0.2 px-1 font-black text-slate-500">Very Good</td>
-                        <td className="py-0.2 px-1 text-right text-[7px] font-mono">70-79</td>
+                        <td 
+                          className="font-black text-sky-700 bg-sky-50"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px',
+                            width: isNursery ? '15px' : '24px'
+                          }}
+                        >
+                          B
+                        </td>
+                        <td 
+                          className="font-black text-slate-500"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px'
+                          }}
+                        >
+                          Very Good
+                        </td>
+                        <td 
+                          className="text-right font-mono"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px',
+                            fontSize: isNursery ? '4.5px' : '7px'
+                          }}
+                        >
+                          70-79
+                        </td>
                       </tr>
                       <tr>
-                        <td className="py-0.2 px-1 font-black text-amber-500 bg-amber-50 w-6">C</td>
-                        <td className="py-0.2 px-1 font-black text-slate-500">Good</td>
-                        <td className="py-0.2 px-1 text-right text-[7px] font-mono">60-69</td>
+                        <td 
+                          className="font-black text-amber-500 bg-amber-50"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px',
+                            width: isNursery ? '15px' : '24px'
+                          }}
+                        >
+                          C
+                        </td>
+                        <td 
+                          className="font-black text-slate-500"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px'
+                          }}
+                        >
+                          Good
+                        </td>
+                        <td 
+                          className="text-right font-mono"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px',
+                            fontSize: isNursery ? '4.5px' : '7px'
+                          }}
+                        >
+                          60-69
+                        </td>
                       </tr>
                       <tr>
-                        <td className="py-0.2 px-1 font-black text-orange-600 bg-orange-50 w-6">D</td>
-                        <td className="py-0.2 px-1 font-black text-slate-500">Fair</td>
-                        <td className="py-0.2 px-1 text-right text-[7px] font-mono">50-59</td>
+                        <td 
+                          className="font-black text-orange-600 bg-orange-50"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px',
+                            width: isNursery ? '15px' : '24px'
+                          }}
+                        >
+                          D
+                        </td>
+                        <td 
+                          className="font-black text-slate-500"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px'
+                          }}
+                        >
+                          Fair
+                        </td>
+                        <td 
+                          className="text-right font-mono"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px',
+                            fontSize: isNursery ? '4.5px' : '7px'
+                          }}
+                        >
+                          50-59
+                        </td>
                       </tr>
                       <tr>
-                        <td className="py-0.2 px-1 font-black text-red-500 bg-red-50 w-6">F</td>
-                        <td className="py-0.2 px-1 font-black text-slate-500">Fail</td>
-                        <td className="py-0.2 px-1 text-right text-[7px] font-mono">&lt; 50</td>
+                        <td 
+                          className="font-black text-red-500 bg-red-50"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px',
+                            width: isNursery ? '15px' : '24px'
+                          }}
+                        >
+                          F
+                        </td>
+                        <td 
+                          className="font-black text-slate-500"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px'
+                          }}
+                        >
+                          Fail
+                        </td>
+                        <td 
+                          className="text-right font-mono"
+                          style={{ 
+                            paddingTop: isNursery ? '0.5px' : '1px', 
+                            paddingBottom: isNursery ? '0.5px' : '1px',
+                            paddingLeft: isNursery ? '2px' : '4px',
+                            paddingRight: isNursery ? '2px' : '4px',
+                            fontSize: isNursery ? '4.5px' : '7px'
+                          }}
+                        >
+                          &lt; 50
+                        </td>
                       </tr>
                     </tbody>
                   </table>
@@ -434,13 +639,22 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
             {/* Term Averages & Performance Catalog Table */}
             <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs text-slate-800 flex flex-col justify-between flex-grow">
               <div>
-                <h4 className="font-extrabold text-slate-900 text-[9px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1 leading-none">
+                <h4 
+                  className="font-extrabold text-slate-900 uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1 leading-none"
+                  style={{ fontSize: '7.2px' }}
+                >
                   <span>📊</span> Term Averages
                 </h4>
                 <div className="overflow-hidden border border-slate-150 rounded-lg">
-                  <table className="w-full text-left text-[8.5px] border-collapse">
+                  <table 
+                    className="w-full text-left border-collapse"
+                    style={{ fontSize: '6.8px' }}
+                  >
                     <thead>
-                      <tr className="bg-slate-50 border-b border-slate-150 text-[7px] font-black uppercase text-slate-505 tracking-wider">
+                      <tr 
+                        className="bg-slate-50 border-b border-slate-150 font-black uppercase text-slate-505 tracking-wider"
+                        style={{ fontSize: '5.6px' }}
+                      >
                         <th className="py-0.5 px-1 font-black">Term</th>
                         <th className="py-0.5 px-1 text-center font-black">Cum</th>
                         <th className="py-0.5 px-1 text-center font-black">Avg</th>
@@ -452,7 +666,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                         const isCurrentActive = term === termName;
                         
                         return (
-                          <tr key={termName} className={`hover:bg-slate-50/50 ${isCurrentActive ? 'bg-emerald-50/20 font-black text-slate-955 text-[8.5px]' : 'text-[8.5px]'}`}>
+                          <tr key={termName} className={`hover:bg-slate-50/50 ${isCurrentActive ? 'bg-emerald-50/20 font-black text-slate-955' : ''}`}>
                             <td className="py-0.5 px-1 font-black text-slate-900">
                               {termName.split(' ')[0]}
                             </td>
@@ -479,7 +693,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
             <span className="text-[8.5px] text-slate-450 normal-case font-bold">Standard Formula Matrix Layout</span>
           </h3>
           {/* Ezibeck-style database table */}
-          <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white shadow-3xs">
+          <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white shadow-3xs w-[95%] mx-auto">
             <table className="academic-evaluation-table w-full text-left text-[13px] border-collapse">
               <thead>
                 <tr className="bg-[#EAEAEA] border-b border-slate-300 text-slate-955 font-black select-none text-[9px] uppercase tracking-wider">
