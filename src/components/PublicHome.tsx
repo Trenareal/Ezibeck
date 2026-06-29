@@ -728,24 +728,38 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
                 <h3 className="text-xl sm:text-2xl font-black text-slate-905 tracking-tight uppercase">Pedagogic Frameworks</h3>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-105 shadow-2xs hover:shadow-md transition-all">
                   <div className="w-10 h-10 bg-emerald-50 border border-emerald-100/50 rounded-xl flex items-center justify-center font-black text-emerald-700 text-xs mb-5">01</div>
-                  <h4 className="font-extrabold text-slate-900 text-sm tracking-tight">Junior Secondary (JSS1-3)</h4>
+                  <h4 className="font-extrabold text-slate-900 text-sm tracking-tight">Pre-Nursery & Nursery (Ages 2-5)</h4>
                   <p className="text-slate-550 text-xs mt-3 leading-relaxed">
-                    Nurturing fundamental concepts in Mathematics, English Language, Basic Sciences, Business Studies, and computer literacy to support a competitive intellectual template.
+                    Providing high-fidelity cognitive foundations. Focused on fine motor skills, basic numeracy, language building, phonics, and early social development using sensory pedagogic materials.
                   </p>
                 </div>
                 <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-105 shadow-2xs hover:shadow-md transition-all">
                   <div className="w-10 h-10 bg-emerald-50 border border-emerald-100/50 rounded-xl flex items-center justify-center font-black text-emerald-700 text-xs mb-5">02</div>
+                  <h4 className="font-extrabold text-slate-900 text-sm tracking-tight">Primary Education (Basic 1-6)</h4>
+                  <p className="text-slate-550 text-xs mt-3 leading-relaxed">
+                    Instilling advanced foundational knowledge in core disciplines like Mathematics, Science, and English Language. Establishing critical thinking, early leadership traits, and structured civic duties.
+                  </p>
+                </div>
+                <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-105 shadow-2xs hover:shadow-md transition-all">
+                  <div className="w-10 h-10 bg-emerald-50 border border-emerald-100/50 rounded-xl flex items-center justify-center font-black text-emerald-700 text-xs mb-5">03</div>
+                  <h4 className="font-extrabold text-slate-900 text-sm tracking-tight">Junior Secondary (JSS1-3)</h4>
+                  <p className="text-slate-550 text-xs mt-3 leading-relaxed">
+                    Nurturing fundamental concepts in Mathematics, English Language, Basic Sciences, Basic Technology, and computer literacy to support a competitive intellectual template.
+                  </p>
+                </div>
+                <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-105 shadow-2xs hover:shadow-md transition-all">
+                  <div className="w-10 h-10 bg-emerald-50 border border-emerald-100/50 rounded-xl flex items-center justify-center font-black text-emerald-700 text-xs mb-5">04</div>
                   <h4 className="font-extrabold text-slate-900 text-sm tracking-tight">Senior Secondary (SS1-3)</h4>
                   <p className="text-slate-550 text-xs mt-3 leading-relaxed">
                     Advanced classes branching to Sciences, Arts, and Social Sciences. Preparing students meticulously to tackle WAEC, NECO, and tertiary entrance examinations.
                   </p>
                 </div>
-                <div className="p-6 sm:p-8 rounded-3xl bg-emerald-600 text-white shadow-2xs hover:shadow-md transition-all">
-                  <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center font-black text-white text-xs mb-5">03</div>
-                  <h4 className="font-extrabold text-sm tracking-tight text-white">Character & Conduct</h4>
+                <div className="p-6 sm:p-8 rounded-3xl bg-emerald-600 text-white shadow-2xs hover:shadow-md transition-all sm:col-span-2 lg:col-span-1">
+                  <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center font-black text-white text-xs mb-5">05</div>
+                  <h4 className="font-extrabold text-sm tracking-tight text-white">Character & Conduct (Unified)</h4>
                   <p className="text-emerald-100 text-xs mt-3 leading-relaxed">
                     Building robust character. Students receive scores across Punctuality, Neatness, Politeness, Cooperation, and Leadership to ensure ethical compliance with premium community values.
                   </p>

@@ -359,7 +359,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
           {/* Right Column (25%): Grading Scale, Conduct Scale, and Term Averages */}
           <div className="flex flex-col space-y-2 h-full">
             {/* Term Averages & Performance Catalog Table */}
-            <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs text-slate-800 flex flex-col justify-between flex-1 min-h-0 nursery-term-averages-card">
+            <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs text-slate-800 flex flex-col justify-between h-auto nursery-term-averages-card">
               <div>
                 <h4 
                   className="font-extrabold text-slate-900 uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1 leading-none"
@@ -408,7 +408,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
             </div>
 
             {/* Grading Scale */}
-            <div className={`bg-[#FCFCFC]/60 border border-slate-200 rounded-xl shadow-3xs flex flex-col justify-between flex-1 min-h-0 nursery-grading-scale-card ${isNursery ? 'p-1 w-full' : 'p-2'}`}>
+            <div className={`bg-[#FCFCFC]/60 border border-slate-200 rounded-xl shadow-3xs flex flex-col justify-between nursery-grading-scale-card ${isNursery ? 'p-1 w-full h-auto' : 'p-2 flex-1 min-h-0'}`}>
               <div>
                 <h4 
                   className="font-extrabold text-slate-900 uppercase tracking-wider select-none border-b border-slate-200/50 flex items-center gap-1 leading-none"
@@ -658,7 +658,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
             </div>
 
             {/* Conduct Scale */}
-            <div className={`bg-[#FCFCFC]/60 border border-slate-200 rounded-xl shadow-3xs flex flex-col justify-between flex-1 min-h-0 nursery-conduct-scale-card ${isNursery ? 'p-1' : 'p-2'}`}>
+            <div className={`bg-[#FCFCFC]/60 border border-slate-200 rounded-xl shadow-3xs flex flex-col justify-between nursery-conduct-scale-card ${isNursery ? 'p-1 h-auto' : 'p-2 flex-1 min-h-0'}`}>
               <div>
                 <h4 className="font-extrabold text-slate-900 text-[9px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1 leading-none">
                   <span>🌟</span> Conduct Scale

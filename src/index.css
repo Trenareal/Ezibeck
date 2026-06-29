@@ -422,6 +422,12 @@
   .report-card-printable .nursery-grading-scale-card,
   .report-card-printable .nursery-conduct-scale-card {
     padding: 5px 6px !important;
+    flex: none !important;
+    height: auto !important;
+    margin-bottom: 6px !important;
+  }
+  .report-card-printable .nursery-conduct-scale-card {
+    margin-bottom: 0 !important;
   }
   .report-card-printable .nursery-term-averages-card h4,
   .report-card-printable .nursery-grading-scale-card h4,
@@ -627,6 +633,11 @@
 .pdf-force-light .nursery-conduct-scale-card {
   padding: 6px 7px !important;
   margin-bottom: 6px !important;
+  flex: none !important;
+  height: auto !important;
+}
+.pdf-force-light .nursery-conduct-scale-card {
+  margin-bottom: 0 !important;
 }
 
 .pdf-force-light .nursery-term-averages-card h4,
