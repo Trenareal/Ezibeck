@@ -354,9 +354,58 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
           </div>
 
           {/* Right Column (20% / col-span-2): Grading Scale, Conduct Scale, and Term Averages */}
-          <div className="col-span-2 flex flex-col justify-between space-y-2 h-full">
+          <div className="col-span-2 flex flex-col space-y-2 h-full">
+            {/* Term Averages & Performance Catalog Table */}
+            <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs text-slate-800 flex flex-col justify-between flex-1 min-h-0">
+              <div>
+                <h4 
+                  className="font-extrabold text-slate-900 uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1 leading-none"
+                  style={{ fontSize: '7.2px' }}
+                >
+                  <span>📊</span> Term Averages
+                </h4>
+                <div className="overflow-hidden border border-slate-150 rounded-lg">
+                  <table 
+                    className="w-full text-left border-collapse"
+                    style={{ fontSize: '6.8px' }}
+                  >
+                    <thead>
+                      <tr 
+                        className="bg-slate-50 border-b border-slate-150 font-black uppercase text-slate-505 tracking-wider"
+                        style={{ fontSize: '5.6px' }}
+                      >
+                        <th className="py-0.5 px-1 font-black">Term</th>
+                        <th className="py-0.5 px-1 text-center font-black">Cum</th>
+                        <th className="py-0.5 px-1 text-center font-black">Avg</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-bold text-slate-700">
+                      {(['First Term', 'Second Term', 'Third Term'] as const).map(termName => {
+                        const statsVal = getNurseryTermStats(termName);
+                        const isCurrentActive = term === termName;
+                        
+                        return (
+                          <tr key={termName} className={`hover:bg-slate-50/50 ${isCurrentActive ? 'bg-emerald-50/20 font-black text-slate-955' : ''}`}>
+                            <td className="py-0.5 px-1 font-black text-slate-900">
+                              {termName.split(' ')[0]}
+                            </td>
+                            <td className="py-0.5 px-1 text-center font-mono text-slate-800">
+                              {statsVal.available ? statsVal.cumulative : '-'}
+                            </td>
+                            <td className="py-0.5 px-1 text-center font-mono font-black text-emerald-800">
+                              {statsVal.available ? `${statsVal.average.toFixed(0)}%` : '-'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
             {/* Grading Scale */}
-            <div className={`bg-[#FCFCFC]/60 border border-slate-200 rounded-xl shadow-3xs flex flex-col justify-between ${isNursery ? 'p-1 w-[90%] mx-auto' : 'p-2'}`}>
+            <div className={`bg-[#FCFCFC]/60 border border-slate-200 rounded-xl shadow-3xs flex flex-col justify-between flex-1 min-h-0 ${isNursery ? 'p-1 w-[90%] mx-auto' : 'p-2'}`}>
               <div>
                 <h4 
                   className="font-extrabold text-slate-900 uppercase tracking-wider select-none border-b border-slate-200/50 flex items-center gap-1 leading-none"
@@ -606,7 +655,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
             </div>
 
             {/* Conduct Scale */}
-            <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between">
+            <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between flex-1 min-h-0">
               <div>
                 <h4 className="font-extrabold text-slate-900 text-[9px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1 leading-none">
                   <span>🌟</span> Conduct Scale
@@ -632,55 +681,6 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                     <span className="w-2.5 h-2.5 shrink-0 rounded bg-slate-50 text-slate-500 text-[7px] flex items-center justify-center font-mono font-black mt-0.5">1</span>
                     <span>No regard for obsevable trait</span>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Term Averages & Performance Catalog Table */}
-            <div className="bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs text-slate-800 flex flex-col justify-between flex-grow">
-              <div>
-                <h4 
-                  className="font-extrabold text-slate-900 uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1 leading-none"
-                  style={{ fontSize: '7.2px' }}
-                >
-                  <span>📊</span> Term Averages
-                </h4>
-                <div className="overflow-hidden border border-slate-150 rounded-lg">
-                  <table 
-                    className="w-full text-left border-collapse"
-                    style={{ fontSize: '6.8px' }}
-                  >
-                    <thead>
-                      <tr 
-                        className="bg-slate-50 border-b border-slate-150 font-black uppercase text-slate-505 tracking-wider"
-                        style={{ fontSize: '5.6px' }}
-                      >
-                        <th className="py-0.5 px-1 font-black">Term</th>
-                        <th className="py-0.5 px-1 text-center font-black">Cum</th>
-                        <th className="py-0.5 px-1 text-center font-black">Avg</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 font-bold text-slate-700">
-                      {(['First Term', 'Second Term', 'Third Term'] as const).map(termName => {
-                        const statsVal = getNurseryTermStats(termName);
-                        const isCurrentActive = term === termName;
-                        
-                        return (
-                          <tr key={termName} className={`hover:bg-slate-50/50 ${isCurrentActive ? 'bg-emerald-50/20 font-black text-slate-955' : ''}`}>
-                            <td className="py-0.5 px-1 font-black text-slate-900">
-                              {termName.split(' ')[0]}
-                            </td>
-                            <td className="py-0.5 px-1 text-center font-mono text-slate-800">
-                              {statsVal.available ? statsVal.cumulative : '-'}
-                            </td>
-                            <td className="py-0.5 px-1 text-center font-mono font-black text-emerald-800">
-                              {statsVal.available ? `${statsVal.average.toFixed(0)}%` : '-'}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
                 </div>
               </div>
             </div>
