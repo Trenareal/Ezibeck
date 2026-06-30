@@ -12,7 +12,7 @@ import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template,
 import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, NURSERY_SUBJECTS, PRE_NURSERY_SUBJECTS, PRIMARY_SUBJECTS, JSS_SUBJECTS, SS1_SUBJECTS, SS_SCIENCE_SUBJECTS, SS_ART_SUBJECTS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal, generateUnique6DigitPassword, getDeterministicPasscode, getStudentPasscodesFromOtherTerms, adjustBehaviourIfRequired } from '../utils/academicUtils';
 import { logPasscodeEvent, getAuditLogs, clearAuditLogs } from '../utils/auditLogger';
 import { dbService, mapDbFacultyToFrontend, mapDbStudentToFrontend } from '../lib/supabase';
-import schoolBadge from '../assets/images/ezibeck_school_badge_final_1782825690492.jpg';
+import schoolBadge from '../assets/images/school_badge.jpg';
 import { ReportCardWatermark, ScratchCardWatermark } from './ReportCardWatermark';
 import { ReportCardPrintable } from './ReportCardPrintable';
 import GuidelinesComponent from './GuidelinesComponent';
@@ -2052,16 +2052,18 @@ export default function TeacherDashboard({
       return ['Basic 1', 'Basic 2', 'Basic 3', 'Basic 4', 'Basic 5', 'Basic 6'];
     }
 
-    // 4. The principal should access to jss1 to ss3b
-    if (
-      roleStr.includes('principal') || 
-      roleStr.includes('junior secondary admin') || 
-      roleStr.includes('junior secondary section admin') || 
-      roleStr.includes('senior secondary admin') || 
-      roleStr.includes('senior secondary section admin') ||
-      currentUser.id === 'justina' || 
-      currentUser.id === 'samson'
-    ) {
+    // 4. The Junior Secondary admin should only see JSS1-3
+    if (roleStr.includes('junior secondary admin') || roleStr.includes('junior secondary section admin') || currentUser.id === 'justina') {
+      return ['JSS1', 'JSS2', 'JSS3'];
+    }
+
+    // 5. The Senior Secondary admin should only see SS1-3B
+    if (roleStr.includes('senior secondary admin') || roleStr.includes('senior secondary section admin') || currentUser.id === 'samson') {
+      return ['SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'];
+    }
+
+    // 6. The principal should access to jss1 to ss3b
+    if (roleStr.includes('principal')) {
       return ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'];
     }
 
@@ -2605,7 +2607,7 @@ export default function TeacherDashboard({
                   <input
                     type="text"
                     required
-                    placeholder="e.g. ezekiel, gladys, anthony, or Full Name"
+                    placeholder="Username"
                     value={usernameInput}
                     onChange={(e) => {
                       setUsernameInput(e.target.value);
@@ -6448,19 +6450,53 @@ export default function TeacherDashboard({
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Select Class Standard:</span>
-                  <div className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-xl border text-xs">
-                    {allowedClasses.map(cls => (
-                      <button
-                        key={cls}
-                        onClick={() => {
-                          setSelectedClass(cls);
-                          setShowAddForm(false);
-                        }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedClass === cls ? 'bg-emerald-800 text-white shadow-sm font-black' : 'text-slate-600 hover:bg-slate-200'}`}
-                      >
-                        {cls}
-                      </button>
-                    ))}
+                  <div className="flex flex-col gap-2">
+                    {allowedClasses.filter(c => !c.startsWith('JSS') && !c.startsWith('SS')).length > 0 && (
+                      <div className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-xl border text-xs">
+                        {allowedClasses.filter(c => !c.startsWith('JSS') && !c.startsWith('SS')).map(cls => (
+                          <button
+                            key={cls}
+                            onClick={() => {
+                              setSelectedClass(cls);
+                              setShowAddForm(false);
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedClass === cls ? 'bg-emerald-800 text-white shadow-sm font-black' : 'text-slate-600 hover:bg-slate-200'}`}
+                          >
+                            {cls}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-xl border text-xs">
+                      <span className="px-2 py-1.5 flex items-center font-bold text-slate-400 uppercase tracking-widest">JSS:</span>
+                      {allowedClasses.filter(c => c.startsWith('JSS')).map(cls => (
+                        <button
+                          key={cls}
+                          onClick={() => {
+                            setSelectedClass(cls);
+                            setShowAddForm(false);
+                          }}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedClass === cls ? 'bg-emerald-800 text-white shadow-sm font-black' : 'text-slate-600 hover:bg-slate-200'}`}
+                        >
+                          {cls}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-xl border text-xs">
+                      <span className="px-2 py-1.5 flex items-center font-bold text-slate-400 uppercase tracking-widest">SS:</span>
+                      {allowedClasses.filter(c => c.startsWith('SS')).map(cls => (
+                        <button
+                          key={cls}
+                          onClick={() => {
+                            setSelectedClass(cls);
+                            setShowAddForm(false);
+                          }}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedClass === cls ? 'bg-emerald-800 text-white shadow-sm font-black' : 'text-slate-600 hover:bg-slate-200'}`}
+                        >
+                          {cls}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 

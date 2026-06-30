@@ -432,7 +432,12 @@ export default function App() {
             supabaseUrl: (import.meta as any).env?.VITE_SUPABASE_URL
           });
         } catch (error: any) {
-          console.error("Error communicating with Supabase:", error);
+          console.error("Error communicating with Supabase (detailed):", {
+            message: error?.message,
+            stack: error?.stack,
+            config: isSupabaseConfigured,
+            url: (import.meta as any).env?.VITE_SUPABASE_URL
+          });
           setDbStatus({
             configured: true,
             connected: false,
