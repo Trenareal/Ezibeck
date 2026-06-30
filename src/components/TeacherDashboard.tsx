@@ -9,7 +9,7 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
 import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile, DbStatus, AuditLogEntry, ALL_CLASSES } from '../types';
-import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, NURSERY_SUBJECTS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal, generateUnique6DigitPassword, getDeterministicPasscode, getStudentPasscodesFromOtherTerms, adjustBehaviourIfRequired } from '../utils/academicUtils';
+import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, NURSERY_SUBJECTS, PRE_NURSERY_SUBJECTS, PRIMARY_SUBJECTS, JSS_SUBJECTS, SS1_SUBJECTS, SS_SCIENCE_SUBJECTS, SS_ART_SUBJECTS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal, generateUnique6DigitPassword, getDeterministicPasscode, getStudentPasscodesFromOtherTerms, adjustBehaviourIfRequired } from '../utils/academicUtils';
 import { logPasscodeEvent, getAuditLogs, clearAuditLogs } from '../utils/auditLogger';
 import { dbService, mapDbFacultyToFrontend, mapDbStudentToFrontend } from '../lib/supabase';
 import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
@@ -681,7 +681,7 @@ export default function TeacherDashboard({
     doc.text(template.schoolName.toUpperCase(), 35, 18);
 
     doc.setFont('helvetica', 'italic');
-    doc.setFontSize(8.0);
+    doc.setFontSize(10.4);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.text(`"${template.motto}"`, 35, 22.0);
 
@@ -990,7 +990,7 @@ export default function TeacherDashboard({
     const isPreNurseryToBasic6 = ['Pre-Nursery', 'Nursery1', 'Nursery2', 'Nursery3', 'Basic1', 'Basic2', 'Basic3', 'Basic4', 'Basic5', 'Basic6'].includes(cleanClassName);
     const headmistressName = facultyProfiles.find(f => f.id === 'nancy')?.name || "Mrs. Nancy Yusuf";
     const signatoryName = isPreNurseryToBasic6 ? headmistressName : (template.principalName || "Dr. Ezekiel Beck");
-    const assessmentVerdictLabel = isPreNurseryToBasic6 ? "HEADMISTRESS'S ASSESSMENT VERDICT:" : "PRINCIPAL'S ASSESSMENT VERDICT:";
+    const assessmentVerdictLabel = isPreNurseryToBasic6 ? "HEADMISTRESS'S OVERALL GRADING REMARK:" : "PRINCIPAL'S OVERALL GRADING REMARK:";
     const signatoryTitle = isPreNurseryToBasic6 ? "HEADMISTRESS" : "PRINCIPAL";
 
     doc.setFont('helvetica', 'bold');
@@ -1578,6 +1578,7 @@ export default function TeacherDashboard({
   const [tempNextTermFee, setTempNextTermFee] = useState(template.nextTermFee);
   const [tempDistinctionThreshold, setTempDistinctionThreshold] = useState(template.distinctionThreshold);
   const [tempPassThreshold, setTempPassThreshold] = useState(template.passThreshold);
+  const [tempTotalAttendance, setTempTotalAttendance] = useState(template.totalAttendance || 110);
 
   const [tempSchoolFee, setTempSchoolFee] = useState(template.schoolFee || "₦100,000.00");
   const [tempPartyFee, setTempPartyFee] = useState(template.partyFee || "₦15,000.00");
@@ -1628,6 +1629,7 @@ export default function TeacherDashboard({
     setTempNextTermFee(template.nextTermFee);
     setTempDistinctionThreshold(template.distinctionThreshold);
     setTempPassThreshold(template.passThreshold);
+    setTempTotalAttendance(template.totalAttendance || 110);
     setTempPortalLocked(template.portalLocked || false);
     
     setTempSchoolFee(template.schoolFee || "₦100,000.00");
@@ -2104,6 +2106,13 @@ export default function TeacherDashboard({
     added.age = newStudentAge;
     added.sex = newStudentSex;
     added.password = newStudentPassword || Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Apply configured total attendance for the term
+    if (template.totalAttendance !== undefined) {
+      added.attendanceTotal = template.totalAttendance;
+      // Scale days present proportionally or ensure it doesn't exceed the total days
+      added.attendancePresent = Math.min(added.attendancePresent, added.attendanceTotal);
+    }
     
     // Add student, trigger ranking refresh
     let refreshed = [...students, added];
@@ -2917,7 +2926,7 @@ export default function TeacherDashboard({
                       <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-none uppercase">
                         {template.schoolName}
                       </h1>
-                      <p className="text-[8.5px] uppercase tracking-wider text-emerald-750 font-extrabold flex items-center justify-center gap-1 select-none">
+                      <p className="school-motto-text text-[8.5px] uppercase tracking-wider text-emerald-750 font-extrabold flex items-center justify-center gap-1 select-none">
                         <span className="w-1 h-1 rounded-full bg-emerald-600"></span>
                         Motto: {template.motto}
                       </p>
@@ -3010,7 +3019,7 @@ export default function TeacherDashboard({
                         </div>
                       </div>
                       <div className="border-t border-slate-200/50 pt-1 mt-1 flex justify-between items-center text-[9px]">
-                        <span className="text-slate-400 font-semibold select-none">Academic Verdict:</span>
+                        <span className="text-slate-400 font-semibold select-none">Overall Grading Remark:</span>
                         <span className="font-bold text-emerald-800">{stats.avgScore >= (template.passThreshold || 50) ? "PASS" : "FAIL"}</span>
                       </div>
                     </div>
@@ -3569,7 +3578,18 @@ export default function TeacherDashboard({
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Attendance Total Sessions</label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Attendance Total Sessions</label>
+                  {template.totalAttendance !== undefined && template.totalAttendance !== editAttendanceTotal && (
+                    <button
+                      type="button"
+                      onClick={() => setEditAttendanceTotal(template.totalAttendance!)}
+                      className="text-[9px] font-black text-blue-600 hover:underline uppercase tracking-wider"
+                    >
+                      Reset to Term ({template.totalAttendance})
+                    </button>
+                  )}
+                </div>
                 <input
                   type="number"
                   value={editAttendanceTotal}
@@ -3687,8 +3707,22 @@ export default function TeacherDashboard({
                               <div key={subj.id} className="p-3 grid grid-cols-12 items-center text-xs font-semibold text-slate-800 hover:bg-slate-50">
                                 <div className={showPrevTermCols ? "col-span-3 flex items-center pr-2" : "col-span-4 flex items-center pr-2"}>
                                   {(() => {
-                                    const isKgClass = editingStudent && (editingStudent.className === 'Pre-Nursery' || editingStudent.className.startsWith('Nursery'));
-                                    const isPermanentKgSubject = !!(isKgClass && NURSERY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase()));
+                                    const isPreNursery = editingStudent && editingStudent.className === 'Pre-Nursery';
+                                    const isNurseryClass = editingStudent && editingStudent.className.startsWith('Nursery');
+                                    const isBasicClass = editingStudent && editingStudent.className.startsWith('Basic');
+                                    const isJssClass = editingStudent && editingStudent.className.startsWith('JSS');
+                                    const isSS1Class = editingStudent && editingStudent.className === 'SS1';
+                                    const isSSScienceClass = editingStudent && (editingStudent.className === 'SS2A' || editingStudent.className === 'SS3A');
+                                    const isSSArtClass = editingStudent && (editingStudent.className === 'SS2B' || editingStudent.className === 'SS3B');
+                                    const isPermanentKgSubject = !!(
+                                      (isPreNursery && PRE_NURSERY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase())) ||
+                                      (isNurseryClass && NURSERY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase())) ||
+                                      (isBasicClass && PRIMARY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase())) ||
+                                      (isJssClass && JSS_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase())) ||
+                                      (isSS1Class && SS1_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase())) ||
+                                      (isSSScienceClass && SS_SCIENCE_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase())) ||
+                                      (isSSArtClass && SS_ART_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase()))
+                                    );
                                     return (
                                       <input
                                         type="text"
@@ -3795,7 +3829,6 @@ export default function TeacherDashboard({
                                         onFocus={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_thirdTerm`]: true }))}
                                         onBlur={() => setFocusedInputs(prev => ({ ...prev, [`${subj.id}_thirdTerm`]: false }))}
                                         onChange={(e) => handleScoreChange(subj.id, 'thirdTerm', parseInt(e.target.value) || 0)}
-                                        className="w-14 py-1 rounded text-center outline-none font-bold font-mono bg-emerald-50 border border-emerald-200 focus:border-indigo-500 text-emerald-900 font-extrabold scale-[1.03] disabled:opacity-75 disabled:cursor-not-allowed"
                                       />
                                     </span>
                                   </>
@@ -3811,8 +3844,22 @@ export default function TeacherDashboard({
                                 {/* Action Button */}
                                 <div className="col-span-1 flex justify-center">
                                   {(() => {
-                                    const isKgClass = editingStudent && (editingStudent.className === 'Pre-Nursery' || editingStudent.className.startsWith('Nursery'));
-                                    const isPermanentKgSubject = !!(isKgClass && NURSERY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase()));
+                                    const isPreNursery = editingStudent && editingStudent.className === 'Pre-Nursery';
+                                    const isNurseryClass = editingStudent && editingStudent.className.startsWith('Nursery');
+                                    const isBasicClass = editingStudent && editingStudent.className.startsWith('Basic');
+                                    const isJssClass = editingStudent && editingStudent.className.startsWith('JSS');
+                                    const isSS1Class = editingStudent && editingStudent.className === 'SS1';
+                                    const isSSScienceClass = editingStudent && (editingStudent.className === 'SS2A' || editingStudent.className === 'SS3A');
+                                    const isSSArtClass = editingStudent && (editingStudent.className === 'SS2B' || editingStudent.className === 'SS3B');
+                                    const isPermanentKgSubject = !!(
+                                      (isPreNursery && PRE_NURSERY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase())) ||
+                                      (isNurseryClass && NURSERY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase())) ||
+                                      (isBasicClass && PRIMARY_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase())) ||
+                                      (isJssClass && JSS_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase())) ||
+                                      (isSS1Class && SS1_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase())) ||
+                                      (isSSScienceClass && SS_SCIENCE_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase())) ||
+                                      (isSSArtClass && SS_ART_SUBJECTS.map(s => s.toLowerCase()).includes(subj.name.toLowerCase()))
+                                    );
                                     
                                     if (isPermanentKgSubject) {
                                       return <span className="text-slate-450 select-none text-[10px]">📌 Fixed</span>;
@@ -4192,7 +4239,7 @@ export default function TeacherDashboard({
                         <h1 className="text-xl sm:text-3.5xl font-black text-slate-900 tracking-tight leading-none uppercase">
                           {template.schoolName}
                         </h1>
-                        <p className="text-[10px] sm:text-[11px] uppercase tracking-wider text-emerald-700 font-bold flex items-center justify-center gap-1.5 select-none font-sans">
+                        <p className="school-motto-text text-[10px] sm:text-[11px] uppercase tracking-wider text-emerald-700 font-bold flex items-center justify-center gap-1.5 select-none font-sans">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
                           Motto: {template.motto}
                         </p>
@@ -4780,6 +4827,7 @@ export default function TeacherDashboard({
                   nextTermFee: serializedFees,
                   distinctionThreshold: Number(tempDistinctionThreshold),
                   passThreshold: Number(tempPassThreshold),
+                  totalAttendance: Number(tempTotalAttendance),
                   portalLocked: tempPortalLocked,
                   schoolFee: tempSchoolFeeNursery,
                   partyFee: tempPartyFeeNursery,
@@ -5247,7 +5295,7 @@ export default function TeacherDashboard({
                 <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-l-4 border-slate-900 pl-2">
                   Section D: Grading Performance Boundaries
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Distinction Threshold Rating (%)</label>
                     <input
@@ -5270,6 +5318,17 @@ export default function TeacherDashboard({
                       value={tempPassThreshold}
                       onChange={(e) => setTempPassThreshold(parseInt(e.target.value) || 50)}
                       className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-amber-500 font-mono text-center"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Attendance Days for Term</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={tempTotalAttendance}
+                      onChange={(e) => setTempTotalAttendance(parseInt(e.target.value) || 110)}
+                      className="w-full bg-slate-50 border rounded-lg p-2.5 outline-none font-bold text-blue-600 font-mono text-center"
                     />
                   </div>
                 </div>
@@ -6001,7 +6060,7 @@ export default function TeacherDashboard({
                   }
 
                   return (
-                    <div key={cls} className="space-y-4">
+                    <div key={`${cls}_${clsIdx}`} className="space-y-4">
                       {chunks.map((sheet, sheetIdx) => {
                         const isLastPageOfClass = sheetIdx === chunks.length - 1;
                         const isLastClassTotal = clsIdx === targetClasses.length - 1;

@@ -198,7 +198,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
           <h1 className="school-title-text text-base sm:text-lg font-black text-slate-900 tracking-tight leading-none uppercase">
             {template.schoolName}
           </h1>
-          <p className="text-[8px] uppercase tracking-wider text-emerald-750 font-extrabold flex items-center justify-center gap-1 select-none">
+          <p className="school-motto-text text-[8px] uppercase tracking-wider text-emerald-750 font-extrabold flex items-center justify-center gap-1 select-none">
             <span className="w-1 h-1 rounded-full bg-emerald-600"></span>
             Motto: {template.motto}
           </p>
@@ -902,7 +902,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
               <span className="font-bold text-emerald-700">{stats.creditsAndAbove + stats.passes}</span>
             </div>
             <div className="flex items-center gap-1 border-l border-slate-200 pl-3">
-              <span className="text-slate-500 font-semibold select-none">Verdict:</span>
+              <span className="text-slate-500 font-semibold select-none">Overall Grading Remark:</span>
               <span className="font-black text-emerald-855 bg-emerald-50 px-1.5 py-0.2 rounded text-[10.5px]">{stats.avgScore >= (template.passThreshold || 50) ? "PASS" : "FAIL"}</span>
             </div>
           </div>

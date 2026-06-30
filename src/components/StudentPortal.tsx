@@ -1285,7 +1285,7 @@ export default function StudentPortal({
                     <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-none uppercase">
                       {template.schoolName}
                     </h1>
-                    <p className="text-[10px] sm:text-[11.5px] uppercase tracking-wider text-emerald-700 font-extrabold flex items-center justify-center gap-1.5 select-none">
+                    <p className="school-motto-text text-[10px] sm:text-[11.5px] uppercase tracking-wider text-emerald-700 font-extrabold flex items-center justify-center gap-1.5 select-none">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
                       Motto: {template.motto}
                     </p>

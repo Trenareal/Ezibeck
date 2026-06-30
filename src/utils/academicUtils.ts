@@ -11,29 +11,73 @@ export const SCHOOL_INFO: SchoolInfo = {
 
 export const JSS_SUBJECTS = [
   "Mathematics",
-  "English Language",
-  "Basic Science",
-  "Social Studies",
+  "English Studies",
+  "Basic Science and Technology",
+  "Pre-vocational Studies",
+  "National Value",
   "Business Studies",
-  "Civic Education",
-  "Computer Studies (ICT)",
-  "Agricultural Science",
-  "Home Economics",
-  "Creative Arts & Crafts"
+  "Cultural and Creative Art",
+  "Speech Development",
+  "Local Language",
+  "C.R.S",
+  "History"
 ];
 
-export const SS_SUBJECTS = [
+export const SS1_SUBJECTS = [
   "Mathematics",
-  "English Language",
+  "Further Mathematics",
+  "English Studies",
+  "Literature In English",
   "Biology",
-  "Chemistry",
   "Physics",
-  "Economics",
+  "Chemistry",
+  "Geography",
+  "Agriculture Science",
+  "Christian religious studies",
+  "Commerce",
+  "Marketing",
   "Civic Education",
+  "Economics",
+  "Government",
+  "Speech Development",
+  "Financial Accounting",
+  "Data Processing"
+];
+
+export const SS_SCIENCE_SUBJECTS = [
+  "Mathematics",
+  "Further Mathematics",
+  "English Studies",
+  "Biology",
+  "Physics",
+  "Chemistry",
   "Geography",
   "Agricultural Science",
-  "Information Technology"
+  "Marketing",
+  "Civic Education",
+  "Economics",
+  "Data Processing",
+  "Speech Development"
 ];
+
+export const SS_ART_SUBJECTS = [
+  "Mathematics",
+  "English Studies",
+  "Literature in English",
+  "Biology",
+  "Agricultural Science",
+  "C.R.S.",
+  "Commerce",
+  "Marketing",
+  "Civic Education",
+  "Economics",
+  "Government",
+  "Financial Accounting",
+  "Data Processing",
+  "Speech Development"
+];
+
+export const SS_SUBJECTS = SS1_SUBJECTS;
 
 export const NURSERY_SUBJECTS = [
   "Numeracy",
@@ -53,18 +97,29 @@ export const NURSERY_SUBJECTS = [
   "Current Affair"
 ];
 
+export const PRE_NURSERY_SUBJECTS = [
+  "Numeracy",
+  "Literacy",
+  "Colouring",
+  "Writing Skill",
+  "Social Habit",
+  "Nature Science",
+  "C.R.S",
+  "Rhyme"
+];
+
 export const PRIMARY_SUBJECTS = [
   "Mathematics",
   "English Studies",
   "Basic Science and Technology",
-  "National Value",
-  "Religion Value",
+  "Quantitative Reasoning",
+  "Verbal Reasoning",
   "Cultural and Creative Art",
   "Current Affair",
   "Local Language",
   "Speech Development",
-  "Verbal Reasoning",
-  "Quantitative Reasoning",
+  "National Value",
+  "Religion Value",
   "History",
   "Prevocational studies"
 ];
@@ -79,6 +134,19 @@ export const BEHAVIOUR_TRAITS = [
   "Obedience & Compliance",
   "Cooperation & Teamwork",
   "Self-reliance"
+];
+
+export const SECONDARY_BEHAVIOUR_TRAITS = [
+  "Punctuality",
+  "Class Attendance",
+  "Attentiveness",
+  "Working Habit",
+  "Sense of Responsibility",
+  "Initiative",
+  "Reliability",
+  "Organisational Ability",
+  "Neatness",
+  "Respect for Authority"
 ];
 
 export const KG_BEHAVIOUR_TRAITS = [
@@ -134,14 +202,15 @@ export function compareSubjects(aName: string, bName: string): number {
     "verbal reasoning",
     "rhymes",
     "spelling drill",
-    "speech development",
+    "cultural and creative art",
     "current affair",
+    "local language",
+    "speech development",
     "national value",
     "religion value",
-    "cultural and creative art",
-    "local language",
     "history",
-    "prevocational studies"
+    "prevocational studies",
+    "pre-vocational studies"
   ];
 
   const aIndex = refOrder.indexOf(aLower);
@@ -430,7 +499,9 @@ export function generateDefaultBehaviour(className?: ClassName): BehaviourRating
       };
     });
   }
-  return BEHAVIOUR_TRAITS.map(trait => {
+  const isSecondary = className && (className.startsWith('JSS') || className.startsWith('SS'));
+  const listToUse = isSecondary ? SECONDARY_BEHAVIOUR_TRAITS : BEHAVIOUR_TRAITS;
+  return listToUse.map(trait => {
     // Most get 3-5
     const score = Math.floor(Math.random() * 3) + 3;
     return {
@@ -451,31 +522,338 @@ export function adjustBehaviourIfRequired(behaviour: BehaviourRating[], classNam
     // Create map of existing
     const existingMap = new Map<string, number>();
     (behaviour || []).forEach(b => {
-      existingMap.set(b.name, b.rating);
+      existingMap.set(b.name.toLowerCase().trim(), b.rating);
     });
     
     return allRequired.map(name => {
-      const existingRating = existingMap.get(name);
+      const existingRating = existingMap.get(name.toLowerCase().trim());
       if (existingRating !== undefined) {
         return { name, rating: existingRating };
       }
       return { name, rating: Math.floor(Math.random() * 3) + 3 };
     });
   } else {
+    const isSecondary = className && (className.startsWith('JSS') || className.startsWith('SS'));
+    const requiredTraits = isSecondary ? SECONDARY_BEHAVIOUR_TRAITS : BEHAVIOUR_TRAITS;
+
     // Create map of existing
     const existingMap = new Map<string, number>();
     (behaviour || []).forEach(b => {
-      existingMap.set(b.name, b.rating);
+      existingMap.set(b.name.toLowerCase().trim(), b.rating);
     });
+
+    const getExisting = (aliases: string[]): number | undefined => {
+      for (const alias of aliases) {
+        const rating = existingMap.get(alias.toLowerCase().trim());
+        if (rating !== undefined) return rating;
+      }
+      return undefined;
+    };
     
-    return BEHAVIOUR_TRAITS.map(name => {
-      const existingRating = existingMap.get(name);
+    return requiredTraits.map(name => {
+      let existingRating: number | undefined = undefined;
+      if (name === "Punctuality") existingRating = getExisting(["punctuality"]);
+      else if (name === "Class Attendance") existingRating = getExisting(["class attendance", "attendance", "punctuality & attendance"]);
+      else if (name === "Attentiveness") existingRating = getExisting(["attentiveness", "attention", "concentration", "attentiveness in class"]);
+      else if (name === "Working Habit") existingRating = getExisting(["working habit", "working habits", "industry & hard work", "industry", "assignment"]);
+      else if (name === "Sense of Responsibility") existingRating = getExisting(["sense of responsibility", "responsibility", "leadership qualities", "self-reliance"]);
+      else if (name === "Initiative") existingRating = getExisting(["initiative", "self-reliance", "leadership qualities"]);
+      else if (name === "Reliability") existingRating = getExisting(["reliability", "honesty & reliability", "honesty"]);
+      else if (name === "Organisational Ability") existingRating = getExisting(["organisational ability", "organizational ability", "cooperation & teamwork"]);
+      else if (name === "Neatness") existingRating = getExisting(["neatness", "neatness & grooming", "grooming"]);
+      else if (name === "Respect for Authority") existingRating = getExisting(["respect for authority", "obedience & compliance", "obedience", "cooperation & teamwork"]);
+      
+      if (existingRating === undefined) {
+        existingRating = existingMap.get(name.toLowerCase().trim());
+      }
+      
       if (existingRating !== undefined) {
         return { name, rating: existingRating };
       }
       return { name, rating: Math.floor(Math.random() * 3) + 3 };
     });
   }
+}
+
+// Adjust subjects array dynamically for Pre-Nursery or wrong class formats to match custom syllabus requirements
+export function adjustSubjectsIfRequired(subjects: SubjectGrade[], className: ClassName, term?: string, studentIdx?: number): SubjectGrade[] {
+  const activeTerm = term || 'Third Term';
+  const sIdx = studentIdx !== undefined ? studentIdx : 0;
+  const usedIds = new Set<string>();
+
+  if (className === 'Pre-Nursery') {
+    const required = PRE_NURSERY_SUBJECTS;
+    
+    const existingMap = new Map<string, SubjectGrade>();
+    (subjects || []).forEach(s => {
+      existingMap.set(s.name.toLowerCase().trim(), s);
+    });
+    
+    const getExisting = (aliases: string[]): SubjectGrade | undefined => {
+      for (const alias of aliases) {
+        const found = existingMap.get(alias.toLowerCase().trim());
+        if (found) return found;
+      }
+      return undefined;
+    };
+    
+    return required.map((name, index) => {
+      let matched: SubjectGrade | undefined = undefined;
+      if (name === "Numeracy") matched = getExisting(["numeracy", "number work", "mathematics"]);
+      else if (name === "Literacy") matched = getExisting(["literacy", "letter work", "english studies", "english"]);
+      else if (name === "Colouring") matched = getExisting(["colouring", "creative art", "creative arts", "fine art", "handwriting"]);
+      else if (name === "Writing Skill") matched = getExisting(["writing skill", "writing skills", "writing", "hand-writing", "handwriting", "health science"]);
+      else if (name === "Social Habit") matched = getExisting(["social habit", "social habits", "social norms", "social habit/health", "civic education"]);
+      else if (name === "Nature Science") matched = getExisting(["nature science", "natural science", "science", "nature study", "health science"]);
+      else if (name === "C.R.S") matched = getExisting(["c.r.s", "crs", "christian religious studies", "c.r.k", "crk"]);
+      else if (name === "Rhyme") matched = getExisting(["rhyme", "rhymes", "rhyme/poem"]);
+      
+      if (!matched && subjects && subjects[index]) {
+        matched = subjects[index];
+      }
+      
+      let finalId = `${name.toLowerCase().replace(/\s+/g, '_')}_${index}`;
+      if (matched && matched.id && !usedIds.has(matched.id)) {
+        finalId = matched.id;
+      }
+      usedIds.add(finalId);
+      
+      if (matched) {
+        return {
+          id: finalId,
+          name: name,
+          testScore: matched.testScore,
+          examScore: matched.examScore,
+          firstTermSummary: matched.firstTermSummary,
+          secondTermSummary: matched.secondTermSummary,
+          thirdTermSummary: matched.thirdTermSummary,
+          position: matched.position,
+          isPositionManual: matched.isPositionManual
+        };
+      } else {
+        const mockSubjectList = [name];
+        const generated = generateRandomGrades(mockSubjectList, activeTerm, sIdx);
+        return {
+          ...generated[0],
+          id: finalId,
+          name: name
+        };
+      }
+    });
+  } else if (className.startsWith('Nursery')) {
+    const required = NURSERY_SUBJECTS;
+    const existingMap = new Map<string, SubjectGrade>();
+    (subjects || []).forEach(s => {
+      existingMap.set(s.name.toLowerCase().trim(), s);
+    });
+    
+    return required.map((name, index) => {
+      const matched = existingMap.get(name.toLowerCase().trim()) || subjects[index];
+      
+      let finalId = `${name.toLowerCase().replace(/\s+/g, '_')}_${index}`;
+      if (matched && matched.id && !usedIds.has(matched.id)) {
+        finalId = matched.id;
+      }
+      usedIds.add(finalId);
+      
+      if (matched) {
+        return {
+          id: finalId,
+          name: name,
+          testScore: matched.testScore,
+          examScore: matched.examScore,
+          firstTermSummary: matched.firstTermSummary,
+          secondTermSummary: matched.secondTermSummary,
+          thirdTermSummary: matched.thirdTermSummary,
+          position: matched.position,
+          isPositionManual: matched.isPositionManual
+        };
+      } else {
+        const mockMockList = [name];
+        const generated = generateRandomGrades(mockMockList, activeTerm, sIdx);
+        return {
+          ...generated[0],
+          id: finalId,
+          name: name
+        };
+      }
+    });
+  } else if (className.startsWith('Basic')) {
+    const required = PRIMARY_SUBJECTS;
+    const existingMap = new Map<string, SubjectGrade>();
+    (subjects || []).forEach(s => {
+      existingMap.set(s.name.toLowerCase().trim(), s);
+    });
+    
+    return required.map((name, index) => {
+      const matched = existingMap.get(name.toLowerCase().trim()) || subjects[index];
+      
+      let finalId = `${name.toLowerCase().replace(/\s+/g, '_')}_${index}`;
+      if (matched && matched.id && !usedIds.has(matched.id)) {
+        finalId = matched.id;
+      }
+      usedIds.add(finalId);
+      
+      if (matched) {
+        return {
+          id: finalId,
+          name: name,
+          testScore: matched.testScore,
+          examScore: matched.examScore,
+          firstTermSummary: matched.firstTermSummary,
+          secondTermSummary: matched.secondTermSummary,
+          thirdTermSummary: matched.thirdTermSummary,
+          position: matched.position,
+          isPositionManual: matched.isPositionManual
+        };
+      } else {
+        const mockMockList = [name];
+        const generated = generateRandomGrades(mockMockList, activeTerm, sIdx);
+        return {
+          ...generated[0],
+          id: finalId,
+          name: name
+        };
+      }
+    });
+  } else if (className.startsWith('JSS')) {
+    const required = JSS_SUBJECTS;
+    const existingMap = new Map<string, SubjectGrade>();
+    (subjects || []).forEach(s => {
+      existingMap.set(s.name.toLowerCase().trim(), s);
+    });
+
+    const getExisting = (aliases: string[]): SubjectGrade | undefined => {
+      for (const alias of aliases) {
+        const found = existingMap.get(alias.toLowerCase().trim());
+        if (found) return found;
+      }
+      return undefined;
+    };
+    
+    return required.map((name, index) => {
+      let matched: SubjectGrade | undefined = undefined;
+      if (name === "Mathematics") matched = getExisting(["mathematics", "maths"]);
+      else if (name === "English Studies") matched = getExisting(["english studies", "english language", "english"]);
+      else if (name === "Basic Science and Technology") matched = getExisting(["basic science and technology", "basic science", "computer studies", "computer science", "computer studies (ict)"]);
+      else if (name === "Pre-vocational Studies") matched = getExisting(["pre-vocational studies", "prevocational studies", "agricultural science", "home economics"]);
+      else if (name === "National Value") matched = getExisting(["national value", "civic education", "social studies"]);
+      else if (name === "Business Studies") matched = getExisting(["business studies"]);
+      else if (name === "Cultural and Creative Art") matched = getExisting(["cultural and creative art", "creative art", "creative arts", "creative arts & crafts"]);
+      else if (name === "Speech Development") matched = getExisting(["speech development"]);
+      else if (name === "Local Language") matched = getExisting(["local language"]);
+      else if (name === "C.R.S") matched = getExisting(["c.r.s", "crs", "christian religious studies", "christian religious knowledge"]);
+      else if (name === "History") matched = getExisting(["history"]);
+
+      if (!matched) {
+        matched = existingMap.get(name.toLowerCase().trim()) || subjects[index];
+      }
+
+      let finalId = `${name.toLowerCase().replace(/\s+/g, '_')}_${index}`;
+      if (matched && matched.id && !usedIds.has(matched.id)) {
+        finalId = matched.id;
+      }
+      usedIds.add(finalId);
+
+      if (matched) {
+        return {
+          id: finalId,
+          name: name,
+          testScore: matched.testScore,
+          examScore: matched.examScore,
+          firstTermSummary: matched.firstTermSummary,
+          secondTermSummary: matched.secondTermSummary,
+          thirdTermSummary: matched.thirdTermSummary,
+          position: matched.position,
+          isPositionManual: matched.isPositionManual
+        };
+      } else {
+        const mockMockList = [name];
+        const generated = generateRandomGrades(mockMockList, activeTerm, sIdx);
+        return {
+          ...generated[0],
+          id: finalId,
+          name: name
+        };
+      }
+    });
+  } else if (className.startsWith('SS')) {
+    let required = SS1_SUBJECTS;
+    if (className === 'SS2A' || className === 'SS3A') {
+      required = SS_SCIENCE_SUBJECTS;
+    } else if (className === 'SS2B' || className === 'SS3B') {
+      required = SS_ART_SUBJECTS;
+    }
+
+    const existingMap = new Map<string, SubjectGrade>();
+    (subjects || []).forEach(s => {
+      existingMap.set(s.name.toLowerCase().trim(), s);
+    });
+
+    const getExisting = (aliases: string[]): SubjectGrade | undefined => {
+      for (const alias of aliases) {
+        const found = existingMap.get(alias.toLowerCase().trim());
+        if (found) return found;
+      }
+      return undefined;
+    };
+
+    return required.map((name, index) => {
+      let matched: SubjectGrade | undefined = undefined;
+      if (name === "Mathematics") matched = getExisting(["mathematics", "maths"]);
+      else if (name === "Further Mathematics") matched = getExisting(["further mathematics", "further maths", "further mathematics/mathematics"]);
+      else if (name === "English Studies") matched = getExisting(["english studies", "english language", "english"]);
+      else if (name === "Literature In English" || name === "Literature in English") matched = getExisting(["literature in english", "literature", "lit in eng", "lit in english"]);
+      else if (name === "Biology") matched = getExisting(["biology"]);
+      else if (name === "Physics") matched = getExisting(["physics"]);
+      else if (name === "Chemistry") matched = getExisting(["chemistry"]);
+      else if (name === "Geography") matched = getExisting(["geography"]);
+      else if (name === "Agriculture Science" || name === "Agricultural Science") matched = getExisting(["agriculture science", "agricultural science", "agriculture", "agric"]);
+      else if (name === "Christian religious studies" || name === "C.R.S." || name === "C.R.S") matched = getExisting(["christian religious studies", "christian religious knowledge", "c.r.s", "crs", "crk", "religion value", "c.r.s."]);
+      else if (name === "Commerce") matched = getExisting(["commerce"]);
+      else if (name === "Marketing") matched = getExisting(["marketing"]);
+      else if (name === "Civic Education") matched = getExisting(["civic education", "civic"]);
+      else if (name === "Economics") matched = getExisting(["economics"]);
+      else if (name === "Government") matched = getExisting(["government", "govt"]);
+      else if (name === "Speech Development") matched = getExisting(["speech development", "speech"]);
+      else if (name === "Financial Accounting") matched = getExisting(["financial accounting", "accounting", "accounts"]);
+      else if (name === "Data Processing") matched = getExisting(["data processing", "computer science", "computer studies", "ict", "information technology"]);
+
+      if (!matched) {
+        matched = existingMap.get(name.toLowerCase().trim()) || subjects[index];
+      }
+
+      let finalId = `${name.toLowerCase().replace(/\s+/g, '_')}_${index}`;
+      if (matched && matched.id && !usedIds.has(matched.id)) {
+        finalId = matched.id;
+      }
+      usedIds.add(finalId);
+
+      if (matched) {
+        return {
+          id: finalId,
+          name: name,
+          testScore: matched.testScore,
+          examScore: matched.examScore,
+          firstTermSummary: matched.firstTermSummary,
+          secondTermSummary: matched.secondTermSummary,
+          thirdTermSummary: matched.thirdTermSummary,
+          position: matched.position,
+          isPositionManual: matched.isPositionManual
+        };
+      } else {
+        const mockMockList = [name];
+        const generated = generateRandomGrades(mockMockList, activeTerm, sIdx);
+        return {
+          ...generated[0],
+          id: finalId,
+          name: name
+        };
+      }
+    });
+  }
+  
+  return subjects;
 }
 
 const FIRST_NAMES = ["Tobi", "Chinedu", "Amina", "Divine", "Emeka", "Zainab", "Olumide", "Favor", "Bassey", "Somtochukwu", "Eseoghene", "Fatima", "Chibuike", "Tega", "Kelechi", "Olamide", "Ejiro", "Blessing", "Samuel", "Tunde", "Uche", "Nkechi", "Seyi", "Funke", "Chidi", "Yinka", "Ifeoma", "Yusuf", "Ozo", "Efe"];
@@ -537,10 +915,18 @@ export function generateUnique6DigitPassword(studentName: string, baseIdOrName: 
 
 export function getDefaultSubjectsForClass(className: ClassName, term?: string, studentIdx?: number): SubjectGrade[] {
   let subjectsList = JSS_SUBJECTS;
-  if (className === 'Pre-Nursery' || className.startsWith('Nursery')) {
+  if (className === 'Pre-Nursery') {
+    subjectsList = PRE_NURSERY_SUBJECTS;
+  } else if (className.startsWith('Nursery')) {
     subjectsList = NURSERY_SUBJECTS;
   } else if (className.startsWith('Basic')) {
     subjectsList = PRIMARY_SUBJECTS;
+  } else if (className === 'SS1') {
+    subjectsList = SS1_SUBJECTS;
+  } else if (className === 'SS2A' || className === 'SS3A') {
+    subjectsList = SS_SCIENCE_SUBJECTS;
+  } else if (className === 'SS2B' || className === 'SS3B') {
+    subjectsList = SS_ART_SUBJECTS;
   } else if (className.startsWith('SS')) {
     subjectsList = SS_SUBJECTS;
   }
@@ -723,10 +1109,11 @@ export function loadStoredStudents(term?: string): Student[] {
           }
           return {
             ...std,
-            subjects,
+            subjects: adjustSubjectsIfRequired(subjects, std.className, activeTerm, idx),
             behaviour: adjustBehaviourIfRequired(std.behaviour, std.className)
           };
         });
+        saveStudents(migrated, activeTerm);
         return migrated;
       }
     }
@@ -742,7 +1129,7 @@ export function loadStoredStudents(term?: string): Student[] {
           }
           return {
             ...std,
-            subjects,
+            subjects: adjustSubjectsIfRequired(subjects, std.className, activeTerm, idx),
             behaviour: adjustBehaviourIfRequired(std.behaviour, std.className)
           };
         });

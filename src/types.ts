@@ -79,6 +79,7 @@ export interface Workspace15Template {
   distinctionThreshold: number;  // 14
   passThreshold: number;         // 15
   portalLocked?: boolean;        // 16: Lock status for students
+  totalAttendance?: number;      // 17: Total attendance days for the term
   schoolFee: string;             // Itemized 1
   partyFee: string;              // Itemized 2
   enrollmentFee: string;         // Itemized 3

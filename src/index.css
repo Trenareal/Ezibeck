@@ -739,3 +739,18 @@
   line-height: 1.2 !important;
 }
 
+/* Custom school motto font size (increased by 30%) */
+.school-motto-text {
+  font-size: 10.4px !important;
+}
+@media (min-width: 640px) {
+  .school-motto-text {
+    font-size: 15px !important;
+  }
+}
+
+/* For HTML-to-PDF / printable sheets, we target .pdf-force-light .school-motto-text */
+.pdf-force-light .school-motto-text {
+  font-size: 7.8pt !important;
+}
+

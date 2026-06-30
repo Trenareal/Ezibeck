@@ -35,6 +35,7 @@ const DEFAULT_WORKSPACE_15: Workspace15Template = {
   nextTermFee: "₦100,000.00|₦15,000.00|₦15,000.00|₦20,000.00;₦100,000.00|₦15,000.00|₦15,000.00|₦20,000.00;₦100,000.00|₦15,000.00|₦15,000.00|₦20,000.00;₦100,000.00|₦15,000.00|₦15,000.00|₦20,000.00",
   distinctionThreshold: 90,
   passThreshold: 50,
+  totalAttendance: 110,
   schoolFee: "₦100,000.00",
   partyFee: "₦15,000.00",
   enrollmentFee: "₦15,000.00",

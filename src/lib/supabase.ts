@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { Student, Workspace15Template, ClassName, FacultyProfile } from '../types';
-import { compareSubjects, getDefaultSubjectsForClass, adjustBehaviourIfRequired } from '../utils/academicUtils';
+import { compareSubjects, getDefaultSubjectsForClass, adjustBehaviourIfRequired, adjustSubjectsIfRequired } from '../utils/academicUtils';
 import { safeStorage } from '../utils/safeStorage';
 
 const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
@@ -48,19 +48,23 @@ export const mapDbStudentToFrontend = (dbStudent: any): Student => {
     resumptionDate: dbStudent.resumption_date,
     password: dbStudent.password,
     principalRemark: dbStudent.principal_remark || '',
-    subjects: (dbStudent.subjects && dbStudent.subjects.length > 0)
-      ? dbStudent.subjects.map((sub: any) => ({
-          id: sub.id,
-          name: sub.name,
-          testScore: sub.test_score,
-          examScore: sub.exam_score,
-          firstTermSummary: sub.first_term_summary,
-          secondTermSummary: sub.second_term_summary,
-          thirdTermSummary: sub.third_term_summary,
-          position: sub.position,
-          isPositionManual: sub.is_position_manual
-        })).sort((a: any, b: any) => compareSubjects(a.name, b.name))
-      : getDefaultSubjectsForClass(dbStudent.class_name as ClassName, dbStudent.term || 'Third Term'),
+    subjects: adjustSubjectsIfRequired(
+      (dbStudent.subjects && dbStudent.subjects.length > 0)
+        ? dbStudent.subjects.map((sub: any) => ({
+            id: sub.id,
+            name: sub.name,
+            testScore: sub.test_score,
+            examScore: sub.exam_score,
+            firstTermSummary: sub.first_term_summary,
+            secondTermSummary: sub.second_term_summary,
+            thirdTermSummary: sub.third_term_summary,
+            position: sub.position,
+            isPositionManual: sub.is_position_manual
+          })).sort((a: any, b: any) => compareSubjects(a.name, b.name))
+        : getDefaultSubjectsForClass(dbStudent.class_name as ClassName, dbStudent.term || 'Third Term'),
+      dbStudent.class_name as ClassName,
+      dbStudent.term || 'Third Term'
+    ),
     behaviour: adjustBehaviourIfRequired(
       (dbStudent.behaviour || []).map((b: any) => ({
         name: b.name,
@@ -74,7 +78,13 @@ export const mapDbStudentToFrontend = (dbStudent: any): Student => {
 export const mapDbConfigToTemplate = (cfg: any): Workspace15Template => {
   const mottoRaw = cfg.motto || '';
   const isLocked = mottoRaw.includes('|LOCKED') || !!cfg.portal_locked;
-  const cleanMotto = mottoRaw.split('|LOCKED')[0];
+  const cleanMotto = mottoRaw.split('|LOCKED')[0].split('|ATTENDANCE:')[0];
+  
+  let totalAttendance = 110;
+  if (mottoRaw.includes('|ATTENDANCE:')) {
+    const part = mottoRaw.split('|ATTENDANCE:')[1];
+    totalAttendance = parseInt(part) || 110;
+  }
   
   const rawFee = cfg.next_term_fee || '';
   const sections = rawFee.includes(';') ? rawFee.split(';') : [];
@@ -119,6 +129,7 @@ export const mapDbConfigToTemplate = (cfg: any): Workspace15Template => {
     distinctionThreshold: cfg.distinction_threshold,
     passThreshold: cfg.pass_threshold,
     portalLocked: isLocked,
+    totalAttendance: totalAttendance,
     schoolFee: nurseryParts[0] || '₦0.00',
     partyFee: nurseryParts[1] || '₦0.00',
     enrollmentFee: nurseryParts[2] || '₦0.00',
@@ -151,8 +162,14 @@ export const mapDbConfigToTemplate = (cfg: any): Workspace15Template => {
 };
 
 export const mapTemplateToDbConfig = (tpl: Workspace15Template) => {
-  const cleanMotto = tpl.motto ? tpl.motto.split('|LOCKED')[0] : '';
-  const mottoToStore = tpl.portalLocked ? `${cleanMotto}|LOCKED` : cleanMotto;
+  const cleanMotto = tpl.motto ? tpl.motto.split('|LOCKED')[0].split('|ATTENDANCE:')[0] : '';
+  let mottoToStore = cleanMotto;
+  if (tpl.portalLocked) {
+    mottoToStore += '|LOCKED';
+  }
+  if (tpl.totalAttendance !== undefined) {
+    mottoToStore += `|ATTENDANCE:${tpl.totalAttendance}`;
+  }
   
   const nurseryFee = `${tpl.schoolFeeNursery || tpl.schoolFee || ''}|${tpl.partyFeeNursery || tpl.partyFee || ''}|${tpl.enrollmentFeeNursery || tpl.enrollmentFee || ''}|${tpl.bookFeeNursery || tpl.bookFee || ''}`;
   const primaryFee = `${tpl.schoolFeePrimary || tpl.schoolFee || ''}|${tpl.partyFeePrimary || tpl.partyFee || ''}|${tpl.enrollmentFeePrimary || tpl.enrollmentFee || ''}|${tpl.bookFeePrimary || tpl.bookFee || ''}`;
