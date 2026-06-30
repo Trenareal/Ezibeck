@@ -689,3 +689,53 @@
 .school-title-text {
   font-size: 1.4em !important;
 }
+
+/* Secondary grading and conduct scale styling for printable layouts */
+.report-card-printable .secondary-grading-scale-card,
+.report-card-printable .secondary-conduct-scale-card {
+  padding: 5px 6px !important;
+  flex: none !important;
+  height: auto !important;
+}
+.report-card-printable .secondary-grading-scale-card h4,
+.report-card-printable .secondary-conduct-scale-card h4 {
+  font-size: 7.5pt !important;
+  margin-bottom: 2px !important;
+  padding-bottom: 1px !important;
+}
+.report-card-printable .secondary-grading-scale-card td {
+  font-size: 6.8pt !important;
+  line-height: 1.2 !important;
+}
+.report-card-printable .secondary-conduct-scale-card div,
+.report-card-printable .secondary-conduct-scale-card span {
+  font-size: 6.2pt !important;
+  line-height: 1.2 !important;
+}
+
+/* PDF generation force styles for secondary cards */
+.pdf-force-light .secondary-grading-scale-card,
+.pdf-force-light .secondary-conduct-scale-card {
+  padding: 6px 7px !important;
+  flex: none !important;
+  height: auto !important;
+}
+.pdf-force-light .secondary-grading-scale-card h4,
+.pdf-force-light .secondary-conduct-scale-card h4 {
+  font-size: 8pt !important;
+  margin-bottom: 3px !important;
+}
+.pdf-force-light .secondary-grading-scale-card td {
+  font-size: 7pt !important;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+  padding-left: 3px !important;
+  padding-right: 3px !important;
+  line-height: 1.2 !important;
+}
+.pdf-force-light .secondary-conduct-scale-card div,
+.pdf-force-light .secondary-conduct-scale-card span {
+  font-size: 6.5pt !important;
+  line-height: 1.2 !important;
+}
+

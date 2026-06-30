@@ -909,99 +909,233 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
       </div>
 
       {/* Ratings & Grade Scale Row */}
-      <div className="grid grid-cols-12 gap-3 relative z-10 pt-2 border-t border-dashed border-slate-200">
-        {/* Column 1: Character & Behavioral Conduct Ratings (takes 8/12 width) */}
-        <div className="col-span-8 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between character-skills-ratings-box">
-          <div>
-            <h4 className="font-extrabold text-slate-900 text-[10.5px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
-              <span>🌟</span> Character & Skills Ratings
-            </h4>
-            <div className="space-y-0 text-[12px] text-slate-800">
-              {(() => {
-                const isKgClass = student.className === 'Pre-Nursery' || student.className.startsWith('Nursery');
-                if (isKgClass) {
-                  const behaviouralList = student.behaviour.filter(b => 
-                    ["Punctuality", "Neatness", "Assignment", "Concentration"].includes(b.name)
-                  );
-                  const skillList = student.behaviour.filter(b => 
-                    ["Hand-writing", "Fluency", "Attitude to Property"].includes(b.name)
-                  );
-                  return (
-                    <div className="grid grid-cols-2 gap-x-4">
-                      <div className="space-y-0">
-                        <h5 className="font-bold text-[8.5px] text-slate-400 uppercase tracking-wider pb-0.2 border-b border-slate-100">Behavioral</h5>
-                        {behaviouralList.map(b => (
-                          <div key={b.name} className="flex items-center justify-between py-0.2 border-b border-dashed border-slate-100">
-                            <span className="font-semibold text-slate-600 truncate max-w-[100px]">{b.name}</span>
-                            <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1 rounded">{b.rating}/5</span>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="space-y-0">
-                        <h5 className="font-bold text-[8.5px] text-slate-400 uppercase tracking-wider pb-0.2 border-b border-slate-100">Skills</h5>
-                        {skillList.map(b => (
-                          <div key={b.name} className="flex items-center justify-between py-0.2 border-b border-dashed border-slate-100">
-                            <span className="font-semibold text-slate-600 truncate max-w-[100px]">{b.name}</span>
-                            <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1 rounded">{b.rating}/5</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                } else {
-                  return (
-                    <div className="grid grid-cols-2 gap-x-4">
-                      {student.behaviour.map(b => (
-                        <div key={b.name} className="flex items-center justify-between py-0.2 border-b border-dashed border-slate-100">
-                          <span className="font-semibold text-slate-600 truncate max-w-[110px]">{b.name}</span>
-                          <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1 rounded">{b.rating}/5</span>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                }
-              })()}
+      {isSecondaryClass ? (
+        <div className="grid grid-cols-12 gap-3 relative z-10 pt-2 border-t border-dashed border-slate-200">
+          {/* Column 1: Character & Behavioral Conduct Ratings (takes 3/12 width) */}
+          <div className="col-span-3 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between character-skills-ratings-box">
+            <div>
+              <h4 className="font-extrabold text-slate-900 text-[9.5px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1 leading-none">
+                <span>🌟</span> Character & Skills
+              </h4>
+              <div className="space-y-0.5 text-[11px] text-slate-800">
+                {student.behaviour.slice(0, Math.ceil(student.behaviour.length / 2)).map(b => (
+                  <div key={b.name} className="flex items-center justify-between py-0.5 border-b border-dashed border-slate-100">
+                    <span className="font-semibold text-slate-600 truncate max-w-[100px]">{b.name}</span>
+                    <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1 rounded text-[10px]">{b.rating}/5</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Column 2: Next Term Fee Summary (takes 4/12 width, beautifully styled) */}
-        <div className="col-span-4 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2.5 shadow-3xs flex flex-col justify-between next-term-fee-box">
-          <div>
-            <h4 className="font-extrabold text-slate-900 text-[10.5px] uppercase tracking-wider mb-2 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
-              <span>💰</span> Next Term Fee Summary
-            </h4>
-            <div className="space-y-1.5 text-[11px] text-slate-700">
-              <div className="flex justify-between items-center py-0.5 border-b border-dashed border-slate-100">
-                <span className="text-slate-400 font-semibold select-none">School Fees:</span>
-                <span className="font-extrabold text-slate-800">{sFee}</span>
-              </div>
-              <div className="flex justify-between items-center py-0.5 border-b border-dashed border-slate-100">
-                <span className="text-slate-400 font-semibold select-none">Party Fee:</span>
-                <span className="font-extrabold text-slate-800">{pFee}</span>
-              </div>
-              <div className="flex justify-between items-center py-0.5 border-b border-dashed border-slate-100">
-                <span className="text-slate-400 font-semibold select-none">Enrollment:</span>
-                <span className="font-extrabold text-slate-800">{eFee}</span>
-              </div>
-              <div className="flex justify-between items-center py-0.5 border-b border-dashed border-slate-100">
-                <span className="text-slate-400 font-semibold select-none">Book Fees:</span>
-                <span className="font-extrabold text-slate-800">{bFee}</span>
+          {/* Column 2: Grading Scale (takes 3/12 width) */}
+          <div className="col-span-3 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between secondary-grading-scale-card">
+            <div>
+              <h4 className="font-extrabold text-slate-900 uppercase tracking-wider select-none border-b border-slate-200/50 flex items-center gap-1 leading-none text-[9.5px] mb-1 pb-0.5">
+                <span>📋</span> Grading Scale
+              </h4>
+              <div className="border border-slate-150 rounded-lg overflow-hidden shadow-3xs">
+                <table className="w-full text-left border-collapse text-slate-600 text-[9px] leading-tight">
+                  <tbody className="divide-slate-100 font-semibold divide-y">
+                    <tr>
+                      <td className="font-black text-emerald-700 bg-emerald-50 px-1 py-0.5 w-6 text-center">A+</td>
+                      <td className="font-black text-slate-500 px-1 py-0.5">Distinction</td>
+                      <td className="text-right font-mono px-1 py-0.5 text-[8px]">90-100</td>
+                    </tr>
+                    <tr>
+                      <td className="font-black text-green-700 bg-green-50 px-1 py-0.5 w-6 text-center">A</td>
+                      <td className="font-black text-slate-500 px-1 py-0.5">Excellent</td>
+                      <td className="text-right font-mono px-1 py-0.5 text-[8px]">80-89</td>
+                    </tr>
+                    <tr>
+                      <td className="font-black text-sky-700 bg-sky-50 px-1 py-0.5 w-6 text-center">B</td>
+                      <td className="font-black text-slate-500 px-1 py-0.5">Very Good</td>
+                      <td className="text-right font-mono px-1 py-0.5 text-[8px]">70-79</td>
+                    </tr>
+                    <tr>
+                      <td className="font-black text-amber-700 bg-amber-50 px-1 py-0.5 w-6 text-center">C</td>
+                      <td className="font-black text-slate-500 px-1 py-0.5">Good</td>
+                      <td className="text-right font-mono px-1 py-0.5 text-[8px]">60-69</td>
+                    </tr>
+                    <tr>
+                      <td className="font-black text-orange-600 bg-orange-50 px-1 py-0.5 w-6 text-center">D</td>
+                      <td className="font-black text-slate-500 px-1 py-0.5">Fair</td>
+                      <td className="text-right font-mono px-1 py-0.5 text-[8px]">50-59</td>
+                    </tr>
+                    <tr>
+                      <td className="font-black text-red-500 bg-red-50 px-1 py-0.5 w-6 text-center">F</td>
+                      <td className="font-black text-slate-500 px-1 py-0.5">Fail</td>
+                      <td className="text-right font-mono px-1 py-0.5 text-[8px]">&lt; 50</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
-          <div className="space-y-1.5 mt-2 pt-1.5 border-t border-dashed border-emerald-300">
-            <div className="flex justify-between items-center text-[11.5px]">
-              <span className="font-black text-emerald-800">Total Invoice:</span>
-              <span className="font-black text-emerald-800 font-mono text-[12px]">{totalFormatted}</span>
+
+          {/* Column 3: Conduct Scale (takes 3/12 width) */}
+          <div className="col-span-3 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between secondary-conduct-scale-card">
+            <div>
+              <h4 className="font-extrabold text-slate-900 text-[9.5px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1 leading-none">
+                <span>🌟</span> Conduct Scale
+              </h4>
+              <div className="space-y-0.5 text-slate-600 font-semibold text-[7.5px] leading-tight">
+                <div className="flex items-start gap-1">
+                  <span className="w-2.5 h-2.5 shrink-0 rounded bg-emerald-50 text-emerald-700 text-[7px] flex items-center justify-center font-mono font-black mt-0.5">5</span>
+                  <span>Excellent degree of trait</span>
+                </div>
+                <div className="flex items-start gap-1">
+                  <span className="w-2.5 h-2.5 shrink-0 rounded bg-green-50 text-green-700 text-[7px] flex items-center justify-center font-mono font-black mt-0.5">4</span>
+                  <span>High level of trait</span>
+                </div>
+                <div className="flex items-start gap-1">
+                  <span className="w-2.5 h-2.5 shrink-0 rounded bg-sky-50 text-sky-700 text-[7px] flex items-center justify-center font-mono font-black mt-0.5">3</span>
+                  <span>Acceptable level of trait</span>
+                </div>
+                <div className="flex items-start gap-1">
+                  <span className="w-2.5 h-2.5 shrink-0 rounded bg-amber-50 text-amber-650 text-[7px] flex items-center justify-center font-mono font-black mt-0.5">2</span>
+                  <span>Minimal regard for trait</span>
+                </div>
+                <div className="flex items-start gap-1">
+                  <span className="w-2.5 h-2.5 shrink-0 rounded bg-slate-50 text-slate-500 text-[7px] flex items-center justify-center font-mono font-black mt-0.5">1</span>
+                  <span>No regard for trait</span>
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between items-center text-[10.5px] text-slate-550 leading-none">
-              <span className="font-semibold">Resumption:</span>
-              <span className="font-extrabold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{template.resumptionDate}</span>
+          </div>
+
+          {/* Column 4: Next Term Fee Summary (takes 3/12 width) */}
+          <div className="col-span-3 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between next-term-fee-box">
+            <div>
+              <h4 className="font-extrabold text-slate-900 text-[9.5px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1 leading-none">
+                <span>💰</span> Next Term Fee Summary
+              </h4>
+              <div className="space-y-1 text-[10px] text-slate-700">
+                <div className="flex justify-between items-center py-0.2 border-b border-dashed border-slate-100">
+                  <span className="text-slate-450 font-semibold select-none">School Fees:</span>
+                  <span className="font-extrabold text-slate-800">{sFee}</span>
+                </div>
+                <div className="flex justify-between items-center py-0.2 border-b border-dashed border-slate-100">
+                  <span className="text-slate-455 font-semibold select-none">Party Fee:</span>
+                  <span className="font-extrabold text-slate-800">{pFee}</span>
+                </div>
+                <div className="flex justify-between items-center py-0.2 border-b border-dashed border-slate-100">
+                  <span className="text-slate-455 font-semibold select-none">Enrollment:</span>
+                  <span className="font-extrabold text-slate-800">{eFee}</span>
+                </div>
+                <div className="flex justify-between items-center py-0.2 border-b border-dashed border-slate-100">
+                  <span className="text-slate-455 font-semibold select-none">Book Fees:</span>
+                  <span className="font-extrabold text-slate-800">{bFee}</span>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-1 mt-1 pt-1 border-t border-dashed border-emerald-300">
+              <div className="flex justify-between items-center text-[10px]">
+                <span className="font-black text-emerald-800">Total Invoice:</span>
+                <span className="font-black text-emerald-800 font-mono text-[10.5px]">{totalFormatted}</span>
+              </div>
+              <div className="flex justify-between items-center text-[8.5px] text-slate-550 leading-none">
+                <span className="font-semibold">Resumption:</span>
+                <span className="font-extrabold text-slate-700 bg-slate-100 px-1 py-0.2 rounded">{template.resumptionDate}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-12 gap-3 relative z-10 pt-2 border-t border-dashed border-slate-200">
+          {/* Column 1: Character & Behavioral Conduct Ratings (takes 8/12 width) */}
+          <div className="col-span-8 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2 shadow-3xs flex flex-col justify-between character-skills-ratings-box">
+            <div>
+              <h4 className="font-extrabold text-slate-900 text-[10.5px] uppercase tracking-wider mb-1 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
+                <span>🌟</span> Character & Skills Ratings
+              </h4>
+              <div className="space-y-0 text-[12px] text-slate-800">
+                {(() => {
+                  const isKgClass = student.className === 'Pre-Nursery' || student.className.startsWith('Nursery');
+                  if (isKgClass) {
+                    const behaviouralList = student.behaviour.filter(b => 
+                      ["Punctuality", "Neatness", "Assignment", "Concentration"].includes(b.name)
+                    );
+                    const skillList = student.behaviour.filter(b => 
+                      ["Hand-writing", "Fluency", "Attitude to Property"].includes(b.name)
+                    );
+                    return (
+                      <div className="grid grid-cols-2 gap-x-4">
+                        <div className="space-y-0">
+                          <h5 className="font-bold text-[8.5px] text-slate-400 uppercase tracking-wider pb-0.2 border-b border-slate-100">Behavioral</h5>
+                          {behaviouralList.map(b => (
+                            <div key={b.name} className="flex items-center justify-between py-0.2 border-b border-dashed border-slate-100">
+                              <span className="font-semibold text-slate-600 truncate max-w-[100px]">{b.name}</span>
+                              <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1 rounded">{b.rating}/5</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="space-y-0">
+                          <h5 className="font-bold text-[8.5px] text-slate-400 uppercase tracking-wider pb-0.2 border-b border-slate-100">Skills</h5>
+                          {skillList.map(b => (
+                            <div key={b.name} className="flex items-center justify-between py-0.2 border-b border-dashed border-slate-100">
+                              <span className="font-semibold text-slate-600 truncate max-w-[100px]">{b.name}</span>
+                              <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1 rounded">{b.rating}/5</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div className="grid grid-cols-2 gap-x-4">
+                        {student.behaviour.map(b => (
+                          <div key={b.name} className="flex items-center justify-between py-0.2 border-b border-dashed border-slate-100">
+                            <span className="font-semibold text-slate-600 truncate max-w-[110px]">{b.name}</span>
+                            <span className="font-mono font-black text-emerald-700 bg-emerald-50 px-1 rounded">{b.rating}/5</span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }
+                })()}
+              </div>
+            </div>
+          </div>
+
+          {/* Column 2: Next Term Fee Summary (takes 4/12 width, beautifully styled) */}
+          <div className="col-span-4 bg-[#FCFCFC]/60 border border-slate-200 rounded-xl p-2.5 shadow-3xs flex flex-col justify-between next-term-fee-box">
+            <div>
+              <h4 className="font-extrabold text-slate-900 text-[10.5px] uppercase tracking-wider mb-2 select-none border-b border-slate-200/50 pb-0.5 flex items-center gap-1">
+                <span>💰</span> Next Term Fee Summary
+              </h4>
+              <div className="space-y-1.5 text-[11px] text-slate-700">
+                <div className="flex justify-between items-center py-0.5 border-b border-dashed border-slate-100">
+                  <span className="text-slate-400 font-semibold select-none">School Fees:</span>
+                  <span className="font-extrabold text-slate-800">{sFee}</span>
+                </div>
+                <div className="flex justify-between items-center py-0.5 border-b border-dashed border-slate-100">
+                  <span className="text-slate-400 font-semibold select-none">Party Fee:</span>
+                  <span className="font-extrabold text-slate-800">{pFee}</span>
+                </div>
+                <div className="flex justify-between items-center py-0.5 border-b border-dashed border-slate-100">
+                  <span className="text-slate-400 font-semibold select-none">Enrollment:</span>
+                  <span className="font-extrabold text-slate-800">{eFee}</span>
+                </div>
+                <div className="flex justify-between items-center py-0.5 border-b border-dashed border-slate-100">
+                  <span className="text-slate-400 font-semibold select-none">Book Fees:</span>
+                  <span className="font-extrabold text-slate-800">{bFee}</span>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-1.5 mt-2 pt-1.5 border-t border-dashed border-emerald-300">
+              <div className="flex justify-between items-center text-[11.5px]">
+                <span className="font-black text-emerald-800">Total Invoice:</span>
+                <span className="font-black text-emerald-800 font-mono text-[12px]">{totalFormatted}</span>
+              </div>
+              <div className="flex justify-between items-center text-[10.5px] text-slate-550 leading-none">
+                <span className="font-semibold">Resumption:</span>
+                <span className="font-extrabold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{template.resumptionDate}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Appraisals, Signatures & Stamps (Guaranteed 1 row using grid-cols-2) */}
       <div className="bg-[#FAF9F9] border border-slate-200 rounded-xl p-2 shadow-3xs text-[12px] print:text-[12px] text-slate-800 space-y-2 relative z-10">
