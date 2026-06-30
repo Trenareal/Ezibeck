@@ -32,7 +32,7 @@ export const SS1_SUBJECTS = [
   "Physics",
   "Chemistry",
   "Geography",
-  "Agriculture Science",
+  "Agricultural Science",
   "Christian religious studies",
   "Commerce",
   "Marketing",
