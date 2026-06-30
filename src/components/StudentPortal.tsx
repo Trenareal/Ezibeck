@@ -11,7 +11,7 @@ import { Student, ClassName, Workspace15Template, DbStatus, AuditLogEntry, ALL_C
 import { SCHOOL_INFO, calculateStudentStats, getLetterAndRemark, calculateSubjectTotal, BEHAVIOUR_TRAITS, generateUnique6DigitPassword, getStudentPasscodesFromOtherTerms, loadStoredStudents, saveStudents, isStudentInTerm, calculateClassPositions, formatOrdinal } from '../utils/academicUtils';
 import { logPasscodeEvent } from '../utils/auditLogger';
 import { isSupabaseConfigured, dbService, mapDbStudentToFrontend } from '../lib/supabase';
-import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
+import schoolBadge from '../assets/images/ezibeck_school_badge_final_1782825690492.jpg';
 import { ReportCardWatermark } from './ReportCardWatermark';
 import { ReportCardPrintable } from './ReportCardPrintable';
 import GuidelinesComponent from './GuidelinesComponent';

@@ -10,7 +10,7 @@ import {
   Info, Search, Image as ImageIcon, Eye, X, CheckSquare, Square, RefreshCw, Sparkles
 } from 'lucide-react';
 import { Workspace15Template } from '../types';
-import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
+import schoolBadge from '../assets/images/ezibeck_school_badge_final_1782825690492.jpg';
 import GuidelinesComponent from './GuidelinesComponent';
 import { dbService } from '../lib/supabase';
 import { safeStorage } from '../utils/safeStorage';

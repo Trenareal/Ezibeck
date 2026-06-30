@@ -12,7 +12,7 @@ import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template,
 import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, NURSERY_SUBJECTS, PRE_NURSERY_SUBJECTS, PRIMARY_SUBJECTS, JSS_SUBJECTS, SS1_SUBJECTS, SS_SCIENCE_SUBJECTS, SS_ART_SUBJECTS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal, generateUnique6DigitPassword, getDeterministicPasscode, getStudentPasscodesFromOtherTerms, adjustBehaviourIfRequired } from '../utils/academicUtils';
 import { logPasscodeEvent, getAuditLogs, clearAuditLogs } from '../utils/auditLogger';
 import { dbService, mapDbFacultyToFrontend, mapDbStudentToFrontend } from '../lib/supabase';
-import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
+import schoolBadge from '../assets/images/ezibeck_school_badge_final_1782825690492.jpg';
 import { ReportCardWatermark, ScratchCardWatermark } from './ReportCardWatermark';
 import { ReportCardPrintable } from './ReportCardPrintable';
 import GuidelinesComponent from './GuidelinesComponent';

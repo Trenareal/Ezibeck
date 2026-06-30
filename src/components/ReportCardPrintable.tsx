@@ -13,7 +13,7 @@ import {
   formatOrdinal 
 } from '../utils/academicUtils';
 import { ReportCardWatermark } from './ReportCardWatermark';
-import schoolBadge from '../assets/images/school_badge_1781423327113.jpg';
+import schoolBadge from '../assets/images/ezibeck_school_badge_final_1782825690492.jpg';
 import { safeStorage } from '../utils/safeStorage';
 
 interface ReportCardPrintableProps {
