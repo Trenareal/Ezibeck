@@ -23,7 +23,7 @@ import {
 const DEFAULT_WORKSPACE_15: Workspace15Template = {
   schoolName: "Ezibeck Academy",
   motto: "Knowledge is Power",
-  address: "No.5 Ezibeck Crescent, Behind Udu Motor Park, Ovwian, Delta State",
+  address: "No. 5 Ezibeck Crescent, Behind Udu Motor pack, Ovwian, Delta state",
   phone: "+234070",
   email: "admissions@ezibeckcollege.edu",
   resumptionDate: "September 14, 2026",
