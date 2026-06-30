@@ -10,6 +10,7 @@ import TeacherDashboard from './components/TeacherDashboard';
 import { Student, Workspace15Template, DbStatus } from './types';
 import { loadStoredStudents, saveStudents, getInitialStudents, isStudentInTerm } from './utils/academicUtils';
 import { safeStorage } from './utils/safeStorage';
+import { syncService } from './lib/syncService';
 import { 
   isSupabaseConfigured, 
   dbService, 
@@ -136,6 +137,18 @@ export default function App() {
     window.addEventListener('popstate', handlePopState);
     return () => {
       window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      console.log('App is online, syncing...');
+      syncService.processQueue();
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
     };
   }, []);
 

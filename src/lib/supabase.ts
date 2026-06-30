@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Student, Workspace15Template, ClassName, FacultyProfile } from '../types';
 import { compareSubjects, getDefaultSubjectsForClass, adjustBehaviourIfRequired, adjustSubjectsIfRequired } from '../utils/academicUtils';
 import { safeStorage } from '../utils/safeStorage';
+import { syncService } from './syncService';
 
 const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
 const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
@@ -366,82 +367,88 @@ export const dbService = {
   },
 
   async saveStudent(student: any) {
-    const { subjects, behaviour, ...studentData } = student;
-    const fallbackId = `EZB-STUDENT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const targetId = studentData.id || fallbackId;
+    try {
+      const { subjects, behaviour, ...studentData } = student;
+      const fallbackId = `EZB-STUDENT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const targetId = studentData.id || fallbackId;
 
-    // 1. Upsert student basic details with strict type safety matching PostgreSQL column types
-    const { data: savedStudent, error: studentError } = await supabase
-      .from('students')
-      .upsert({
-        id: targetId,
-        name: studentData.name,
-        age: Math.max(1, Math.round(Number(studentData.age) || 15)),
-        sex: studentData.sex === 'Female' ? 'Female' : 'Male',
-        class_name: studentData.className || 'JSS1',
-        term_date: studentData.termDate || '',
-        session: studentData.session || '',
-        attendance_present: Math.max(0, Math.round(Number(studentData.attendancePresent) || 0)),
-        attendance_total: Math.max(0, Math.round(Number(studentData.attendanceTotal) || 110)),
-        form_teacher_remark: studentData.formTeacherRemark || '',
-        form_teacher_name: studentData.formTeacherName || '',
-        principal_name: studentData.principalName || '',
-        resumption_date: studentData.resumptionDate || '',
-        password: studentData.password || '123456',
-        principal_remark: studentData.principalRemark || ''
-      })
-      .select()
-      .single();
+      // 1. Upsert student basic details with strict type safety matching PostgreSQL column types
+      const { data: savedStudent, error: studentError } = await supabase
+        .from('students')
+        .upsert({
+          id: targetId,
+          name: studentData.name,
+          age: Math.max(1, Math.round(Number(studentData.age) || 15)),
+          sex: studentData.sex === 'Female' ? 'Female' : 'Male',
+          class_name: studentData.className || 'JSS1',
+          term_date: studentData.termDate || '',
+          session: studentData.session || '',
+          attendance_present: Math.max(0, Math.round(Number(studentData.attendancePresent) || 0)),
+          attendance_total: Math.max(0, Math.round(Number(studentData.attendanceTotal) || 110)),
+          form_teacher_remark: studentData.formTeacherRemark || '',
+          form_teacher_name: studentData.formTeacherName || '',
+          principal_name: studentData.principalName || '',
+          resumption_date: studentData.resumptionDate || '',
+          password: studentData.password || '123456',
+          principal_remark: studentData.principalRemark || ''
+        })
+        .select()
+        .single();
 
-    if (studentError) throw studentError;
+      if (studentError) throw studentError;
 
-    const studentId = savedStudent.id;
+      const studentId = savedStudent.id;
 
-    // 2. Clear and Upsert Subjects
-    if (subjects && subjects.length > 0) {
-      // Clear old
-      await supabase.from('subject_grades').delete().eq('student_id', studentId);
-      
-      // Insert new with strict bounds adhering to PostgreSQL check constraints (test <= 30, exam <= 70)
-      const subjectsWithRelations = subjects.map((sub: any) => ({
-        student_id: studentId,
-        name: sub.name,
-        test_score: Math.max(0, Math.min(30, Math.round(Number(sub.testScore) || 0))),
-        exam_score: Math.max(0, Math.min(70, Math.round(Number(sub.examScore) || 0))),
-        first_term_summary: Math.round(Number(sub.firstTermSummary) || 0),
-        second_term_summary: Math.round(Number(sub.secondTermSummary) || 0),
-        third_term_summary: Math.round(Number(sub.thirdTermSummary) || 0),
-        position: sub.position ? Math.max(1, Math.round(Number(sub.position))) : null,
-        is_position_manual: !!sub.isPositionManual
-      }));
+      // 2. Clear and Upsert Subjects
+      if (subjects && subjects.length > 0) {
+        // Clear old
+        await supabase.from('subject_grades').delete().eq('student_id', studentId);
+        
+        // Insert new with strict bounds adhering to PostgreSQL check constraints (test <= 30, exam <= 70)
+        const subjectsWithRelations = subjects.map((sub: any) => ({
+          student_id: studentId,
+          name: sub.name,
+          test_score: Math.max(0, Math.min(30, Math.round(Number(sub.testScore) || 0))),
+          exam_score: Math.max(0, Math.min(70, Math.round(Number(sub.examScore) || 0))),
+          first_term_summary: Math.round(Number(sub.firstTermSummary) || 0),
+          second_term_summary: Math.round(Number(sub.secondTermSummary) || 0),
+          third_term_summary: Math.round(Number(sub.thirdTermSummary) || 0),
+          position: sub.position ? Math.max(1, Math.round(Number(sub.position))) : null,
+          is_position_manual: !!sub.isPositionManual
+        }));
 
-      const { error: subError } = await supabase
-        .from('subject_grades')
-        .insert(subjectsWithRelations);
+        const { error: subError } = await supabase
+          .from('subject_grades')
+          .insert(subjectsWithRelations);
 
-      if (subError) throw subError;
+        if (subError) throw subError;
+      }
+
+      // 3. Clear and Upsert Behaviour/Traits
+      if (behaviour && behaviour.length > 0) {
+        // Clear old
+        await supabase.from('behavioural_ratings').delete().eq('student_id', studentId);
+
+        // Insert new with strict rating bounds matching check constraints (1 to 5)
+        const behaviourWithRelations = behaviour.map((b: any) => ({
+          student_id: studentId,
+          name: b.name,
+          rating: Math.max(1, Math.min(5, Math.round(Number(b.rating) || 5)))
+        }));
+
+        const { error: bError } = await supabase
+          .from('behavioural_ratings')
+          .insert(behaviourWithRelations);
+
+        if (bError) throw bError;
+      }
+
+      return savedStudent;
+    } catch (error) {
+      console.error('[dbService] saveStudent failed, queueing:', error);
+      await syncService.enqueue({ table: 'students', action: 'upsert', data: student });
+      throw error;
     }
-
-    // 3. Clear and Upsert Behaviour/Traits
-    if (behaviour && behaviour.length > 0) {
-      // Clear old
-      await supabase.from('behavioural_ratings').delete().eq('student_id', studentId);
-
-      // Insert new with strict rating bounds matching check constraints (1 to 5)
-      const behaviourWithRelations = behaviour.map((b: any) => ({
-        student_id: studentId,
-        name: b.name,
-        rating: Math.max(1, Math.min(5, Math.round(Number(b.rating) || 5)))
-      }));
-
-      const { error: bError } = await supabase
-        .from('behavioural_ratings')
-        .insert(behaviourWithRelations);
-
-      if (bError) throw bError;
-    }
-
-    return savedStudent;
   },
 
   async saveAllStudents(students: Student[]) {
