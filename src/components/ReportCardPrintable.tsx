@@ -219,7 +219,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
           } SCHOOL
         </h2>
         <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-widest">
-          {term.toUpperCase()} SESSION
+          {term.toUpperCase()} | {student.session} SESSION
         </span>
       </div>
 
