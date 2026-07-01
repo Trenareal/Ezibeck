@@ -282,10 +282,10 @@ function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
   const assignedIds = new Set<string>();
 
   for (const slot of slots) {
-    // Try matching by both exact ID and slot first
-    let match = profiles.find(f => f.id === slot.def.id && slot.check(f) && !assignedIds.has(f.id));
+    // 1. Try matching by exact ID first (since ID/username is the primary key/stable identifier)
+    let match = profiles.find(f => f.id === slot.def.id && !assignedIds.has(f.id));
     if (!match) {
-      // If not found, match by slot check to support renamed/edited IDs
+      // 2. If not found, match by slot check to support renamed/edited IDs
       match = profiles.find(f => slot.check(f) && !assignedIds.has(f.id));
     }
 
@@ -298,7 +298,7 @@ function alignFacultyProfiles(profiles: FacultyProfile[]): FacultyProfile[] {
           role: slot.def.role,
           avatar: slot.def.avatar,
           email: slot.def.email || match.email,
-          password: (match.password === 'admin123' || !match.password) ? slot.def.password : match.password
+          password: match.password || slot.def.password
         };
       }
       aligned.push(match);
@@ -1902,7 +1902,7 @@ export default function TeacherDashboard({
           });
       } else {
         dbService.saveFacultyProfile(updatedProfile).catch(err => {
-          console.error("Failed to sync faculty edit updates to Supabase:", err);
+          console.error("Failed to sync faculty edit updates to Supabase. Error:", err, "Profile:", updatedProfile);
         });
       }
     }
