@@ -276,6 +276,16 @@ BEGIN
     ) THEN
         ALTER TABLE public.behavioural_ratings ADD CONSTRAINT behavioural_ratings_rating_check CHECK (rating >= 1 AND rating <= 5);
     END IF;
+
+    -- Update summary check constraints to allow values up to 100
+    ALTER TABLE public.subject_grades DROP CONSTRAINT IF EXISTS subject_grades_first_term_summary_check;
+    ALTER TABLE public.subject_grades ADD CONSTRAINT subject_grades_first_term_summary_check CHECK (first_term_summary >= 0 AND first_term_summary <= 100);
+
+    ALTER TABLE public.subject_grades DROP CONSTRAINT IF EXISTS subject_grades_second_term_summary_check;
+    ALTER TABLE public.subject_grades ADD CONSTRAINT subject_grades_second_term_summary_check CHECK (second_term_summary >= 0 AND second_term_summary <= 100);
+
+    ALTER TABLE public.subject_grades DROP CONSTRAINT IF EXISTS subject_grades_third_term_summary_check;
+    ALTER TABLE public.subject_grades ADD CONSTRAINT subject_grades_third_term_summary_check CHECK (third_term_summary >= 0 AND third_term_summary <= 100);
 END $$;
 
 -- 7. REFRESH SCHEMA CONFIG

@@ -478,16 +478,23 @@ export default function App() {
   }, [template.currentTerm, syncTrigger]);
 
   // Update students roster and commit back to term-isolated storage + Supabase
-  const handleUpdateStudents = async (updatedList: Student[]) => {
+  const handleUpdateStudents = async (updatedList: Student[], targetTerm?: string) => {
+    const termToUse = targetTerm || template.currentTerm;
     setIsSaving(true);
     isLocalSavingRef.current = true;
     try {
       // Determine deleted students to delete them in Supabase
-      const deletedStudents = students.filter(s => !updatedList.some(ul => ul.id === s.id));
+      let originalList = students;
+      if (termToUse !== template.currentTerm) {
+        originalList = loadStoredStudents(termToUse);
+      }
+      const deletedStudents = originalList.filter(s => !updatedList.some(ul => ul.id === s.id));
 
       // Optimistically update frontend state and local storage fallback
-      setStudents(updatedList);
-      saveStudents(updatedList, template.currentTerm);
+      if (termToUse === template.currentTerm) {
+        setStudents(updatedList);
+      }
+      saveStudents(updatedList, termToUse);
 
       if (isSupabaseConfigured) {
         try {
@@ -498,7 +505,7 @@ export default function App() {
           
           // 2. Identify and upsert only the added/modified students to prevent expensive bulk wiping
           const changedStudents = updatedList.filter(ul => {
-            const original = students.find(s => s.id === ul.id);
+            const original = originalList.find(s => s.id === ul.id);
             if (!original) return true; // Brand new student
 
             // Compare scalar student attributes

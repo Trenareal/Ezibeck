@@ -170,7 +170,7 @@ interface TeacherDashboardProps {
   students: Student[];
   template: Workspace15Template;
   onBack: () => void;
-  onUpdateStudents: (updatedList: Student[]) => void;
+  onUpdateStudents: (updatedList: Student[], targetTerm?: string) => void;
   onUpdateTemplate: (newTemplate: Workspace15Template) => void;
   dbStatus?: DbStatus;
   onPushLocalToSupabase?: () => Promise<{ success: boolean; message: string }>;
@@ -382,6 +382,7 @@ export default function TeacherDashboard({
   });
 
   const [focusedInputs, setFocusedInputs] = useState<Record<string, boolean>>({});
+  const [nurseryInputs, setNurseryInputs] = useState<Record<string, string>>({});
 
   // Sync staff user session to survive browser reloads
   React.useEffect(() => {
@@ -2168,7 +2169,8 @@ export default function TeacherDashboard({
     let refreshed = [...termStudents, added];
     refreshed = calculateClassPositions(refreshed, selectedClass, activeTermTab);
     
-    onUpdateStudents(refreshed);
+    setTermStudents(refreshed);
+    onUpdateStudents(refreshed, activeTermTab);
     
     // Log passcode generation event
     logPasscodeEvent({
@@ -2194,6 +2196,7 @@ export default function TeacherDashboard({
     setEditPassword(student.password || '123456');
     setEditAttendancePresent(student.attendancePresent);
     setEditAttendanceTotal(student.attendanceTotal);
+    setNurseryInputs({});
     
     let subjectsListToEdit = [...student.subjects];
     if (activeTermTab === 'Third Term') {
@@ -2343,7 +2346,7 @@ export default function TeacherDashboard({
     value: string
   ) => {
     const numVal = parseFloat(value);
-    const cleanVal = isNaN(numVal) ? 0 : numVal;
+    const cleanVal = isNaN(numVal) ? 0 : (type === 'average' ? Math.min(100, numVal) : numVal);
 
     setEditSubjects(prev => {
       const subjectName = `__nursery_term_stats_${termName}`;
@@ -2435,7 +2438,8 @@ export default function TeacherDashboard({
     
     try {
       // Streamline: Let high-performance parent handler perform selective differential upserting to both localStorage and Supabase
-      await onUpdateStudents(refreshed);
+      setTermStudents(refreshed);
+      await onUpdateStudents(refreshed, activeTermTab);
       
       // Keep local editing view active with the newly saved values so the editor stays open and form components are fully interactive
       setEditingStudent(updatedStudent);
@@ -3996,8 +4000,19 @@ export default function TeacherDashboard({
                                           <div className="flex items-center justify-center gap-1">
                                             <input
                                               type="number"
-                                              value={statsVal.cumulative || ''}
-                                              onChange={(e) => handleNurseryOverrideChange(termName, 'cumulative', e.target.value)}
+                                              value={
+                                                nurseryInputs[`${termName}_cumulative`] !== undefined
+                                                  ? nurseryInputs[`${termName}_cumulative`]
+                                                  : (statsVal.cumulative || '')
+                                              }
+                                              onChange={(e) => {
+                                                const rawVal = e.target.value;
+                                                setNurseryInputs(prev => ({
+                                                  ...prev,
+                                                  [`${termName}_cumulative`]: rawVal
+                                                }));
+                                                handleNurseryOverrideChange(termName, 'cumulative', rawVal);
+                                              }}
                                               className="w-24 px-2 py-1 text-center font-mono border border-slate-250 rounded-lg focus:border-emerald-500 focus:outline-hidden bg-emerald-50/10 hover:bg-emerald-50/20 transition-all font-bold"
                                               placeholder="Score"
                                               min="0"
@@ -4013,8 +4028,23 @@ export default function TeacherDashboard({
                                             <input
                                               type="number"
                                               step="0.1"
-                                              value={statsVal.average ? statsVal.average.toFixed(1) : ''}
-                                              onChange={(e) => handleNurseryOverrideChange(termName, 'average', e.target.value)}
+                                              value={
+                                                nurseryInputs[`${termName}_average`] !== undefined
+                                                  ? nurseryInputs[`${termName}_average`]
+                                                  : (statsVal.average ? statsVal.average.toString() : '')
+                                              }
+                                              onChange={(e) => {
+                                                let rawVal = e.target.value;
+                                                const numVal = parseFloat(rawVal);
+                                                if (!isNaN(numVal) && numVal > 100) {
+                                                  rawVal = "100";
+                                                }
+                                                setNurseryInputs(prev => ({
+                                                  ...prev,
+                                                  [`${termName}_average`]: rawVal
+                                                }));
+                                                handleNurseryOverrideChange(termName, 'average', rawVal);
+                                              }}
                                               className="w-24 px-2 py-1 text-center font-mono border border-slate-250 rounded-lg focus:border-emerald-500 focus:outline-hidden bg-emerald-50/10 hover:bg-emerald-50/20 transition-all text-emerald-800 font-bold"
                                               placeholder="%"
                                               min="0"
@@ -5469,7 +5499,8 @@ export default function TeacherDashboard({
                         setResetConfirmState('confirming');
                       } else {
                         // Perform full reset: completely delete all student records!
-                        onUpdateStudents([]);
+                        setTermStudents([]);
+                        onUpdateStudents([], activeTermTab);
                         triggerSuccess('Successfully deleted all students across all classes for a completely fresh academic session!');
                         setResetConfirmState('idle');
                       }
@@ -6791,7 +6822,8 @@ export default function TeacherDashboard({
                   const { id, name, className, source } = deleteConfirmStudent;
                   let refreshed = termStudents.filter(s => s.id !== id);
                   refreshed = calculateClassPositions(refreshed, className, activeTermTab);
-                  onUpdateStudents(refreshed);
+                  setTermStudents(refreshed);
+                  onUpdateStudents(refreshed, activeTermTab);
                   
                   if (source === 'view') {
                     setViewingReportStudent(null);

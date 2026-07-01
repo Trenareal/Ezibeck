@@ -37,6 +37,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
   const isNursery = ['Pre-Nursery', 'Nursery1', 'Nursery2', 'Nursery3'].includes(cleanClassName);
   const isBasic = ['Basic1', 'Basic2', 'Basic3', 'Basic4', 'Basic5', 'Basic6'].includes(cleanClassName);
   const showFourColumnLayout = isSecondaryClass || isBasic;
+  const visibleSubjects = (student?.subjects || []).filter(s => s && s.name && !s.name.startsWith('__'));
 
   const getNurseryTermStats = (termName: 'First Term' | 'Second Term' | 'Third Term') => {
     let subjectsToUse: any[] = [];
@@ -746,7 +747,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
-                {student.subjects.map(subj => {
+                {visibleSubjects.map(subj => {
                   const tot = calculateSubjectTotal(subj);
                   
                   // Formulate annual / session average data realistically matching the 20/20/60 formula of Ezibeck
@@ -811,19 +812,19 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                 {/* Calculation Footer */}
                 <tr className="bg-[#FAF9F9]/90 border-t border-slate-205 text-slate-400 font-semibold select-none text-[12px] uppercase tracking-wider divide-x divide-slate-100">
                   <td className="py-1 px-2 font-semibold text-slate-500">
-                    Count: {student.subjects.length}
+                    Count: {visibleSubjects.length}
                   </td>
                   <td className="py-1 px-2 text-center font-bold">
                     Avg: {(() => {
-                      const tCount = student.subjects.length || 1;
-                      const testSum = student.subjects.reduce((sum, s) => sum + (s.testScore || 0), 0);
+                      const tCount = visibleSubjects.length || 1;
+                      const testSum = visibleSubjects.reduce((sum, s) => sum + (s.testScore || 0), 0);
                       return (testSum / tCount).toFixed(1);
                     })()}
                   </td>
                   <td className="py-1 px-2 text-center font-bold">
                     Avg: {(() => {
-                      const tCount = student.subjects.length || 1;
-                      const examSum = student.subjects.reduce((sum, s) => sum + (s.examScore || 0), 0);
+                      const tCount = visibleSubjects.length || 1;
+                      const examSum = visibleSubjects.reduce((sum, s) => sum + (s.examScore || 0), 0);
                       return (examSum / tCount).toFixed(1);
                     })()}
                   </td>
@@ -837,29 +838,29 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                     <>
                       <td className="py-1 px-1 text-center font-bold">
                         Avg: {(() => {
-                          const tCount = student.subjects.length || 1;
-                          const fSum = student.subjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
+                          const tCount = visibleSubjects.length || 1;
+                          const fSum = visibleSubjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
                           return (fSum / tCount).toFixed(1);
                         })()}
                       </td>
                       <td className="py-1 px-1 text-center font-bold">
                         Avg: {(() => {
-                          const tCount = student.subjects.length || 1;
-                          const sSum = student.subjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
+                          const tCount = visibleSubjects.length || 1;
+                          const sSum = visibleSubjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
                           return (sSum / tCount).toFixed(1);
                         })()}
                       </td>
                       <td className="py-1 px-1 text-center font-bold">
                         Avg: {(() => {
-                          const tCount = student.subjects.length || 1;
-                          const thSum = student.subjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
+                          const tCount = visibleSubjects.length || 1;
+                          const thSum = visibleSubjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
                           return (thSum / tCount).toFixed(1);
                         })()}
                       </td>
                       <td className="py-1 px-2 text-center font-black bg-slate-100/50 text-slate-800">
                         Avg: {(() => {
-                          const tCount = student.subjects.length || 1;
-                          const sessionSum = student.subjects.reduce((sum, s) => {
+                          const tCount = visibleSubjects.length || 1;
+                          const sessionSum = visibleSubjects.reduce((sum, s) => {
                             const f = s.firstTermSummary !== undefined ? s.firstTermSummary : 0;
                             const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : 0;
                             const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0;
@@ -895,7 +896,7 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
             </div>
             <div className="flex items-center gap-1">
               <span className="text-slate-500 font-semibold select-none">Total Subjects:</span>
-              <span className="font-bold text-slate-800">{student.subjects.length}</span>
+              <span className="font-bold text-slate-800">{visibleSubjects.length}</span>
             </div>
             <div className="flex items-center gap-1">
               <span className="text-slate-500 font-semibold select-none">Passed:</span>
