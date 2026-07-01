@@ -1024,7 +1024,20 @@ export default function TeacherDashboard({
     doc.setFontSize(6.8);
     doc.setTextColor(darkTextColor[0], darkTextColor[1], darkTextColor[2]);
 
-    const formTeacherNameStr = student.formTeacherName || "Form Educator";
+    const classTeacherProfilePdf = facultyProfiles.find(f => f.assignedClass === student.className);
+    let fallbackTeacherPdf = classTeacherProfilePdf ? classTeacherProfilePdf.name : '';
+    if (!fallbackTeacherPdf) {
+      const isNurseryPdf = ['Pre-Nursery', 'Nursery1', 'Nursery2', 'Nursery3'].includes(cleanClassName);
+      const isBasicPdf = ['Basic1', 'Basic2', 'Basic3', 'Basic4', 'Basic5', 'Basic6'].includes(cleanClassName);
+      if (isBasicPdf) {
+        fallbackTeacherPdf = template.formTeacherJunior || "Headmistress";
+      } else if (isNurseryPdf) {
+        fallbackTeacherPdf = template.formTeacherSenior || "Nursery Admin";
+      } else {
+        fallbackTeacherPdf = template.principalName || "Principal";
+      }
+    }
+    const formTeacherNameStr = student.formTeacherName || fallbackTeacherPdf;
     doc.text(formTeacherNameStr, 37.5, sigY - 1.2, { align: 'center' });
     doc.text(signatoryName, 104.5, sigY - 1.2, { align: 'center' });
 
@@ -1847,7 +1860,19 @@ export default function TeacherDashboard({
             setEditBehaviour(adjustBehaviourIfRequired(freshStudent.behaviour, freshStudent.className));
             setEditFormComment(freshStudent.formTeacherRemark);
             setEditPrincipalRemark(freshStudent.principalRemark || '');
-            setEditTeacherName(freshStudent.formTeacherName);
+            let initialTeacherNameLoad = freshStudent.formTeacherName;
+            if (currentUser && currentUser.id !== 'ezekiel') {
+              initialTeacherNameLoad = currentUser.name;
+            } else {
+              const classTeacher = facultyProfiles.find(f => f.assignedClass === freshStudent.className);
+              if (classTeacher) {
+                initialTeacherNameLoad = classTeacher.name;
+              }
+            }
+            if (!initialTeacherNameLoad) {
+              initialTeacherNameLoad = freshStudent.formTeacherName || 'Form Educator';
+            }
+            setEditTeacherName(initialTeacherNameLoad);
             setEditPrincipalName(freshStudent.principalName);
             setEditResumeDate(freshStudent.resumptionDate);
           }
@@ -2255,7 +2280,19 @@ export default function TeacherDashboard({
     setEditBehaviour(adjustBehaviourIfRequired(student.behaviour, student.className));
     setEditFormComment(student.formTeacherRemark);
     setEditPrincipalRemark((student as any).principalRemark || '');
-    setEditTeacherName(student.formTeacherName);
+    let initialTeacherNameEdit = student.formTeacherName;
+    if (currentUser && currentUser.id !== 'ezekiel') {
+      initialTeacherNameEdit = currentUser.name;
+    } else {
+      const classTeacher = facultyProfiles.find(f => f.assignedClass === student.className);
+      if (classTeacher) {
+        initialTeacherNameEdit = classTeacher.name;
+      }
+    }
+    if (!initialTeacherNameEdit) {
+      initialTeacherNameEdit = student.formTeacherName || 'Form Educator';
+    }
+    setEditTeacherName(initialTeacherNameEdit);
     setEditPrincipalName(student.principalName);
     setEditResumeDate(student.resumptionDate);
   };
@@ -3517,13 +3554,16 @@ export default function TeacherDashboard({
                       const isBasic = ['Basic1', 'Basic2', 'Basic3', 'Basic4', 'Basic5', 'Basic6'].includes(cleanClassName);
                       const isPreNurseryToBasic6 = isNursery || isBasic;
 
-                      let fallbackTeacher = '';
-                      if (isBasic) {
-                        fallbackTeacher = template.formTeacherJunior || "Headmistress";
-                      } else if (isNursery) {
-                        fallbackTeacher = template.formTeacherSenior || "Nursery Admin";
-                      } else {
-                        fallbackTeacher = template.principalName || "Principal";
+                      const classTeacherProfile = facultyProfiles.find(f => f.assignedClass === viewingReportStudent.className);
+                      let fallbackTeacher = classTeacherProfile ? classTeacherProfile.name : '';
+                      if (!fallbackTeacher) {
+                        if (isBasic) {
+                          fallbackTeacher = template.formTeacherJunior || "Headmistress";
+                        } else if (isNursery) {
+                          fallbackTeacher = template.formTeacherSenior || "Nursery Admin";
+                        } else {
+                          fallbackTeacher = template.principalName || "Principal";
+                        }
                       }
 
                       const displayTeacherName = viewingReportStudent.formTeacherName || fallbackTeacher;
@@ -4811,13 +4851,16 @@ export default function TeacherDashboard({
                           const isNursery = ['Pre-Nursery', 'Nursery1', 'Nursery2', 'Nursery3'].includes(cleanClassName);
                           const isBasic = ['Basic1', 'Basic2', 'Basic3', 'Basic4', 'Basic5', 'Basic6'].includes(cleanClassName);
 
-                          let fallbackTeacher = '';
-                          if (isBasic) {
-                            fallbackTeacher = template.formTeacherJunior || "Headmistress";
-                          } else if (isNursery) {
-                            fallbackTeacher = template.formTeacherSenior || "Nursery Admin";
-                          } else {
-                            fallbackTeacher = template.principalName || "Principal";
+                          const classTeacherProfile = facultyProfiles.find(f => f.assignedClass === previewStudent.className);
+                          let fallbackTeacher = classTeacherProfile ? classTeacherProfile.name : '';
+                          if (!fallbackTeacher) {
+                            if (isBasic) {
+                              fallbackTeacher = template.formTeacherJunior || "Headmistress";
+                            } else if (isNursery) {
+                              fallbackTeacher = template.formTeacherSenior || "Nursery Admin";
+                            } else {
+                              fallbackTeacher = template.principalName || "Principal";
+                            }
                           }
 
                           const displayTeacherName = previewStudent.formTeacherName || fallbackTeacher;

@@ -33,6 +33,40 @@ export const supabase = createClient(
 );
 
 export const mapDbStudentToFrontend = (dbStudent: any): Student => {
+  const overrides = dbStudent.nursery_overrides || [];
+  
+  // Transform nursery overrides from the new nursery_overrides table into frontend helper subject rows
+  const overrideSubjects = overrides.map((ov: any) => ({
+    id: `subj_override_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
+    name: `__nursery_term_stats_${ov.term}`,
+    testScore: 0,
+    examScore: 0,
+    firstTermSummary: ov.cumulative || 0,
+    secondTermSummary: Math.round((ov.average || 0) * 10),
+    thirdTermSummary: 0,
+    position: null,
+    isPositionManual: false
+  }));
+
+  // Standard subjects (filtering out any old helper rows that might have been saved in subject_grades)
+  const dbSubjects = dbStudent.subjects || [];
+  const normalSubjects = dbSubjects
+    .filter((sub: any) => sub.name && !sub.name.startsWith('__nursery_term_stats_'))
+    .map((sub: any) => ({
+      id: sub.id,
+      name: sub.name,
+      testScore: sub.test_score,
+      examScore: sub.exam_score,
+      firstTermSummary: sub.first_term_summary,
+      secondTermSummary: sub.second_term_summary,
+      thirdTermSummary: sub.third_term_summary,
+      position: sub.position,
+      isPositionManual: sub.is_position_manual
+    }));
+
+  // Combine standard subjects with mapped nursery override rows
+  const combinedSubjects = [...normalSubjects, ...overrideSubjects];
+
   return {
     id: dbStudent.id,
     name: dbStudent.name,
@@ -50,18 +84,8 @@ export const mapDbStudentToFrontend = (dbStudent: any): Student => {
     password: dbStudent.password,
     principalRemark: dbStudent.principal_remark || '',
     subjects: adjustSubjectsIfRequired(
-      (dbStudent.subjects && dbStudent.subjects.length > 0)
-        ? dbStudent.subjects.map((sub: any) => ({
-            id: sub.id,
-            name: sub.name,
-            testScore: sub.test_score,
-            examScore: sub.exam_score,
-            firstTermSummary: sub.first_term_summary,
-            secondTermSummary: sub.second_term_summary,
-            thirdTermSummary: sub.third_term_summary,
-            position: sub.position,
-            isPositionManual: sub.is_position_manual
-          })).sort((a: any, b: any) => compareSubjects(a.name, b.name))
+      (combinedSubjects.length > 0)
+        ? combinedSubjects.sort((a: any, b: any) => compareSubjects(a.name, b.name))
         : getDefaultSubjectsForClass(dbStudent.class_name as ClassName, dbStudent.term || 'Third Term'),
       dbStudent.class_name as ClassName,
       dbStudent.term || 'Third Term'
@@ -347,13 +371,30 @@ export const dbService = {
       query = query.eq('class_name', className);
     }
     
-    const { data, error } = await query;
+    const { data: studentsData, error } = await query;
     if (error) throw error;
-    return data;
+    if (!studentsData || studentsData.length === 0) return [];
+
+    let overrides: any[] = [];
+    try {
+      const { data: ovData, error: ovError } = await supabase
+        .from('nursery_overrides')
+        .select('*');
+      if (!ovError && ovData) {
+        overrides = ovData;
+      }
+    } catch (e) {
+      console.warn("Table public.nursery_overrides does not exist yet. Please run the SQL migration in supabase_schema.sql.", e);
+    }
+
+    return studentsData.map(stud => ({
+      ...stud,
+      nursery_overrides: overrides.filter(ov => ov.student_id === stud.id)
+    }));
   },
 
   async getStudentById(id: string) {
-    const { data, error } = await supabase
+    const { data: studentData, error } = await supabase
       .from('students')
       .select(`
         *,
@@ -363,7 +404,25 @@ export const dbService = {
       .eq('id', id)
       .maybeSingle();
     if (error) throw error;
-    return data;
+    if (!studentData) return null;
+
+    let overrides: any[] = [];
+    try {
+      const { data: ovData, error: ovError } = await supabase
+        .from('nursery_overrides')
+        .select('*')
+        .eq('student_id', id);
+      if (!ovError && ovData) {
+        overrides = ovData;
+      }
+    } catch (e) {
+      console.warn("Table public.nursery_overrides does not exist yet. Please run the SQL migration.", e);
+    }
+
+    return {
+      ...studentData,
+      nursery_overrides: overrides
+    };
   },
 
   async saveStudent(student: any) {
@@ -399,29 +458,60 @@ export const dbService = {
 
       const studentId = savedStudent.id;
 
-      // 2. Clear and Upsert Subjects
+      // 2. Clear and Upsert Subjects & Nursery Overrides
       if (subjects && subjects.length > 0) {
-        // Clear old
+        const normalSubjects = subjects.filter((sub: any) => sub.name && !sub.name.startsWith('__nursery_term_stats_'));
+        const nurseryStatsSubjects = subjects.filter((sub: any) => sub.name && sub.name.startsWith('__nursery_term_stats_'));
+
+        // Clear and Insert normal subjects
         await supabase.from('subject_grades').delete().eq('student_id', studentId);
         
-        // Insert new with strict bounds adhering to PostgreSQL check constraints (test <= 30, exam <= 70)
-        const subjectsWithRelations = subjects.map((sub: any) => ({
-          student_id: studentId,
-          name: sub.name,
-          test_score: Math.max(0, Math.min(30, Math.round(Number(sub.testScore) || 0))),
-          exam_score: Math.max(0, Math.min(70, Math.round(Number(sub.examScore) || 0))),
-          first_term_summary: Math.round(Number(sub.firstTermSummary) || 0),
-          second_term_summary: Math.round(Number(sub.secondTermSummary) || 0),
-          third_term_summary: Math.round(Number(sub.thirdTermSummary) || 0),
-          position: sub.position ? Math.max(1, Math.round(Number(sub.position))) : null,
-          is_position_manual: !!sub.isPositionManual
-        }));
+        if (normalSubjects.length > 0) {
+          const subjectsWithRelations = normalSubjects.map((sub: any) => ({
+            student_id: studentId,
+            name: sub.name,
+            test_score: Math.max(0, Math.min(30, Math.round(Number(sub.testScore) || 0))),
+            exam_score: Math.max(0, Math.min(70, Math.round(Number(sub.examScore) || 0))),
+            first_term_summary: Math.round(Number(sub.firstTermSummary) || 0),
+            second_term_summary: Math.round(Number(sub.secondTermSummary) || 0),
+            third_term_summary: Math.round(Number(sub.thirdTermSummary) || 0),
+            position: sub.position ? Math.max(1, Math.round(Number(sub.position))) : null,
+            is_position_manual: !!sub.isPositionManual
+          }));
 
-        const { error: subError } = await supabase
-          .from('subject_grades')
-          .insert(subjectsWithRelations);
+          const { error: subError } = await supabase
+            .from('subject_grades')
+            .insert(subjectsWithRelations);
 
-        if (subError) throw subError;
+          if (subError) throw subError;
+        }
+
+        // Save Nursery Overrides to public.nursery_overrides table
+        try {
+          await supabase.from('nursery_overrides').delete().eq('student_id', studentId);
+
+          if (nurseryStatsSubjects.length > 0) {
+            const overridesToInsert = nurseryStatsSubjects.map((sub: any) => {
+              const term = sub.name.replace('__nursery_term_stats_', '');
+              const cumulative = Math.round(Number(sub.firstTermSummary) || 0);
+              const average = (Math.round(Number(sub.secondTermSummary) || 0)) / 10;
+              return {
+                student_id: studentId,
+                term: term,
+                cumulative: cumulative,
+                average: average
+              };
+            });
+
+            const { error: ovError } = await supabase
+              .from('nursery_overrides')
+              .insert(overridesToInsert);
+            
+            if (ovError) throw ovError;
+          }
+        } catch (ovErr) {
+          console.warn("Could not save to public.nursery_overrides table. It might not be created yet in your Supabase database. Please run the SQL schema migration in your Supabase dashboard.", ovErr);
+        }
       }
 
       // 3. Clear and Upsert Behaviour/Traits
@@ -480,25 +570,40 @@ export const dbService = {
 
     if (studentError) throw studentError;
 
-    // 2. Gather all subjects and all behaviours from all students, enforcing constraints
+    // 2. Gather all subjects, behaviours, and overrides from all students, enforcing constraints
     const allSubjects: any[] = [];
     const allBehaviours: any[] = [];
+    const allNurseryOverrides: any[] = [];
     const studentIds = students.map(s => s.id);
 
     students.forEach(student => {
       if (student.subjects && student.subjects.length > 0) {
         student.subjects.forEach((sub: any) => {
-          allSubjects.push({
-            student_id: student.id,
-            name: sub.name,
-            test_score: Math.max(0, Math.min(30, Math.round(Number(sub.testScore) || 0))),
-            exam_score: Math.max(0, Math.min(70, Math.round(Number(sub.examScore) || 0))),
-            first_term_summary: Math.round(Number(sub.firstTermSummary) || 0),
-            second_term_summary: Math.round(Number(sub.secondTermSummary) || 0),
-            third_term_summary: Math.round(Number(sub.thirdTermSummary) || 0),
-            position: sub.position ? Math.max(1, Math.round(Number(sub.position))) : null,
-            is_position_manual: !!sub.isPositionManual
-          });
+          const isNurseryStats = sub.name && sub.name.startsWith('__nursery_term_stats_');
+          
+          if (isNurseryStats) {
+            const term = sub.name.replace('__nursery_term_stats_', '');
+            const cumulative = Math.round(Number(sub.firstTermSummary) || 0);
+            const average = (Math.round(Number(sub.secondTermSummary) || 0)) / 10;
+            allNurseryOverrides.push({
+              student_id: student.id,
+              term: term,
+              cumulative: cumulative,
+              average: average
+            });
+          } else {
+            allSubjects.push({
+              student_id: student.id,
+              name: sub.name,
+              test_score: Math.max(0, Math.min(30, Math.round(Number(sub.testScore) || 0))),
+              exam_score: Math.max(0, Math.min(70, Math.round(Number(sub.examScore) || 0))),
+              first_term_summary: Math.round(Number(sub.firstTermSummary) || 0),
+              second_term_summary: Math.round(Number(sub.secondTermSummary) || 0),
+              third_term_summary: Math.round(Number(sub.thirdTermSummary) || 0),
+              position: sub.position ? Math.max(1, Math.round(Number(sub.position))) : null,
+              is_position_manual: !!sub.isPositionManual
+            });
+          }
         });
       }
 
@@ -513,13 +618,19 @@ export const dbService = {
       }
     });
 
-    // 3. Clear existing grades/behaviours for these specific students in bulk, then batch insert
+    // 3. Clear existing grades/behaviours/overrides for these specific students in bulk, then batch insert
     if (studentIds.length > 0) {
       const { error: delSubError } = await supabase.from('subject_grades').delete().in('student_id', studentIds);
       if (delSubError) throw delSubError;
 
       const { error: delBhvError } = await supabase.from('behavioural_ratings').delete().in('student_id', studentIds);
       if (delBhvError) throw delBhvError;
+
+      try {
+        await supabase.from('nursery_overrides').delete().in('student_id', studentIds);
+      } catch (ovErr) {
+        console.warn("Could not delete nursery overrides. Table may not exist.", ovErr);
+      }
     }
 
     // 4. Batch insert all new grades and behaviours
@@ -535,6 +646,17 @@ export const dbService = {
         .from('behavioural_ratings')
         .insert(allBehaviours);
       if (bError) throw bError;
+    }
+
+    if (allNurseryOverrides.length > 0) {
+      try {
+        const { error: ovError } = await supabase
+          .from('nursery_overrides')
+          .insert(allNurseryOverrides);
+        if (ovError) throw ovError;
+      } catch (ovErr) {
+        console.warn("Could not batch insert nursery overrides. Table may not exist.", ovErr);
+      }
     }
   },
 

@@ -113,6 +113,18 @@ CREATE TABLE IF NOT EXISTS public.calendar_events (
     updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Table 6. Nursery Overrides Table
+CREATE TABLE IF NOT EXISTS public.nursery_overrides (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    student_id text REFERENCES public.students(id) ON DELETE CASCADE NOT NULL,
+    term text NOT NULL, -- 'First Term' | 'Second Term' | 'Third Term'
+    cumulative integer NOT NULL DEFAULT 0,
+    average numeric(5,2) NOT NULL DEFAULT 0.00,
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+    unique (student_id, term)
+);
+
 -- =====================================================================
 -- 3. INDEXES FOR PERFORMANCE OPTIMIZATION
 -- =====================================================================
@@ -131,6 +143,7 @@ ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subject_grades ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.behavioural_ratings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.calendar_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.nursery_overrides ENABLE ROW LEVEL SECURITY;
 
 -- Clean up any conflicting policy definitions from older migration trials
 DO $$
@@ -141,7 +154,7 @@ BEGIN
          SELECT policyname, tablename 
          FROM pg_policies 
          WHERE schemaname = 'public' 
-           AND tablename IN ('school_config', 'faculty_profiles', 'students', 'subject_grades', 'behavioural_ratings', 'calendar_events')
+           AND tablename IN ('school_config', 'faculty_profiles', 'students', 'subject_grades', 'behavioural_ratings', 'calendar_events', 'nursery_overrides')
     LOOP
         EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', pol.policyname, pol.tablename);
     END LOOP;
@@ -179,6 +192,11 @@ CREATE POLICY "Allow public select operations" ON public.calendar_events FOR SEL
 CREATE POLICY "Allow public insert operations" ON public.calendar_events FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update operations" ON public.calendar_events FOR UPDATE USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public delete operations" ON public.calendar_events FOR DELETE USING (true);
+
+CREATE POLICY "Allow public select operations" ON public.nursery_overrides FOR SELECT USING (true);
+CREATE POLICY "Allow public insert operations" ON public.nursery_overrides FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update operations" ON public.nursery_overrides FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public delete operations" ON public.nursery_overrides FOR DELETE USING (true);
 
 -- =====================================================================
 -- 5. SEED DATA GENERATION
@@ -277,15 +295,15 @@ BEGIN
         ALTER TABLE public.behavioural_ratings ADD CONSTRAINT behavioural_ratings_rating_check CHECK (rating >= 1 AND rating <= 5);
     END IF;
 
-    -- Update summary check constraints to allow values up to 100
+    -- Update summary check constraints to allow values up to 10000 (accommodates nursery aggregates)
     ALTER TABLE public.subject_grades DROP CONSTRAINT IF EXISTS subject_grades_first_term_summary_check;
-    ALTER TABLE public.subject_grades ADD CONSTRAINT subject_grades_first_term_summary_check CHECK (first_term_summary >= 0 AND first_term_summary <= 100);
+    ALTER TABLE public.subject_grades ADD CONSTRAINT subject_grades_first_term_summary_check CHECK (first_term_summary >= 0 AND first_term_summary <= 10000);
 
     ALTER TABLE public.subject_grades DROP CONSTRAINT IF EXISTS subject_grades_second_term_summary_check;
-    ALTER TABLE public.subject_grades ADD CONSTRAINT subject_grades_second_term_summary_check CHECK (second_term_summary >= 0 AND second_term_summary <= 100);
+    ALTER TABLE public.subject_grades ADD CONSTRAINT subject_grades_second_term_summary_check CHECK (second_term_summary >= 0 AND second_term_summary <= 10000);
 
     ALTER TABLE public.subject_grades DROP CONSTRAINT IF EXISTS subject_grades_third_term_summary_check;
-    ALTER TABLE public.subject_grades ADD CONSTRAINT subject_grades_third_term_summary_check CHECK (third_term_summary >= 0 AND third_term_summary <= 100);
+    ALTER TABLE public.subject_grades ADD CONSTRAINT subject_grades_third_term_summary_check CHECK (third_term_summary >= 0 AND third_term_summary <= 10000);
 END $$;
 
 -- 7. REFRESH SCHEMA CONFIG

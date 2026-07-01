@@ -1956,12 +1956,38 @@ export default function StudentPortal({
                     const isPreNurseryToBasic6 = isNursery || isBasic;
 
                     let fallbackTeacher = '';
-                    if (isBasic) {
-                      fallbackTeacher = template.formTeacherJunior || "Headmistress";
-                    } else if (isNursery) {
-                      fallbackTeacher = template.formTeacherSenior || "Nursery Admin";
-                    } else {
-                      fallbackTeacher = template.principalName || "Principal";
+                    const classToTeacherMap: Record<string, string> = {
+                      'Pre-Nursery': "Mrs. Evelyn Ndu",
+                      'Nursery 1': "Mrs. Rose Mary",
+                      'Nursery 2': "Mr. Kelvin Joe",
+                      'Nursery 3': "Mrs. Mercy Joy",
+                      'Basic 1': "Mr. Samuel Adele",
+                      'Basic 2': "Mrs. Blessing Praise",
+                      'Basic 3': "Mr. Patrick Obi",
+                      'Basic 4': "Mrs. Victoria Oge",
+                      'Basic 5': "Mr. Emmanuel Eze",
+                      'Basic 6': "Mrs. Juliet Ngozi",
+                      'JSS1': "Mrs. Gladys Alabi",
+                      'JSS2': "Mr. Anthony Okon",
+                      'JSS3': "Mrs. Sarah John",
+                      'SS1': "Mr. Benson Chidi",
+                      'SS2A': "Mrs. Florence Musa",
+                      'SS2B': "Mrs. Mabel Rogers",
+                      'SS3A': "Mr. David Ibrahim",
+                      'SS3B': "Mr. Julius Spare"
+                    };
+
+                    const stdClassKey = (selectedStudent.className || '').trim();
+                    fallbackTeacher = classToTeacherMap[stdClassKey] || '';
+
+                    if (!fallbackTeacher) {
+                      if (isBasic) {
+                        fallbackTeacher = template.formTeacherJunior || "Headmistress";
+                      } else if (isNursery) {
+                        fallbackTeacher = template.formTeacherSenior || "Nursery Admin";
+                      } else {
+                        fallbackTeacher = template.principalName || "Principal";
+                      }
                     }
 
                     const displayTeacherName = selectedStudent.formTeacherName || fallbackTeacher;
