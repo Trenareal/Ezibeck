@@ -9,7 +9,7 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
 import { Student, ClassName, SubjectGrade, BehaviourRating, Workspace15Template, FacultyProfile, DbStatus, AuditLogEntry, ALL_CLASSES } from '../types';
-import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, NURSERY_SUBJECTS, PRE_NURSERY_SUBJECTS, PRIMARY_SUBJECTS, JSS_SUBJECTS, SS1_SUBJECTS, SS_SCIENCE_SUBJECTS, SS_ART_SUBJECTS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal, generateUnique6DigitPassword, getDeterministicPasscode, getStudentPasscodesFromOtherTerms, adjustBehaviourIfRequired } from '../utils/academicUtils';
+import { createStudent, calculateStudentStats, calculateStudentStatsForTerm, calculateClassPositions, BEHAVIOUR_TRAITS, NURSERY_SUBJECTS, PRE_NURSERY_SUBJECTS, PRIMARY_SUBJECTS, JSS_SUBJECTS, SS1_SUBJECTS, SS_SCIENCE_SUBJECTS, SS_ART_SUBJECTS, SCHOOL_INFO, getLetterAndRemark, calculateSubjectTotal, formatOrdinal, generateUnique6DigitPassword, getDeterministicPasscode, getStudentPasscodesFromOtherTerms, adjustBehaviourIfRequired, loadStoredStudents, isStudentInTerm } from '../utils/academicUtils';
 import { logPasscodeEvent, getAuditLogs, clearAuditLogs } from '../utils/auditLogger';
 import { dbService, mapDbFacultyToFrontend, mapDbStudentToFrontend } from '../lib/supabase';
 import schoolBadge from '../assets/images/school_badge.jpg';
@@ -1056,7 +1056,7 @@ export default function TeacherDashboard({
         setZipProgress(`Compiling reports for class ${cls}...`);
         
         // Calculate class ranks of standard for this term exactly
-        const sortedRoster = calculateClassPositions(students, cls, activeTermTab)
+        const sortedRoster = calculateClassPositions(termStudents, cls, activeTermTab)
           .filter(s => s.className === cls);
 
         if (sortedRoster.length === 0) {
@@ -1203,6 +1203,54 @@ export default function TeacherDashboard({
     }
     return 'First Term';
   });
+
+  const [termStudents, setTermStudents] = useState<Student[]>([]);
+  const [loadingTermStudents, setLoadingTermStudents] = useState(false);
+
+  const isSupabaseConfigured = !!((import.meta as any).env?.VITE_SUPABASE_URL && (import.meta as any).env?.VITE_SUPABASE_ANON_KEY);
+
+  useEffect(() => {
+    let active = true;
+    async function fetchTermData() {
+      if (activeTermTab === template.currentTerm) {
+        setTermStudents(students);
+        return;
+      }
+      setLoadingTermStudents(true);
+      try {
+        if (isSupabaseConfigured) {
+          const rawStudents = await dbService.getStudents();
+          if (active) {
+            const mapped = (rawStudents || []).map(mapDbStudentToFrontend);
+            const termFiltered = mapped.filter(s => isStudentInTerm(s.id, activeTermTab));
+            if (termFiltered.length > 0) {
+              setTermStudents(termFiltered);
+            } else {
+              setTermStudents(loadStoredStudents(activeTermTab));
+            }
+          }
+        } else {
+          if (active) {
+            setTermStudents(loadStoredStudents(activeTermTab));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load students for term:", activeTermTab, err);
+        if (active) {
+          setTermStudents(loadStoredStudents(activeTermTab));
+        }
+      } finally {
+        if (active) {
+          setLoadingTermStudents(false);
+        }
+      }
+    }
+
+    fetchTermData();
+    return () => {
+      active = false;
+    };
+  }, [activeTermTab, students, template.currentTerm]);
 
   const isTermReadOnly = activeTermTab !== template.currentTerm;
   const editingIsSecondary = editingStudent ? ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes((editingStudent.className || '').replace(/\s+/g, '')) : false;
@@ -1390,14 +1438,14 @@ export default function TeacherDashboard({
         const { sub, studentId } = event.state;
         
         if (sub === 'view' && studentId) {
-          const found = students.find(s => s.id === studentId);
+          const found = termStudents.find(s => s.id === studentId);
           if (found) {
             setViewingReportStudent(found);
             setEditingStudent(null);
             return;
           }
         } else if (sub === 'edit' && studentId) {
-          const found = students.find(s => s.id === studentId);
+          const found = termStudents.find(s => s.id === studentId);
           if (found) {
             startEditStudent(found);
             setViewingReportStudent(null);
@@ -1415,7 +1463,7 @@ export default function TeacherDashboard({
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, [students]);
+  }, [termStudents]);
 
   // Listen to state changes to push history entries upon user action click
   useEffect(() => {
@@ -2084,7 +2132,7 @@ export default function TeacherDashboard({
   }, [currentUser, allowedClasses, selectedClass]);
 
   // Filter students showing in the selected class
-  const classStudents = students.filter(s => s.className === selectedClass);
+  const classStudents = termStudents.filter(s => s.className === selectedClass);
 
   // Stats for current class overview
   const totalInClass = classStudents.length;
@@ -2103,7 +2151,7 @@ export default function TeacherDashboard({
     e.preventDefault();
     if (!newStudentName.trim()) return;
 
-    const newIdx = students.filter(s => s.className === selectedClass).length;
+    const newIdx = termStudents.filter(s => s.className === selectedClass).length;
     const added = createStudent(newStudentName.trim(), selectedClass, newIdx, activeTermTab);
     added.age = newStudentAge;
     added.sex = newStudentSex;
@@ -2117,7 +2165,7 @@ export default function TeacherDashboard({
     }
     
     // Add student, trigger ranking refresh
-    let refreshed = [...students, added];
+    let refreshed = [...termStudents, added];
     refreshed = calculateClassPositions(refreshed, selectedClass, activeTermTab);
     
     onUpdateStudents(refreshed);
@@ -2368,7 +2416,7 @@ export default function TeacherDashboard({
     } as any;
 
     // Replace in full list, trigger rank recalculation
-    let refreshed = students.map(s => s.id === editingStudent.id ? updatedStudent : s);
+    let refreshed = termStudents.map(s => s.id === editingStudent.id ? updatedStudent : s);
     refreshed = calculateClassPositions(refreshed, selectedClass, activeTermTab);
 
     // Validate score boundaries to safeguard database check constraints
@@ -2405,7 +2453,7 @@ export default function TeacherDashboard({
 
   // Remove Student Profile Efficaciously
   const deleteStudentProfile = (id: string, name: string) => {
-    const stud = students.find(s => s.id === id);
+    const stud = termStudents.find(s => s.id === id);
     const cls = stud ? stud.className : selectedClass;
     setDeleteConfirmStudent({ id, name, className: cls, source: 'list' });
   };
@@ -2887,7 +2935,7 @@ export default function TeacherDashboard({
                       student={viewingReportStudent}
                       term={activeTermTab}
                       template={template}
-                      studentsRoster={students}
+                      studentsRoster={termStudents}
                       isGeneratingPdf={isGeneratingPdf}
                     />
                   </ReportCardScaleWrapper>
@@ -3004,7 +3052,7 @@ export default function TeacherDashboard({
                           <div className="flex justify-between items-center">
                             <span className="text-slate-400 font-semibold select-none">Class Position:</span>
                             <span className="font-black text-slate-900">{(() => {
-                              const sortedRoster = calculateClassPositions(students, viewingReportStudent.className, activeTermTab)
+                              const sortedRoster = calculateClassPositions(termStudents, viewingReportStudent.className, activeTermTab)
                                 .filter(s => s.className === viewingReportStudent.className);
                               const posIdx = sortedRoster.findIndex(s => s.id === viewingReportStudent.id);
                               return posIdx !== -1 ? `${formatOrdinal(posIdx + 1)} of ${sortedRoster.length}` : "N/A";
@@ -6028,7 +6076,7 @@ export default function TeacherDashboard({
                 </div>
                 
                 <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider text-right">
-                  System: All {students.length} student passcodes synchronized.
+                  System: All {termStudents.length} student passcodes synchronized.
                 </div>
               </div>
             </div>
@@ -6041,7 +6089,7 @@ export default function TeacherDashboard({
                   : [selectedPassClass as ClassName];
 
                 return targetClasses.map((cls, clsIdx) => {
-                  const classStudents = students.filter(s => s.className === cls);
+                  const classStudents = termStudents.filter(s => s.className === cls);
                   
                   // Setup 12-slots pagination (2 columns x 6 rows = 12 slots)
                   const chunks: (Student | null)[][] = [];
@@ -6741,7 +6789,7 @@ export default function TeacherDashboard({
                 id="btn-delete-confirm-yes"
                 onClick={() => {
                   const { id, name, className, source } = deleteConfirmStudent;
-                  let refreshed = students.filter(s => s.id !== id);
+                  let refreshed = termStudents.filter(s => s.id !== id);
                   refreshed = calculateClassPositions(refreshed, className, activeTermTab);
                   onUpdateStudents(refreshed);
                   
