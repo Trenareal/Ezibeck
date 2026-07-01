@@ -902,6 +902,10 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
               <span className="text-slate-500 font-semibold select-none">Passed:</span>
               <span className="font-bold text-emerald-700">{stats.creditsAndAbove + stats.passes}</span>
             </div>
+            <div className="flex items-center gap-1">
+              <span className="text-slate-500 font-semibold select-none">Failed:</span>
+              <span className="font-bold text-rose-600">{stats.failures}</span>
+            </div>
             <div className="flex items-center gap-1 border-l border-slate-200 pl-3">
               <span className="text-slate-500 font-semibold select-none">Overall Grading Remark:</span>
               <span className="font-black text-emerald-855 bg-emerald-50 px-1.5 py-0.2 rounded text-[10.5px]">{stats.avgScore >= (template.passThreshold || 50) ? "PASS" : "FAIL"}</span>

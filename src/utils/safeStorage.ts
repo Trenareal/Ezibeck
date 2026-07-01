@@ -6,6 +6,27 @@
 const memoryStorage: Record<string, string> = {};
 
 export const safeStorage = {
+  get isInMemory(): boolean {
+    if (typeof window === 'undefined') return true;
+    try {
+      const testKey = '__storage_test__';
+      window.localStorage.setItem(testKey, testKey);
+      window.localStorage.removeItem(testKey);
+      return false;
+    } catch (e) {
+      return true;
+    }
+  },
+
+  get isIframe(): boolean {
+    if (typeof window === 'undefined') return false;
+    try {
+      return window.self !== window.top;
+    } catch (e) {
+      return true;
+    }
+  },
+
   getItem(key: string): string | null {
     try {
       if (typeof window !== 'undefined' && window.localStorage) {

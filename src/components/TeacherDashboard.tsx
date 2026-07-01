@@ -2753,6 +2753,36 @@ export default function TeacherDashboard({
   return (
     <div className="bg-slate-50 min-h-screen py-10 px-4 sm:px-6 lg:px-8 font-sans print:bg-white print:py-0 print:px-0">
       
+      {/* Sandbox Warning Banner */}
+      {(!dbStatus || !dbStatus.configured) && (safeStorage.isInMemory || safeStorage.isIframe) && (
+        <div className="max-w-6xl mx-auto mb-6 bg-amber-50 border border-amber-250 p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xs animate-fade-in print:hidden">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-amber-100 rounded-xl text-amber-800 flex-shrink-0">
+              <AlertCircle className="w-5 h-5 text-amber-800" />
+            </div>
+            <div>
+              <h4 className="text-sm font-extrabold text-amber-950 font-sans">⚠️ Warning: Browser Sandbox Storage is active (Iframe Mode)</h4>
+              <p className="text-xs text-amber-800 leading-normal mt-1">
+                Your browser blocks persistent storage when this page is loaded inside an iframe. <strong>All school data, custom grades, and reports will turn to zero or disappear if you reload, refresh, or redeploy!</strong>
+              </p>
+              <p className="text-[11px] text-amber-700/90 font-medium leading-normal mt-1">
+                To keep your work saved permanently, please either <strong>open this website in a new browser tab</strong> (using the "Open in new tab" icon at the top right of the preview panel) or click <strong>"Local Database Fallback"</strong> on the right to configure cloud storage (Supabase).
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.open(window.location.href, '_blank');
+              }
+            }}
+            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all outline-none cursor-pointer border-none shrink-0"
+          >
+            Open in New Tab
+          </button>
+        </div>
+      )}
+      
       {/* Top dashboard navigation banner */}
       <div className="max-w-6xl mx-auto mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 print:hidden">
         <div>
