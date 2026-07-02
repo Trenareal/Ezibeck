@@ -74,16 +74,17 @@ export function decryptPassword(cipherText: string): string {
 }
 
 export const mapDbStudentToFrontend = (dbStudent: any): Student => {
-  const overrides = dbStudent.nursery_overrides || [];
+  // Filter out nursery override helper rows directly from the subjects array
+  const overrides = (dbStudent.subjects || []).filter((sub: any) => sub.name && sub.name.startsWith('__nursery_term_stats_'));
   
-  // Transform nursery overrides from the new nursery_overrides table into frontend helper subject rows
+  // Transform nursery overrides into frontend helper subject rows
   const overrideSubjects = overrides.map((ov: any) => ({
     id: `subj_override_${Date.now()}_${Math.floor(Math.random() * 10000)}`,
-    name: `__nursery_term_stats_${ov.term}`,
+    name: ov.name,
     testScore: 0,
     examScore: 0,
-    firstTermSummary: ov.cumulative || 0,
-    secondTermSummary: Math.round((ov.average || 0) * 10),
+    firstTermSummary: ov.firstTermSummary || 0,
+    secondTermSummary: ov.secondTermSummary || 0,
     thirdTermSummary: 0,
     position: null,
     isPositionManual: false
@@ -432,10 +433,20 @@ export const dbService = {
       console.warn("Table public.nursery_overrides does not exist yet. Please run the SQL migration in supabase_schema.sql.", e);
     }
 
-    return studentsData.map(stud => ({
-      ...stud,
-      nursery_overrides: overrides.filter(ov => ov.student_id === stud.id)
-    }));
+    return studentsData.map(stud => {
+      const studOverrides = overrides.filter(ov => ov.student_id === stud.id);
+      return {
+        ...stud,
+        subjects: [
+          ...(stud.subjects || []),
+          ...studOverrides.map((ov: any) => ({
+            name: `__nursery_term_stats_${ov.term}`,
+            firstTermSummary: ov.cumulative,
+            secondTermSummary: Math.round(Number(ov.average) * 10)
+          }))
+        ]
+      };
+    });
   },
 
   async getStudentById(id: string) {
