@@ -2044,12 +2044,11 @@ export default function TeacherDashboard({
         : editingFacultyRole
     };
 
-    const updated = facultyProfiles.map(f => {
-      if (f.id === editingFaculty.id) {
-        return updatedProfile;
-      }
-      return f;
-    });
+    const isNew = !facultyProfiles.some(f => f.id === editingFaculty.id && editingFaculty.id !== '');
+    
+    const updated = isNew 
+      ? [...facultyProfiles, updatedProfile]
+      : facultyProfiles.map(f => f.id === editingFaculty.id ? updatedProfile : f);
 
     setFacultyProfiles(updated);
     if (typeof window !== 'undefined') {
@@ -2057,7 +2056,7 @@ export default function TeacherDashboard({
     }
 
     if (dbStatus && dbStatus.configured && dbStatus.connected) {
-      if (editingFaculty.id !== newId) {
+      if (!isNew && editingFaculty.id !== newId) {
         dbService.deleteFacultyProfile(editingFaculty.id)
           .then(() => dbService.saveFacultyProfile(updatedProfile))
           .catch(err => {
@@ -2065,7 +2064,7 @@ export default function TeacherDashboard({
           });
       } else {
         dbService.saveFacultyProfile(updatedProfile).catch(err => {
-          console.error("Failed to sync faculty edit updates to Supabase. Error:", err, "Profile:", updatedProfile);
+          console.error("Failed to sync faculty update/add to Supabase. Error:", err, "Profile:", updatedProfile);
         });
       }
     }
@@ -5980,6 +5979,21 @@ export default function TeacherDashboard({
                   Configure class assignments for teachers. Form Teachers can strictly access and modify students in their assigned class. Use the edit button to assign classes, modify usernames, change passcodes, or authorize/restrict access.
                 </p>
               </div>
+              <button
+                onClick={() => {
+                  setEditingFaculty({ id: '', name: '', role: 'Form Teacher - ', avatar: '👩‍🏫', password: '' });
+                  setEditingFacultyId('');
+                  setEditingFacultyName('');
+                  setEditingFacultyEmail('');
+                  setEditingFacultyPassword('');
+                  setEditingFacultyClass('');
+                  setEditingFacultyRole('Form Teacher - ');
+                  setEditingFacultyAvatar('👩‍🏫');
+                }}
+                className="bg-slate-900 hover:bg-slate-950 text-white font-black text-xs px-5 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-sm"
+              >
+                <Plus className="w-4 h-4" /> Add Staff Account
+              </button>
             </div>
 
             {editingFaculty && (
@@ -6212,6 +6226,26 @@ export default function TeacherDashboard({
                         ⚙️ Edit & Assign Class
                       </button>
 
+                      {!isSelf && p.id !== 'ezekiel' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (safeConfirm(`Are you sure you want to delete ${p.name}? This action cannot be undone.`)) {
+                              const updated = facultyProfiles.filter(f => f.id !== p.id);
+                              setFacultyProfiles(updated);
+                              if (typeof window !== 'undefined') {
+                                localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(updated));
+                              }
+                              if (dbStatus && dbStatus.configured && dbStatus.connected) {
+                                dbService.deleteFacultyProfile(p.id).catch(err => console.error("Failed to delete staff:", err));
+                              }
+                            }
+                          }}
+                          className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 p-2.5 rounded-xl transition-all mr-2"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                       {!isSelf && p.id !== 'ezekiel' && (
                         <button
                           type="button"
