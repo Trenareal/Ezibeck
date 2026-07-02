@@ -1436,36 +1436,12 @@ export default function TeacherDashboard({
         try {
           const dbProfiles = await dbService.getFacultyProfiles();
           if (dbProfiles && dbProfiles.length > 0) {
-            // Actively delete any pre-existing legacy/duplicate staff profiles that start with 'a0000'
-            const badProfiles = dbProfiles.filter(p => p.id && p.id.toLowerCase().startsWith('a0000'));
-            for (const bp of badProfiles) {
-              await dbService.deleteFacultyProfile(bp.id).catch(err => {
-                console.error("Failed to delete bad profile:", bp.id, err);
-              });
-            }
-
+            // Map and set to state, filtering out legacy bad profiles
             const mapped = dbProfiles.map(mapDbFacultyToFrontend).filter(f => !f.id.toLowerCase().startsWith('a0000'));
-            const aligned = alignFacultyProfiles(mapped).filter(f => !f.id.toLowerCase().startsWith('a0000'));
-
-            // Sync any missing or default profiles back to Supabase
-            for (const f of aligned) {
-              await dbService.saveFacultyProfile(f).catch(err => {
-                console.error("Failed to sync faculty profile to database:", f.name, err);
-              });
-            }
-
-            // Clean up/delete any non-core/excessive profiles from the Supabase database
-            const alignedIds = aligned.map(f => f.id);
-            const extraProfiles = mapped.filter(f => !alignedIds.includes(f.id));
-            for (const extra of extraProfiles) {
-              await dbService.deleteFacultyProfile(extra.id).catch(err => {
-                console.error("Failed to clean up non-core faculty profile:", extra.id, err);
-              });
-            }
-
-            setFacultyProfiles(aligned);
+            
+            setFacultyProfiles(mapped);
             if (typeof window !== 'undefined') {
-              localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(aligned));
+              localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(mapped));
             }
           } else {
             // Seed defaults to Supabase so it's always populated initially
@@ -1989,7 +1965,7 @@ export default function TeacherDashboard({
 
 
   // Staff registration helper
-  const handleRegisterStaff = (e: React.FormEvent) => {
+  const handleRegisterStaff = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!regName.trim() || !regPassword) return;
 
@@ -2008,9 +1984,11 @@ export default function TeacherDashboard({
     }
 
     if (dbStatus && dbStatus.configured && dbStatus.connected) {
-      dbService.saveFacultyProfile(newFaculty).catch(err => {
+      try {
+        await dbService.saveFacultyProfile(newFaculty);
+      } catch (err) {
         console.error("Failed to sync registered staff to Supabase:", err);
-      });
+      }
     }
 
     setRegName('');
@@ -2020,7 +1998,7 @@ export default function TeacherDashboard({
   };
 
   // Save edited teacher profile and class assignment
-  const handleSaveFacultyEdit = (e: React.FormEvent) => {
+  const handleSaveFacultyEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingFaculty) return;
 
@@ -2030,7 +2008,7 @@ export default function TeacherDashboard({
       return;
     }
 
-    const newId = editingFacultyId.trim().toLowerCase() || editingFaculty.id;
+    const newId = editingFacultyId.trim().toLowerCase() || editingFaculty.id || ("staff_" + Date.now());
     const updatedProfile = {
       ...editingFaculty,
       id: newId,
@@ -2056,16 +2034,15 @@ export default function TeacherDashboard({
     }
 
     if (dbStatus && dbStatus.configured && dbStatus.connected) {
-      if (!isNew && editingFaculty.id !== newId) {
-        dbService.deleteFacultyProfile(editingFaculty.id)
-          .then(() => dbService.saveFacultyProfile(updatedProfile))
-          .catch(err => {
-            console.error("Failed to sync faculty ID rename update to Supabase:", err);
-          });
-      } else {
-        dbService.saveFacultyProfile(updatedProfile).catch(err => {
-          console.error("Failed to sync faculty update/add to Supabase. Error:", err, "Profile:", updatedProfile);
-        });
+      try {
+        if (!isNew && editingFaculty.id !== newId) {
+          await dbService.deleteFacultyProfile(editingFaculty.id);
+          await dbService.saveFacultyProfile(updatedProfile);
+        } else {
+          await dbService.saveFacultyProfile(updatedProfile);
+        }
+      } catch (err) {
+        console.error("Failed to sync faculty update/add to Supabase. Error:", err, "Profile:", updatedProfile);
       }
     }
 
@@ -6229,7 +6206,7 @@ export default function TeacherDashboard({
                       {!isSelf && p.id !== 'ezekiel' && (
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={async () => {
                             if (safeConfirm(`Are you sure you want to delete ${p.name}? This action cannot be undone.`)) {
                               const updated = facultyProfiles.filter(f => f.id !== p.id);
                               setFacultyProfiles(updated);
@@ -6237,7 +6214,11 @@ export default function TeacherDashboard({
                                 localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(updated));
                               }
                               if (dbStatus && dbStatus.configured && dbStatus.connected) {
-                                dbService.deleteFacultyProfile(p.id).catch(err => console.error("Failed to delete staff:", err));
+                                try {
+                                  await dbService.deleteFacultyProfile(p.id);
+                                } catch (err) {
+                                  console.error("Failed to delete staff:", err);
+                                }
                               }
                             }
                           }}
