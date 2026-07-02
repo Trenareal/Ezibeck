@@ -581,6 +581,10 @@ export function adjustSubjectsIfRequired(subjects: SubjectGrade[], className: Cl
   const sIdx = studentIdx !== undefined ? studentIdx : 0;
   const usedIds = new Set<string>();
 
+  // Preserve helper/override rows (e.g. __nursery_term_stats_*) — they aren't
+  // part of the standard curriculum and must survive this reconciliation step.
+  const overrideRows = (subjects || []).filter(s => s.name && s.name.startsWith('__'));
+
   if (className === 'Pre-Nursery') {
     const required = PRE_NURSERY_SUBJECTS;
     
@@ -597,7 +601,7 @@ export function adjustSubjectsIfRequired(subjects: SubjectGrade[], className: Cl
       return undefined;
     };
     
-    return required.map((name, index) => {
+    return [...required.map((name, index) => {
       let matched: SubjectGrade | undefined = undefined;
       if (name === "Numeracy") matched = getExisting(["numeracy", "number work", "mathematics"]);
       else if (name === "Literacy") matched = getExisting(["literacy", "letter work", "english studies", "english"]);
@@ -639,15 +643,14 @@ export function adjustSubjectsIfRequired(subjects: SubjectGrade[], className: Cl
           name: name
         };
       }
-    });
+    }), ...overrideRows];
   } else if (className.startsWith('Nursery')) {
     const required = NURSERY_SUBJECTS;
     const existingMap = new Map<string, SubjectGrade>();
     (subjects || []).forEach(s => {
       existingMap.set(s.name.toLowerCase().trim(), s);
     });
-    
-    return required.map((name, index) => {
+    return [...required.map((name, index) => {
       const matched = existingMap.get(name.toLowerCase().trim()) || subjects[index];
       
       let finalId = `${name.toLowerCase().replace(/\s+/g, '_')}_${index}`;
@@ -677,7 +680,7 @@ export function adjustSubjectsIfRequired(subjects: SubjectGrade[], className: Cl
           name: name
         };
       }
-    });
+    }), ...overrideRows];
   } else if (className.startsWith('Basic')) {
     const required = PRIMARY_SUBJECTS;
     const existingMap = new Map<string, SubjectGrade>();
@@ -685,7 +688,7 @@ export function adjustSubjectsIfRequired(subjects: SubjectGrade[], className: Cl
       existingMap.set(s.name.toLowerCase().trim(), s);
     });
     
-    return required.map((name, index) => {
+    return [...required.map((name, index) => {
       const matched = existingMap.get(name.toLowerCase().trim()) || subjects[index];
       
       let finalId = `${name.toLowerCase().replace(/\s+/g, '_')}_${index}`;
@@ -715,7 +718,7 @@ export function adjustSubjectsIfRequired(subjects: SubjectGrade[], className: Cl
           name: name
         };
       }
-    });
+    }), ...overrideRows];
   } else if (className.startsWith('JSS')) {
     const required = JSS_SUBJECTS;
     const existingMap = new Map<string, SubjectGrade>();
@@ -730,8 +733,8 @@ export function adjustSubjectsIfRequired(subjects: SubjectGrade[], className: Cl
       }
       return undefined;
     };
-    
-    return required.map((name, index) => {
+
+    return [...required.map((name, index) => {
       let matched: SubjectGrade | undefined = undefined;
       if (name === "Mathematics") matched = getExisting(["mathematics", "maths"]);
       else if (name === "English Studies") matched = getExisting(["english studies", "english language", "english"]);
@@ -776,7 +779,7 @@ export function adjustSubjectsIfRequired(subjects: SubjectGrade[], className: Cl
           name: name
         };
       }
-    });
+    }), ...overrideRows];
   } else if (className.startsWith('SS')) {
     let required = SS1_SUBJECTS;
     if (className === 'SS2A' || className === 'SS3A') {
@@ -798,7 +801,7 @@ export function adjustSubjectsIfRequired(subjects: SubjectGrade[], className: Cl
       return undefined;
     };
 
-    return required.map((name, index) => {
+    return [...required.map((name, index) => {
       let matched: SubjectGrade | undefined = undefined;
       if (name === "Mathematics") matched = getExisting(["mathematics", "maths"]);
       else if (name === "Further Mathematics") matched = getExisting(["further mathematics", "further maths", "further mathematics/mathematics"]);
@@ -850,10 +853,10 @@ export function adjustSubjectsIfRequired(subjects: SubjectGrade[], className: Cl
           name: name
         };
       }
-    });
+    }), ...overrideRows];
   }
   
-  return subjects;
+  return [...subjects.filter(s => s.name && s.name.startsWith('__')), ...subjects.filter(s => !(s.name && s.name.startsWith('__')))];
 }
 
 const FIRST_NAMES = ["Tobi", "Chinedu", "Amina", "Divine", "Emeka", "Zainab", "Olumide", "Favor", "Bassey", "Somtochukwu", "Eseoghene", "Fatima", "Chibuike", "Tega", "Kelechi", "Olamide", "Ejiro", "Blessing", "Samuel", "Tunde", "Uche", "Nkechi", "Seyi", "Funke", "Chidi", "Yinka", "Ifeoma", "Yusuf", "Ozo", "Efe"];
