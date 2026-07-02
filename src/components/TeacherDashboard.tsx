@@ -1358,7 +1358,6 @@ export default function TeacherDashboard({
   const getNurseryTermStats = (termName: 'First Term' | 'Second Term' | 'Third Term') => {
     if (!editingStudent) return { cumulative: 0, average: 0, available: false };
 
-    // 1. Check if we have an override row in the active subjects we are editing or the student's subjects
     const overrideSub = editSubjects?.find(s => s.name === `__nursery_term_stats_${termName}`) ||
                         editingStudent.subjects?.find(s => s.name === `__nursery_term_stats_${termName}`);
 
@@ -1368,58 +1367,15 @@ export default function TeacherDashboard({
       return { cumulative, average, available: true };
     }
 
-    // 2. If this is the active term, calculate live from editSubjects (excluding helper rows)
     if (activeTermTab === termName) {
       const subjectsToUse = (editSubjects || []).filter(s => !s.name.startsWith('__'));
-      if (subjectsToUse.length === 0) {
-        return { cumulative: 0, average: 0, available: false };
-      }
-      const cumulative = subjectsToUse.reduce((sum: number, s: any) => {
-        const test = s.testScore || 0;
-        const exam = s.examScore || 0;
-        return sum + (test + exam);
-      }, 0);
-      const average = cumulative / subjectsToUse.length;
-      return { cumulative, average, available: true };
+      if (subjectsToUse.length === 0) return { cumulative: 0, average: 0, available: false };
+      const cumulative = subjectsToUse.reduce((sum, s) => sum + (s.testScore || 0) + (s.examScore || 0), 0);
+      return { cumulative, average: cumulative / subjectsToUse.length, available: true };
     }
 
-    // 3. Otherwise, fetch from localStorage of that term
-    let subjectsToUse: any[] = [];
-    const termKey = `ezibeck_students_${termName.toLowerCase().replace(/\s+/g, '_')}`;
-    const data = typeof window !== 'undefined' ? safeStorage.getItem(termKey) : null;
-    if (data) {
-      try {
-        const parsed = JSON.parse(data);
-        if (Array.isArray(parsed)) {
-          const baseId = editingStudent.id.split('_')[0];
-          const matchedStud = parsed.find((s: any) => s && s.id && typeof s.id === 'string' && s.id.split('_')[0] === baseId);
-          if (matchedStud && Array.isArray(matchedStud.subjects)) {
-            const matchOverride = matchedStud.subjects.find((s: any) => s.name === `__nursery_term_stats_${termName}`);
-            if (matchOverride) {
-              const cumulative = matchOverride.firstTermSummary || 0;
-              const average = (matchOverride.secondTermSummary || 0) / 10;
-              return { cumulative, average, available: true };
-            }
-            subjectsToUse = matchedStud.subjects.filter((s: any) => !s.name.startsWith('__'));
-          }
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    if (subjectsToUse.length === 0) {
-      return { cumulative: 0, average: 0, available: false };
-    }
-
-    const cumulative = subjectsToUse.reduce((sum: number, s: any) => {
-      const test = s.testScore || 0;
-      const exam = s.examScore || 0;
-      return sum + (test + exam);
-    }, 0);
-    const average = cumulative / subjectsToUse.length;
-
-    return { cumulative, average, available: true };
+    // No override saved for this term yet — legitimately unavailable, not a bug
+    return { cumulative: 0, average: 0, available: false };
   };
 
   // Print latest database issues or status to the system console when they occur
