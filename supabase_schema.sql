@@ -342,6 +342,6 @@ NOTIFY pgrst, 'reload schema';
 -- Supabase free instances, we configure PostgreSQL's session supervisor to 
 -- actively terminate idle connections. This frees up connection slots nearly 
 -- instantly for new incoming transactions.
-ALTER DATABASE postgres SET idle_session_timeout = '10000'; -- Terminate any sessions inactive for 10 seconds (optimized)
-ALTER DATABASE postgres SET idle_in_transaction_session_timeout = '15000'; -- Terminate hung transactions after 15 seconds (optimized)
-ALTER DATABASE postgres SET statement_timeout = '30000'; -- Max query execute duration 30 seconds (optimized, guards memory)
+ALTER DATABASE postgres SET idle_session_timeout = '30000'; -- Terminate any sessions inactive for 30 seconds
+ALTER DATABASE postgres SET idle_in_transaction_session_timeout = '45000'; -- Terminate hung transactions after 45 seconds
+ALTER DATABASE postgres SET statement_timeout = '60000'; -- Max query execute duration 1 minute (guards memory)
