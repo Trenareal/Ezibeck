@@ -44,10 +44,33 @@ export function logPasscodeEvent(params: {
   // Keep up to 1000 logs for memory performance
   const updatedLogs = [entry, ...logs].slice(0, 1000);
   saveAuditLogs(updatedLogs);
+
+  // Sync with Supabase asynchronously without circular dependency issues at load-time
+  import('../lib/supabase').then(({ dbService, isSupabaseConfigured }) => {
+    if (isSupabaseConfigured) {
+      dbService.saveAuditLog(entry).catch(err => {
+        console.warn('[AuditLogger] Failed to sync audit log entry to Supabase:', err);
+      });
+    }
+  }).catch(e => {
+    console.debug('[AuditLogger] Supabase not loaded or configured:', e);
+  });
+
   return entry;
 }
 
 export function clearAuditLogs() {
   if (typeof window === 'undefined') return;
   safeStorage.removeItem('ezibeck_passcode_audit_logs');
+
+  // Sync deletion with Supabase asynchronously
+  import('../lib/supabase').then(({ dbService, isSupabaseConfigured }) => {
+    if (isSupabaseConfigured) {
+      dbService.clearAuditLogs().catch(err => {
+        console.warn('[AuditLogger] Failed to clear audit logs in Supabase:', err);
+      });
+    }
+  }).catch(e => {
+    console.debug('[AuditLogger] Supabase not loaded or configured:', e);
+  });
 }

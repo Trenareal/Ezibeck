@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { Student, Workspace15Template, ClassName, FacultyProfile } from '../types';
+import { Student, Workspace15Template, ClassName, FacultyProfile, AuditLogEntry } from '../types';
 import { compareSubjects, getDefaultSubjectsForClass, adjustBehaviourIfRequired, adjustSubjectsIfRequired } from '../utils/academicUtils';
 import { safeStorage } from '../utils/safeStorage';
 import { syncService } from './syncService';
@@ -82,6 +82,8 @@ export const mapDbStudentToFrontend = (dbStudent: any): Student => {
     principalName: dbStudent.principal_name || '',
     resumptionDate: dbStudent.resumption_date,
     password: dbStudent.password,
+    passwordUseCount: dbStudent.password_use_count || 0,
+    passwordRolledOver: !!dbStudent.password_rolled_over,
     principalRemark: dbStudent.principal_remark || '',
     subjects: adjustSubjectsIfRequired(
       (combinedSubjects.length > 0)
@@ -219,6 +221,8 @@ export const mapTemplateToDbConfig = (tpl: Workspace15Template) => {
     next_term_fee: serializedFee,
     distinction_threshold: tpl.distinctionThreshold,
     pass_threshold: tpl.passThreshold,
+    portal_locked: !!tpl.portalLocked,
+    total_attendance: tpl.totalAttendance !== undefined ? tpl.totalAttendance : 110,
   };
 };
 
@@ -449,6 +453,8 @@ export const dbService = {
           principal_name: studentData.principalName || '',
           resumption_date: studentData.resumptionDate || '',
           password: studentData.password || '123456',
+          password_use_count: Math.max(0, Math.round(Number(studentData.passwordUseCount) || 0)),
+          password_rolled_over: !!studentData.passwordRolledOver,
           principal_remark: studentData.principalRemark || ''
         })
         .select()
@@ -488,6 +494,10 @@ export const dbService = {
 
         // Save Nursery Overrides to public.nursery_overrides table
         try {
+          console.log('[dbService] Saving nursery overrides for student:', studentId);
+          console.log('[dbService] All subjects passed to saveStudent:', subjects);
+          console.log('[dbService] Nursery subjects identified:', nurseryStatsSubjects);
+          
           await supabase.from('nursery_overrides').delete().eq('student_id', studentId);
 
           if (nurseryStatsSubjects.length > 0) {
@@ -502,12 +512,16 @@ export const dbService = {
                 average: average
               };
             });
+            console.log('[dbService] Inserting nursery overrides:', overridesToInsert);
 
             const { error: ovError } = await supabase
               .from('nursery_overrides')
               .insert(overridesToInsert);
             
-            if (ovError) throw ovError;
+            if (ovError) {
+              console.error('[dbService] Error inserting nursery overrides:', ovError);
+              throw ovError;
+            }
           }
         } catch (ovErr) {
           console.warn("Could not save to public.nursery_overrides table. It might not be created yet in your Supabase database. Please run the SQL schema migration in your Supabase dashboard.", ovErr);
@@ -560,6 +574,8 @@ export const dbService = {
       principal_name: s.principalName || '',
       resumption_date: s.resumptionDate,
       password: s.password || '123456',
+      password_use_count: Math.max(0, Math.round(Number(s.passwordUseCount) || 0)),
+      password_rolled_over: !!s.passwordRolledOver,
       principal_remark: s.principalRemark || ''
     }));
 
@@ -775,5 +791,66 @@ export const dbService = {
       .eq('id', id);
     if (error) throw error;
     return true;
+  },
+
+  // --- Passcode Audit Logs ---
+  async getAuditLogs() {
+    try {
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .order('timestamp', { ascending: false });
+      if (error) {
+        console.warn("Could not query audit_logs table. Please run the SQL migration.", error);
+        return null;
+      }
+      return data.map((row: any) => ({
+        id: row.id,
+        timestamp: row.timestamp,
+        studentId: row.student_id,
+        studentName: row.student_name,
+        studentClass: row.student_class,
+        action: row.action as any,
+        performedBy: row.performed_by,
+        oldPasscode: row.old_passcode || undefined,
+        newPasscode: row.new_passcode
+      }));
+    } catch (e) {
+      console.warn("Exception fetching audit logs:", e);
+      return null;
+    }
+  },
+
+  async saveAuditLog(entry: AuditLogEntry) {
+    try {
+      const { error } = await supabase
+        .from('audit_logs')
+        .upsert({
+          id: entry.id,
+          timestamp: entry.timestamp,
+          student_id: entry.studentId,
+          student_name: entry.studentName,
+          student_class: entry.studentClass,
+          action: entry.action,
+          performed_by: entry.performedBy,
+          old_passcode: entry.oldPasscode || null,
+          new_passcode: entry.newPasscode
+        });
+      if (error) throw error;
+    } catch (e) {
+      console.warn("Exception saving audit log to db:", e);
+    }
+  },
+
+  async clearAuditLogs() {
+    try {
+      const { error } = await supabase
+        .from('audit_logs')
+        .delete()
+        .neq('id', 'placeholder_sentinel_row'); // Delete all
+      if (error) throw error;
+    } catch (e) {
+      console.warn("Exception clearing audit logs from db:", e);
+    }
   }
 };

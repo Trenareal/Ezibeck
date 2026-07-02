@@ -1063,9 +1063,10 @@ export default function StudentPortal({
             } catch (e) {
               console.error("Error parsing second term students in StudentPortal", e);
             }
-            const cleanClassName = selectedStudent.className.replace(/\s+/g, '');
-            const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes(cleanClassName);
-            const isNurseryClass = ['Pre-Nursery', 'Nursery1', 'Nursery2', 'Nursery3'].includes(cleanClassName);
+            const cleanClassName = selectedStudent.className.replace(/\s+/g, '').toLowerCase();
+            const isSecondaryClass = ['jss1', 'jss2', 'jss3', 'ss1', 'ss2a', 'ss2b', 'ss3a', 'ss3b'].includes(cleanClassName) || cleanClassName.startsWith('jss') || cleanClassName.startsWith('ss');
+            const isNurseryClass = ['pre-nursery', 'nursery1', 'nursery2', 'nursery3'].includes(cleanClassName) || cleanClassName.includes('nursery');
+            const isBasic = ['basic1', 'basic2', 'basic3', 'basic4', 'basic5', 'basic6'].includes(cleanClassName) || cleanClassName.startsWith('basic');
 
             const getNurseryTermStats = (termName: 'First Term' | 'Second Term' | 'Third Term') => {
               let subjectsToUse: any[] = [];
@@ -1454,7 +1455,7 @@ export default function StudentPortal({
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
                         {/* Header columns styled like raw Ezibeck headers */}
-                        <tr className="bg-[#EAEAEA] border-b border-slate-300 text-slate-950 font-black select-none text-[10.5px] uppercase tracking-wider">
+                        <tr className="bg-[#EAEAEA] border-b border-slate-300 text-slate-955 font-black select-none text-[10.5px] uppercase tracking-wider">
                           <th className="py-2.5 px-3 border-r border-slate-300 min-w-[150px]">
                             <span className="flex items-center gap-1.5">📝 Subjects</span>
                           </th>
@@ -1465,38 +1466,75 @@ export default function StudentPortal({
                             <span className="flex items-center justify-center gap-1"># EXAM (70)</span>
                           </th>
                           <th className="py-2.5 px-3 border-r border-slate-300 text-center bg-emerald-100/40 w-24">
-                            <span className="flex items-center justify-center gap-1 text-emerald-950">Σ TERM (100)</span>
+                            <span className="flex items-center justify-center gap-1 text-emerald-955 font-black">Σ TERM (100)</span>
                           </th>
-                          {viewingTerm === 'Second Term' && isSecondaryClass && (
-                            <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-24">
-                              <span className="flex items-center justify-center gap-1">1st Term Avg</span>
-                            </th>
-                          )}
-                          {viewingTerm === 'Third Term' && !isNurseryClass && (
+                          {isBasic ? (
                             <>
-                              <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
-                                <span className="flex items-center justify-center gap-1"># 1ST TERM (20)</span>
+                              <th className="py-2.5 px-3 border-r border-slate-300 text-center w-20">
+                                <span className="flex items-center justify-center gap-1">Σ GRADE</span>
                               </th>
-                              <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
-                                <span className="flex items-center justify-center gap-1"># 2ND TERM (20)</span>
+                              <th className="py-2.5 px-3 border-r border-slate-300 text-center w-16">
+                                <span className="flex items-center justify-center gap-1"># POSITION</span>
                               </th>
-                              <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
-                                <span className="flex items-center justify-center gap-1"># 3RD TERM (60)</span>
+                              <th className="py-2.5 px-4 font-black text-slate-955 border-r border-slate-300">
+                                <span className="flex items-center gap-1.5">💬 TEACHER'S REMARK</span>
                               </th>
-                              <th className="py-2.5 px-3 border-r border-slate-300 text-center bg-emerald-100/30 w-28 text-slate-955 font-black">
-                                <span className="flex items-center justify-center gap-1 text-slate-955 font-black">Σ SESSION AVE</span>
+                              {viewingTerm === 'Second Term' && (
+                                <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-24">
+                                  <span className="flex items-center justify-center gap-1">1ST TERM AVERAGE</span>
+                                </th>
+                              )}
+                              {viewingTerm === 'Third Term' && (
+                                <>
+                                  <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
+                                    <span className="flex items-center justify-center gap-1">1ST TERM AVERAGE</span>
+                                  </th>
+                                  <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
+                                    <span className="flex items-center justify-center gap-1">2ND TERM AVERAGE</span>
+                                  </th>
+                                  <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
+                                    <span className="flex items-center justify-center gap-1">3RD TERM AVERAGE</span>
+                                  </th>
+                                  <th className="py-2.5 px-3 border-r border-slate-300 text-center bg-emerald-100/30 w-28 text-slate-955 font-black">
+                                    <span className="flex items-center justify-center gap-1 text-slate-955 font-black">SESSION AVERAGE</span>
+                                  </th>
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              {viewingTerm === 'Second Term' && isSecondaryClass && (
+                                <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-24">
+                                  <span className="flex items-center justify-center gap-1">1st Term Avg</span>
+                                </th>
+                              )}
+                              {viewingTerm === 'Third Term' && !isNurseryClass && (
+                                <>
+                                  <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
+                                    <span className="flex items-center justify-center gap-1"># 1ST TERM (20)</span>
+                                  </th>
+                                  <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
+                                    <span className="flex items-center justify-center gap-1"># 2ND TERM (20)</span>
+                                  </th>
+                                  <th className="py-2.5 px-3 border-r border-slate-300 text-center text-[10px] w-20">
+                                    <span className="flex items-center justify-center gap-1"># 3RD TERM (60)</span>
+                                  </th>
+                                  <th className="py-2.5 px-3 border-r border-slate-300 text-center bg-emerald-100/30 w-28 text-slate-955 font-black">
+                                    <span className="flex items-center justify-center gap-1 text-slate-955 font-black">Σ SESSION AVE</span>
+                                  </th>
+                                </>
+                              )}
+                              <th className="py-2.5 px-3 border-r border-slate-300 text-center w-20">
+                                <span className="flex items-center justify-center gap-1">Σ GRADE</span>
+                              </th>
+                              <th className="py-2.5 px-3 border-r border-slate-300 text-center w-16">
+                                <span className="flex items-center justify-center gap-1"># POSITION</span>
+                              </th>
+                              <th className="py-2.5 px-4 font-black text-slate-950">
+                                <span className="flex items-center gap-1.5">💬 TEACHER'S REMARK</span>
                               </th>
                             </>
                           )}
-                          <th className="py-2.5 px-3 border-r border-slate-300 text-center w-20">
-                            <span className="flex items-center justify-center gap-1">Σ GRADE</span>
-                          </th>
-                          <th className="py-2.5 px-3 border-r border-slate-300 text-center w-16">
-                            <span className="flex items-center justify-center gap-1"># POSITION</span>
-                          </th>
-                          <th className="py-2.5 px-4 font-black text-slate-950">
-                            <span className="flex items-center gap-1.5">💬 TEACHER'S REMARK</span>
-                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 font-medium text-slate-705">
@@ -1504,10 +1542,10 @@ export default function StudentPortal({
                           const tot = calculateSubjectTotal(subj);
                           
                           // Formulate annual / session average data realistically matching the 20/20/60 formula of Ezibeck
-                          const firstTerm = subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0 ? subj.firstTermSummary : Math.round(tot * 0.2);
-                          const secondTerm = subj.secondTermSummary !== undefined && subj.secondTermSummary !== 0 ? subj.secondTermSummary : Math.round(tot * 0.2);
-                          const thirdTerm = subj.thirdTermSummary !== undefined && subj.thirdTermSummary !== 0 ? subj.thirdTermSummary : Math.round(tot * 0.6);
-                          const sessionAvg = firstTerm + secondTerm + thirdTerm;
+                          const firstTerm = subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0 ? subj.firstTermSummary : (isBasic ? tot : Math.round(tot * 0.2));
+                          const secondTerm = subj.secondTermSummary !== undefined && subj.secondTermSummary !== 0 ? subj.secondTermSummary : (isBasic ? tot : Math.round(tot * 0.2));
+                          const thirdTerm = subj.thirdTermSummary !== undefined && subj.thirdTermSummary !== 0 ? subj.thirdTermSummary : (isBasic ? tot : Math.round(tot * 0.6));
+                          const sessionAvg = isBasic ? Math.round((firstTerm + secondTerm + thirdTerm) / 3) : (firstTerm + secondTerm + thirdTerm);
 
                           // Find matching first term subject score if in 2nd term
                           let firstTermAvgStr = "-";
@@ -1525,35 +1563,77 @@ export default function StudentPortal({
                           }
 
                           const { letter, remark, ratingClass } = getLetterAndRemark(
-                            viewingTerm === 'Third Term' ? sessionAvg : tot
+                            (viewingTerm === 'Third Term' && !isBasic) ? sessionAvg : tot
                           );
 
                           return (
                             <tr key={subj.id} className="hover:bg-slate-50/60 transition-all border-b border-slate-200">
-                              <td className="py-2.5 px-3 border-r border-slate-200 font-extrabold text-slate-950 bg-slate-50/40">{subj.name}</td>
+                              <td className="py-2.5 px-3 border-r border-slate-200 font-extrabold text-slate-955 bg-slate-50/40">{subj.name}</td>
                               <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{subj.testScore}</td>
                               <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{subj.examScore}</td>
                               <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black font-mono text-emerald-950 bg-emerald-50/30">{tot}</td>
-                               {viewingTerm === 'Second Term' && isSecondaryClass && (
-                                 <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950 bg-blue-50/10">
-                                   {firstTermAvgStr !== "-" ? `${firstTermAvgStr}%` : "-"}
-                                 </td>
-                               )}
-                              {viewingTerm === 'Third Term' && !isNurseryClass && (
+                              {isBasic ? (
                                 <>
-                                  <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{firstTerm}</td>
-                                  <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{secondTerm}</td>
-                                  <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{thirdTerm}</td>
-                                  <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black font-mono text-emerald-950 bg-slate-50/60">{sessionAvg}</td>
+                                  <td className="py-2.5 px-3 border-r border-slate-200 text-center">
+                                    <span className={`px-2 py-0.5 text-[10px] font-black rounded-sm tracking-wider ${ratingClass}`}>
+                                      {letter}
+                                    </span>
+                                  </td>
+                                  <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black text-slate-955 bg-slate-50/20">{subj.position ? `${subj.position}` : '-'}</td>
+                                  <td className="py-2.5 px-4 italic text-slate-950 text-[11px] font-bold leading-tight bg-[#FCFCFC] border-r border-slate-200">{remark}</td>
+                                  {viewingTerm === 'Second Term' && (
+                                    <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-955 bg-blue-50/10">
+                                      {(() => {
+                                        let firstTermAvgStrBasic = "-";
+                                        if (subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0) {
+                                          firstTermAvgStrBasic = String(subj.firstTermSummary);
+                                        } else {
+                                          const baseId = selectedStudent.id.split('_')[0];
+                                          const matchMatch = firstTermStuds.find(s => s.id.startsWith(baseId));
+                                          const matchSubj = matchMatch?.subjects.find(s => s.name.toLowerCase() === subj.name.toLowerCase());
+                                          if (matchSubj) {
+                                            firstTermAvgStrBasic = String((matchSubj.testScore || 0) + (matchSubj.examScore || 0));
+                                          } else {
+                                            firstTermAvgStrBasic = "100";
+                                          }
+                                        }
+                                        return firstTermAvgStrBasic !== "-" ? `${firstTermAvgStrBasic}%` : "-";
+                                      })()}
+                                    </td>
+                                  )}
+                                  {viewingTerm === 'Third Term' && (
+                                    <>
+                                      <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{firstTerm}</td>
+                                      <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{secondTerm}</td>
+                                      <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{thirdTerm}</td>
+                                      <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black font-mono text-emerald-950 bg-slate-50/60">{sessionAvg}</td>
+                                    </>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  {viewingTerm === 'Second Term' && isSecondaryClass && (
+                                    <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950 bg-blue-50/10">
+                                      {firstTermAvgStr !== "-" ? `${firstTermAvgStr}%` : "-"}
+                                    </td>
+                                  )}
+                                  {viewingTerm === 'Third Term' && !isNurseryClass && (
+                                    <>
+                                      <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{firstTerm}</td>
+                                      <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{secondTerm}</td>
+                                      <td className="py-2.5 px-3 border-r border-slate-200 text-center font-mono font-bold text-slate-950">{thirdTerm}</td>
+                                      <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black font-mono text-emerald-950 bg-slate-50/60">{sessionAvg}</td>
+                                    </>
+                                  )}
+                                  <td className="py-2.5 px-3 border-r border-slate-200 text-center">
+                                    <span className={`px-2 py-0.5 text-[10px] font-black rounded-sm tracking-wider ${ratingClass}`}>
+                                      {letter}
+                                    </span>
+                                  </td>
+                                  <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black text-slate-950 bg-slate-50/20">{subj.position ? `${subj.position}` : '-'}</td>
+                                  <td className="py-2.5 px-4 italic text-slate-950 text-[11px] font-bold leading-tight bg-[#FCFCFC]">{remark}</td>
                                 </>
                               )}
-                              <td className="py-2.5 px-3 border-r border-slate-200 text-center">
-                                <span className={`px-2 py-0.5 text-[10px] font-black rounded-sm tracking-wider ${ratingClass}`}>
-                                  {letter}
-                                </span>
-                              </td>
-                              <td className="py-2.5 px-3 border-r border-slate-200 text-center font-black text-slate-950 bg-slate-50/20">{subj.position ? `${subj.position}` : '-'}</td>
-                              <td className="py-2.5 px-4 italic text-slate-950 text-[11px] font-bold leading-tight bg-[#FCFCFC]">{remark}</td>
                             </tr>
                           );
                         })}
@@ -1580,62 +1660,121 @@ export default function StudentPortal({
                           <td className="py-2 px-3 text-center font-black text-emerald-705 bg-emerald-50/20">
                             Average: {stats.avgScore.toFixed(1)}%
                           </td>
-                          {viewingTerm === 'Second Term' && (
-                            <td className="py-2 px-3 text-center bg-slate-50/20 text-slate-400 font-bold">-</td>
-                          )}
-                          {viewingTerm === 'Third Term' && !isNurseryClass && (
+                          {isBasic ? (
                             <>
-                              <td className="py-2 px-3 text-center font-bold">
-                                Average: {(() => {
-                                  const tCount = selectedStudent.subjects.length || 1;
-                                  const fSum = selectedStudent.subjects.reduce((sum, s) => {
-                                    const tot = (s.testScore || 0) + (s.examScore || 0);
-                                    const val = s.firstTermSummary !== undefined && s.firstTermSummary !== 0 ? s.firstTermSummary : Math.round(tot * 0.2);
-                                    return sum + val;
-                                  }, 0);
-                                  return (fSum / tCount).toFixed(1);
-                                })()}
-                              </td>
-                              <td className="py-2 px-3 text-center font-bold">
-                                Average: {(() => {
-                                  const tCount = selectedStudent.subjects.length || 1;
-                                  const sSum = selectedStudent.subjects.reduce((sum, s) => {
-                                    const tot = (s.testScore || 0) + (s.examScore || 0);
-                                    const val = s.secondTermSummary !== undefined && s.secondTermSummary !== 0 ? s.secondTermSummary : Math.round(tot * 0.2);
-                                    return sum + val;
-                                  }, 0);
-                                  return (sSum / tCount).toFixed(1);
-                                })()}
-                              </td>
-                              <td className="py-2 px-3 text-center font-bold">
-                                Average: {(() => {
-                                  const tCount = selectedStudent.subjects.length || 1;
-                                  const thSum = selectedStudent.subjects.reduce((sum, s) => {
-                                    const tot = (s.testScore || 0) + (s.examScore || 0);
-                                    const val = s.thirdTermSummary !== undefined && s.thirdTermSummary !== 0 ? s.thirdTermSummary : Math.round(tot * 0.6);
-                                    return sum + val;
-                                  }, 0);
-                                  return (thSum / tCount).toFixed(1);
-                                })()}
-                              </td>
-                              <td className="py-2 px-3 text-center font-black bg-slate-100/50">
-                                Average: {(() => {
-                                  const tCount = selectedStudent.subjects.length || 1;
-                                  const sessionSum = selectedStudent.subjects.reduce((sum, s) => {
-                                    const tot = (s.testScore || 0) + (s.examScore || 0);
-                                    const f = s.firstTermSummary !== undefined && s.firstTermSummary !== 0 ? s.firstTermSummary : Math.round(tot * 0.2);
-                                    const sec = s.secondTermSummary !== undefined && s.secondTermSummary !== 0 ? s.secondTermSummary : Math.round(tot * 0.2);
-                                    const th = s.thirdTermSummary !== undefined && s.thirdTermSummary !== 0 ? s.thirdTermSummary : Math.round(tot * 0.6);
-                                    return sum + (f + sec + th);
-                                  }, 0);
-                                  return (sessionSum / tCount).toFixed(1);
-                                })()}%
-                              </td>
+                              <td className="py-2 px-3" colSpan={3}></td>
+                              {viewingTerm === 'Second Term' && (
+                                <td className="py-2 px-3 text-center bg-slate-50/20 text-slate-400 font-bold">-</td>
+                              )}
+                              {viewingTerm === 'Third Term' && (
+                                <>
+                                  <td className="py-2 px-3 text-center font-bold">
+                                    Average: {(() => {
+                                      const tCount = selectedStudent.subjects.length || 1;
+                                      const fSum = selectedStudent.subjects.reduce((sum, s) => {
+                                        const tot = (s.testScore || 0) + (s.examScore || 0);
+                                        const val = s.firstTermSummary !== undefined && s.firstTermSummary !== 0 ? s.firstTermSummary : tot;
+                                        return sum + val;
+                                      }, 0);
+                                      return (fSum / tCount).toFixed(1);
+                                    })()}
+                                  </td>
+                                  <td className="py-2 px-3 text-center font-bold">
+                                    Average: {(() => {
+                                      const tCount = selectedStudent.subjects.length || 1;
+                                      const sSum = selectedStudent.subjects.reduce((sum, s) => {
+                                        const tot = (s.testScore || 0) + (s.examScore || 0);
+                                        const val = s.secondTermSummary !== undefined && s.secondTermSummary !== 0 ? s.secondTermSummary : tot;
+                                        return sum + val;
+                                      }, 0);
+                                      return (sSum / tCount).toFixed(1);
+                                    })()}
+                                  </td>
+                                  <td className="py-2 px-3 text-center font-bold">
+                                    Average: {(() => {
+                                      const tCount = selectedStudent.subjects.length || 1;
+                                      const thSum = selectedStudent.subjects.reduce((sum, s) => {
+                                        const tot = (s.testScore || 0) + (s.examScore || 0);
+                                        const val = s.thirdTermSummary !== undefined && s.thirdTermSummary !== 0 ? s.thirdTermSummary : tot;
+                                        return sum + val;
+                                      }, 0);
+                                      return (thSum / tCount).toFixed(1);
+                                    })()}
+                                  </td>
+                                  <td className="py-2 px-3 text-center font-black bg-slate-100/50">
+                                    Average: {(() => {
+                                      const tCount = selectedStudent.subjects.length || 1;
+                                      const sessionSum = selectedStudent.subjects.reduce((sum, s) => {
+                                        const tot = (s.testScore || 0) + (s.examScore || 0);
+                                        const f = s.firstTermSummary !== undefined && s.firstTermSummary !== 0 ? s.firstTermSummary : tot;
+                                        const sec = s.secondTermSummary !== undefined && s.secondTermSummary !== 0 ? s.secondTermSummary : tot;
+                                        const th = s.thirdTermSummary !== undefined && s.thirdTermSummary !== 0 ? s.thirdTermSummary : tot;
+                                        return sum + ((f + sec + th) / 3);
+                                      }, 0);
+                                      return (sessionSum / tCount).toFixed(1);
+                                    })()}%
+                                  </td>
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              {viewingTerm === 'Second Term' && isSecondaryClass && (
+                                <td className="py-2 px-3 text-center bg-slate-50/20 text-slate-400 font-bold">-</td>
+                              )}
+                              {viewingTerm === 'Third Term' && !isNurseryClass && (
+                                <>
+                                  <td className="py-2 px-3 text-center font-bold">
+                                    Average: {(() => {
+                                      const tCount = selectedStudent.subjects.length || 1;
+                                      const fSum = selectedStudent.subjects.reduce((sum, s) => {
+                                        const tot = (s.testScore || 0) + (s.examScore || 0);
+                                        const val = s.firstTermSummary !== undefined && s.firstTermSummary !== 0 ? s.firstTermSummary : Math.round(tot * 0.2);
+                                        return sum + val;
+                                      }, 0);
+                                      return (fSum / tCount).toFixed(1);
+                                    })()}
+                                  </td>
+                                  <td className="py-2 px-3 text-center font-bold">
+                                    Average: {(() => {
+                                      const tCount = selectedStudent.subjects.length || 1;
+                                      const sSum = selectedStudent.subjects.reduce((sum, s) => {
+                                        const tot = (s.testScore || 0) + (s.examScore || 0);
+                                        const val = s.secondTermSummary !== undefined && s.secondTermSummary !== 0 ? s.secondTermSummary : Math.round(tot * 0.2);
+                                        return sum + val;
+                                      }, 0);
+                                      return (sSum / tCount).toFixed(1);
+                                    })()}
+                                  </td>
+                                  <td className="py-2 px-3 text-center font-bold">
+                                    Average: {(() => {
+                                      const tCount = selectedStudent.subjects.length || 1;
+                                      const thSum = selectedStudent.subjects.reduce((sum, s) => {
+                                        const tot = (s.testScore || 0) + (s.examScore || 0);
+                                        const val = s.thirdTermSummary !== undefined && s.thirdTermSummary !== 0 ? s.thirdTermSummary : Math.round(tot * 0.6);
+                                        return sum + val;
+                                      }, 0);
+                                      return (thSum / tCount).toFixed(1);
+                                    })()}
+                                  </td>
+                                  <td className="py-2 px-3 text-center font-black bg-slate-100/50">
+                                    Average: {(() => {
+                                      const tCount = selectedStudent.subjects.length || 1;
+                                      const sessionSum = selectedStudent.subjects.reduce((sum, s) => {
+                                        const tot = (s.testScore || 0) + (s.examScore || 0);
+                                        const f = s.firstTermSummary !== undefined && s.firstTermSummary !== 0 ? s.firstTermSummary : Math.round(tot * 0.2);
+                                        const sec = s.secondTermSummary !== undefined && s.secondTermSummary !== 0 ? s.secondTermSummary : Math.round(tot * 0.2);
+                                        const th = s.thirdTermSummary !== undefined && s.thirdTermSummary !== 0 ? s.thirdTermSummary : Math.round(tot * 0.6);
+                                        return sum + (f + sec + th);
+                                      }, 0);
+                                      return (sessionSum / tCount).toFixed(1);
+                                    })()}%
+                                  </td>
+                                </>
+                              )}
+                              <td className="py-2 px-3" colSpan={3}></td>
                             </>
                           )}
-                          <td className="py-2 px-3" colSpan={3}>
-                            {/* Empty spacing for other columns */}
-                          </td>
                         </tr>
                       </tbody>
                     </table>
@@ -1950,9 +2089,9 @@ export default function StudentPortal({
                 <div className="grid grid-cols-2 print:grid-cols-2 gap-4 md:gap-6 relative z-10 pt-6 border-t border-dashed border-slate-200">
                   {/* Form Teacher Remark Callout */}
                   {(() => {
-                    const cleanClassName = (selectedStudent.className || '').replace(/\s+/g, '');
-                    const isNursery = ['Pre-Nursery', 'Nursery1', 'Nursery2', 'Nursery3'].includes(cleanClassName);
-                    const isBasic = ['Basic1', 'Basic2', 'Basic3', 'Basic4', 'Basic5', 'Basic6'].includes(cleanClassName);
+                    const cleanClassName = (selectedStudent.className || '').replace(/\s+/g, '').toLowerCase();
+                    const isNursery = ['pre-nursery', 'nursery1', 'nursery2', 'nursery3'].includes(cleanClassName) || cleanClassName.includes('nursery');
+                    const isBasic = ['basic1', 'basic2', 'basic3', 'basic4', 'basic5', 'basic6'].includes(cleanClassName) || cleanClassName.startsWith('basic');
                     const isPreNurseryToBasic6 = isNursery || isBasic;
 
                     let fallbackTeacher = '';

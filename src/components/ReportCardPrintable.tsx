@@ -32,10 +32,10 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
   isGeneratingPdf = false
 }, ref) => {
   const stats = calculateStudentStatsForTerm(student, term);
-  const cleanClassName = (student?.className || '').replace(/\s+/g, '');
-  const isSecondaryClass = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2A', 'SS2B', 'SS3A', 'SS3B'].includes(cleanClassName);
-  const isNursery = ['Pre-Nursery', 'Nursery1', 'Nursery2', 'Nursery3'].includes(cleanClassName);
-  const isBasic = ['Basic1', 'Basic2', 'Basic3', 'Basic4', 'Basic5', 'Basic6'].includes(cleanClassName);
+  const cleanClassName = (student?.className || '').replace(/\s+/g, '').toLowerCase();
+  const isSecondaryClass = ['jss1', 'jss2', 'jss3', 'ss1', 'ss2a', 'ss2b', 'ss3a', 'ss3b'].includes(cleanClassName) || cleanClassName.startsWith('jss') || cleanClassName.startsWith('ss');
+  const isNursery = ['pre-nursery', 'nursery1', 'nursery2', 'nursery3'].includes(cleanClassName) || cleanClassName.includes('nursery');
+  const isBasic = ['basic1', 'basic2', 'basic3', 'basic4', 'basic5', 'basic6'].includes(cleanClassName) || cleanClassName.startsWith('basic');
   const showFourColumnLayout = isSecondaryClass || isBasic;
   const visibleSubjects = (student?.subjects || []).filter(s => s && s.name && !s.name.startsWith('__'));
 
@@ -714,36 +714,73 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                   <th className="py-1 px-2 border-r border-slate-300 text-center bg-emerald-100/30 w-18">
                     <span className="flex items-center justify-center text-emerald-955 font-black">TERM (100)</span>
                   </th>
-                  {term === 'Second Term' && isSecondaryClass && (
-                    <th className="py-1 px-2 border-r border-slate-300 text-center text-[8.5px] w-20 bg-blue-50 text-blue-900 font-black">
-                      <span className="flex items-center justify-center">1ST T AVG</span>
-                    </th>
-                  )}
-                  {term === 'Third Term' && !isNursery && (
+                  {isBasic ? (
                     <>
-                      <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
-                        <span className="flex items-center justify-center">1ST T (20)</span>
+                      <th className="py-1 px-2 border-r border-slate-300 text-center w-16">
+                        <span className="flex items-center justify-center">GRADE</span>
                       </th>
-                      <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
-                        <span className="flex items-center justify-center">2ND T (20)</span>
+                      <th className="py-1 px-1 border-r border-slate-300 text-center w-14">
+                        <span className="flex items-center justify-center">POSITION</span>
                       </th>
-                      <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
-                        <span className="flex items-center justify-center">3RD T (60)</span>
+                      <th className="py-1 px-2 font-black text-slate-955 border-r border-slate-300">
+                        <span className="flex items-center gap-1">💬 REMARK</span>
                       </th>
-                      <th className="py-1 px-2 border-r border-slate-300 text-center bg-emerald-100/20 w-22 text-slate-955 font-black">
-                        <span className="flex items-center justify-center font-black">SESS AVG</span>
+                      {term === 'Second Term' && (isSecondaryClass || isBasic) && (
+                        <th className="py-1 px-2 border-r border-slate-300 text-center text-[8.5px] w-20 bg-blue-50 text-blue-900 font-black">
+                          <span className="flex items-center justify-center">1ST TERM AVERAGE</span>
+                        </th>
+                      )}
+                      {term === 'Third Term' && !isNursery && (
+                        <>
+                          <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
+                            <span className="flex items-center justify-center">1ST TERM AVERAGE</span>
+                          </th>
+                          <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
+                            <span className="flex items-center justify-center">2ND TERM AVERAGE</span>
+                          </th>
+                          <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
+                            <span className="flex items-center justify-center">3RD TERM AVERAGE</span>
+                          </th>
+                          <th className="py-1 px-2 border-r border-slate-300 text-center bg-emerald-100/20 w-22 text-slate-955 font-black">
+                            <span className="flex items-center justify-center font-black">SESSION AVERAGE</span>
+                          </th>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {term === 'Second Term' && (isSecondaryClass || isBasic) && (
+                        <th className="py-1 px-2 border-r border-slate-300 text-center text-[8.5px] w-20 bg-blue-50 text-blue-900 font-black">
+                          <span className="flex items-center justify-center">1ST T AVG</span>
+                        </th>
+                      )}
+                      {term === 'Third Term' && !isNursery && (
+                        <>
+                          <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
+                            <span className="flex items-center justify-center">1ST T {isBasic ? '(100)' : '(20)'}</span>
+                          </th>
+                          <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
+                            <span className="flex items-center justify-center">2ND T {isBasic ? '(100)' : '(20)'}</span>
+                          </th>
+                          <th className="py-1 px-1 border-r border-slate-300 text-center text-[8px] w-14">
+                            <span className="flex items-center justify-center">3RD T {isBasic ? '(100)' : '(60)'}</span>
+                          </th>
+                          <th className="py-1 px-2 border-r border-slate-300 text-center bg-emerald-100/20 w-22 text-slate-955 font-black">
+                            <span className="flex items-center justify-center font-black">SESS AVG</span>
+                          </th>
+                        </>
+                      )}
+                      <th className="py-1 px-2 border-r border-slate-300 text-center w-16">
+                        <span className="flex items-center justify-center">GRADE</span>
+                      </th>
+                      <th className="py-1 px-1 border-r border-slate-300 text-center w-14">
+                        <span className="flex items-center justify-center">POSITION</span>
+                      </th>
+                      <th className="py-1 px-2 font-black text-slate-955">
+                        <span className="flex items-center gap-1">💬 REMARK</span>
                       </th>
                     </>
                   )}
-                  <th className="py-1 px-2 border-r border-slate-300 text-center w-16">
-                    <span className="flex items-center justify-center">GRADE</span>
-                  </th>
-                  <th className="py-1 px-1 border-r border-slate-300 text-center w-14">
-                    <span className="flex items-center justify-center">POSITION</span>
-                  </th>
-                  <th className="py-1 px-2 font-black text-slate-955">
-                    <span className="flex items-center gap-1">💬 REMARK</span>
-                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
@@ -751,13 +788,13 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                   const tot = calculateSubjectTotal(subj);
                   
                   // Formulate annual / session average data realistically matching the 20/20/60 formula of Ezibeck
-                  const firstTerm = subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0 ? subj.firstTermSummary : Math.round(tot * 0.2);
-                  const secondTerm = subj.secondTermSummary !== undefined && subj.secondTermSummary !== 0 ? subj.secondTermSummary : Math.round(tot * 0.2);
-                  const thirdTerm = subj.thirdTermSummary !== undefined && subj.thirdTermSummary !== 0 ? subj.thirdTermSummary : Math.round(tot * 0.6);
-                  const sessionAvg = firstTerm + secondTerm + thirdTerm;
+                  const firstTerm = subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0 ? subj.firstTermSummary : (isBasic ? tot : Math.round(tot * 0.2));
+                  const secondTerm = subj.secondTermSummary !== undefined && subj.secondTermSummary !== 0 ? subj.secondTermSummary : (isBasic ? tot : Math.round(tot * 0.2));
+                  const thirdTerm = subj.thirdTermSummary !== undefined && subj.thirdTermSummary !== 0 ? subj.thirdTermSummary : (isBasic ? tot : Math.round(tot * 0.6));
+                  const sessionAvg = isBasic ? Math.round((firstTerm + secondTerm + thirdTerm) / 3) : (firstTerm + secondTerm + thirdTerm);
 
                   const { letter, remark, ratingClass } = getLetterAndRemark(
-                    term === 'Third Term' ? sessionAvg : tot
+                    (term === 'Third Term' && !isBasic) ? sessionAvg : tot
                   );
 
                   return (
@@ -766,45 +803,91 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                       <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{subj.testScore}</td>
                       <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{subj.examScore}</td>
                       <td className="py-1 px-2 border-r border-slate-150 text-center font-black font-mono text-emerald-855 bg-emerald-50/10">{tot}</td>
-                      {term === 'Second Term' && isSecondaryClass && (
-                        <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800 bg-blue-50/5">
-                          {(() => {
-                            let firstTermAvgStr = "-";
-                            const baseId = student.id.split('_')[0];
-                            try {
-                              const matchMatch = firstTermStuds.find(s => s.id.startsWith(baseId));
-                              const matchSubj = matchMatch?.subjects.find(s => s.name.toLowerCase() === subj.name.toLowerCase());
-                              if (subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0) {
-                                firstTermAvgStr = String(subj.firstTermSummary) + "%";
-                              } else if (matchSubj) {
-                                firstTermAvgStr = String((matchSubj.testScore || 0) + (matchSubj.examScore || 0)) + "%";
-                              } else {
-                                firstTermAvgStr = String(Math.round(tot * 0.75)) + "%";
-                              }
-                            } catch (e) {
-                              console.error(e);
-                            }
-                            return firstTermAvgStr;
-                          })()}
-                        </td>
-                      )}
-                      {term === 'Third Term' && !isNursery && (
+                      {isBasic ? (
                         <>
-                          <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{firstTerm}</td>
-                          <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{secondTerm}</td>
-                          <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{thirdTerm}</td>
-                          <td className="py-1 px-2 border-r border-slate-150 text-center font-black font-mono text-emerald-850 bg-slate-50/40">{sessionAvg}</td>
+                          <td className="py-1 px-2 border-r border-slate-150 text-center">
+                            <span className={`px-1.5 py-0.5 text-[11px] font-black rounded-sm tracking-wider ${ratingClass}`}>
+                              {letter}
+                            </span>
+                          </td>
+                          <td className="py-1 px-1 border-r border-slate-150 text-center font-black text-slate-900 bg-slate-50/10">
+                            {isNursery || isBasic ? '-' : formatOrdinal(subj.position)}
+                          </td>
+                          <td className="py-1 px-2 italic text-slate-700 text-[12px] font-bold leading-tight bg-[#FCFCFC] border-r border-slate-150">{remark}</td>
+                          {term === 'Second Term' && (isSecondaryClass || isBasic) && (
+                            <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800 bg-blue-50/5">
+                              {(() => {
+                                let firstTermAvgStr = "-";
+                                const baseId = student.id.split('_')[0];
+                                try {
+                                  const matchMatch = firstTermStuds.find(s => s.id.startsWith(baseId));
+                                  const matchSubj = matchMatch?.subjects.find(s => s.name.toLowerCase() === subj.name.toLowerCase());
+                                  if (subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0) {
+                                    firstTermAvgStr = String(subj.firstTermSummary) + "%";
+                                  } else if (matchSubj) {
+                                    firstTermAvgStr = String((matchSubj.testScore || 0) + (matchSubj.examScore || 0)) + "%";
+                                  } else {
+                                    firstTermAvgStr = isBasic ? "100%" : (String(Math.round(tot * 0.75)) + "%");
+                                  }
+                                } catch (e) {
+                                  console.error(e);
+                                }
+                                return firstTermAvgStr;
+                              })()}
+                            </td>
+                          )}
+                          {term === 'Third Term' && !isNursery && (
+                            <>
+                              <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{firstTerm}</td>
+                              <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{secondTerm}</td>
+                              <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{thirdTerm}</td>
+                              <td className="py-1 px-2 border-r border-slate-150 text-center font-black font-mono text-emerald-850 bg-slate-50/40">{sessionAvg}</td>
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {term === 'Second Term' && (isSecondaryClass || isBasic) && (
+                            <td className="py-1 px-2 border-r border-slate-150 text-center font-mono font-bold text-slate-800 bg-blue-50/5">
+                              {(() => {
+                                let firstTermAvgStr = "-";
+                                const baseId = student.id.split('_')[0];
+                                try {
+                                  const matchMatch = firstTermStuds.find(s => s.id.startsWith(baseId));
+                                  const matchSubj = matchMatch?.subjects.find(s => s.name.toLowerCase() === subj.name.toLowerCase());
+                                  if (subj.firstTermSummary !== undefined && subj.firstTermSummary !== 0) {
+                                    firstTermAvgStr = String(subj.firstTermSummary) + "%";
+                                  } else if (matchSubj) {
+                                    firstTermAvgStr = String((matchSubj.testScore || 0) + (matchSubj.examScore || 0)) + "%";
+                                  } else {
+                                    firstTermAvgStr = isBasic ? "100%" : (String(Math.round(tot * 0.75)) + "%");
+                                  }
+                                } catch (e) {
+                                  console.error(e);
+                                }
+                                return firstTermAvgStr;
+                              })()}
+                            </td>
+                          )}
+                          {term === 'Third Term' && !isNursery && (
+                            <>
+                              <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{firstTerm}</td>
+                              <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{secondTerm}</td>
+                              <td className="py-1 px-1 border-r border-slate-150 text-center font-mono font-bold text-slate-800">{thirdTerm}</td>
+                              <td className="py-1 px-2 border-r border-slate-150 text-center font-black font-mono text-emerald-850 bg-slate-50/40">{sessionAvg}</td>
+                            </>
+                          )}
+                          <td className="py-1 px-2 border-r border-slate-150 text-center">
+                            <span className={`px-1.5 py-0.5 text-[11px] font-black rounded-sm tracking-wider ${ratingClass}`}>
+                              {letter}
+                            </span>
+                          </td>
+                          <td className="py-1 px-1 border-r border-slate-150 text-center font-black text-slate-900 bg-slate-50/10">
+                            {isNursery || isBasic ? '-' : formatOrdinal(subj.position)}
+                          </td>
+                          <td className="py-1 px-2 italic text-slate-700 text-[12px] font-bold leading-tight bg-[#FCFCFC]">{remark}</td>
                         </>
                       )}
-                      <td className="py-1 px-2 border-r border-slate-150 text-center">
-                        <span className={`px-1.5 py-0.5 text-[11px] font-black rounded-sm tracking-wider ${ratingClass}`}>
-                          {letter}
-                        </span>
-                      </td>
-                      <td className="py-1 px-1 border-r border-slate-150 text-center font-black text-slate-900 bg-slate-50/10">
-                        {isNursery || isBasic ? '-' : formatOrdinal(subj.position)}
-                      </td>
-                      <td className="py-1 px-2 italic text-slate-700 text-[12px] font-bold leading-tight bg-[#FCFCFC]">{remark}</td>
                     </tr>
                   );
                 })}
@@ -831,47 +914,95 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
                   <td className="py-1 px-2 text-center font-black text-emerald-855 bg-emerald-50/10">
                     Avg: {stats.avgScore.toFixed(1)}%
                   </td>
-                  {term === 'Second Term' && isSecondaryClass && (
-                    <td className="py-1 px-2 text-center font-bold text-slate-400">-</td>
-                  )}
-                  {term === 'Third Term' && !isNursery && (
+                  {isBasic ? (
                     <>
-                      <td className="py-1 px-1 text-center font-bold">
-                        Avg: {(() => {
-                          const tCount = visibleSubjects.length || 1;
-                          const fSum = visibleSubjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
-                          return (fSum / tCount).toFixed(1);
-                        })()}
-                      </td>
-                      <td className="py-1 px-1 text-center font-bold">
-                        Avg: {(() => {
-                          const tCount = visibleSubjects.length || 1;
-                          const sSum = visibleSubjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
-                          return (sSum / tCount).toFixed(1);
-                        })()}
-                      </td>
-                      <td className="py-1 px-1 text-center font-bold">
-                        Avg: {(() => {
-                          const tCount = visibleSubjects.length || 1;
-                          const thSum = visibleSubjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
-                          return (thSum / tCount).toFixed(1);
-                        })()}
-                      </td>
-                      <td className="py-1 px-2 text-center font-black bg-slate-100/50 text-slate-800">
-                        Avg: {(() => {
-                          const tCount = visibleSubjects.length || 1;
-                          const sessionSum = visibleSubjects.reduce((sum, s) => {
-                            const f = s.firstTermSummary !== undefined ? s.firstTermSummary : 0;
-                            const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : 0;
-                            const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0;
-                            return sum + (f + sec + th);
-                          }, 0);
-                          return (sessionSum / tCount).toFixed(1);
-                        })()}%
-                      </td>
+                      <td className="py-1 px-2" colSpan={3}></td>
+                      {term === 'Second Term' && (isSecondaryClass || isBasic) && (
+                        <td className="py-1 px-2 text-center font-bold text-slate-400 bg-blue-50/5">-</td>
+                      )}
+                      {term === 'Third Term' && !isNursery && (
+                        <>
+                          <td className="py-1 px-1 text-center font-bold">
+                            Avg: {(() => {
+                              const tCount = visibleSubjects.length || 1;
+                              const fSum = visibleSubjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
+                              return (fSum / tCount).toFixed(1);
+                            })()}
+                          </td>
+                          <td className="py-1 px-1 text-center font-bold">
+                            Avg: {(() => {
+                              const tCount = visibleSubjects.length || 1;
+                              const sSum = visibleSubjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
+                              return (sSum / tCount).toFixed(1);
+                            })()}
+                          </td>
+                          <td className="py-1 px-1 text-center font-bold">
+                            Avg: {(() => {
+                              const tCount = visibleSubjects.length || 1;
+                              const thSum = visibleSubjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
+                              return (thSum / tCount).toFixed(1);
+                            })()}
+                          </td>
+                          <td className="py-1 px-2 text-center font-black bg-slate-100/50 text-slate-800">
+                            Avg: {(() => {
+                              const tCount = visibleSubjects.length || 1;
+                              const sessionSum = visibleSubjects.reduce((sum, s) => {
+                                const f = s.firstTermSummary !== undefined ? s.firstTermSummary : 0;
+                                const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : 0;
+                                const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0;
+                                return sum + (f + sec + th);
+                              }, 0);
+                              return (sessionSum / tCount).toFixed(1);
+                            })()}%
+                          </td>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {term === 'Second Term' && isSecondaryClass && (
+                        <td className="py-1 px-2 text-center font-bold text-slate-400">-</td>
+                      )}
+                      {term === 'Third Term' && !isNursery && (
+                        <>
+                          <td className="py-1 px-1 text-center font-bold">
+                            Avg: {(() => {
+                              const tCount = visibleSubjects.length || 1;
+                              const fSum = visibleSubjects.reduce((sum, s) => sum + (s.firstTermSummary !== undefined ? s.firstTermSummary : 0), 0);
+                              return (fSum / tCount).toFixed(1);
+                            })()}
+                          </td>
+                          <td className="py-1 px-1 text-center font-bold">
+                            Avg: {(() => {
+                              const tCount = visibleSubjects.length || 1;
+                              const sSum = visibleSubjects.reduce((sum, s) => sum + (s.secondTermSummary !== undefined ? s.secondTermSummary : 0), 0);
+                              return (sSum / tCount).toFixed(1);
+                            })()}
+                          </td>
+                          <td className="py-1 px-1 text-center font-bold">
+                            Avg: {(() => {
+                              const tCount = visibleSubjects.length || 1;
+                              const thSum = visibleSubjects.reduce((sum, s) => sum + (s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0), 0);
+                              return (thSum / tCount).toFixed(1);
+                            })()}
+                          </td>
+                          <td className="py-1 px-2 text-center font-black bg-slate-100/50 text-slate-800">
+                            Avg: {(() => {
+                              const tCount = visibleSubjects.length || 1;
+                              const sessionSum = visibleSubjects.reduce((sum, s) => {
+                                const f = s.firstTermSummary !== undefined ? s.firstTermSummary : 0;
+                                const sec = s.secondTermSummary !== undefined ? s.secondTermSummary : 0;
+                                const th = s.thirdTermSummary !== undefined ? s.thirdTermSummary : 0;
+                                return sum + (f + sec + th);
+                              }, 0);
+                              return (sessionSum / tCount).toFixed(1);
+                            })()}%
+                          </td>
+                        </>
+                      )}
+                      <td className="py-1 px-2" colSpan={3}></td>
                     </>
                   )}
-                  <td className="py-1 px-2" colSpan={3}></td>
                 </tr>
               </tbody>
             </table>

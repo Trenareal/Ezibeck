@@ -32,13 +32,12 @@ CREATE TABLE IF NOT EXISTS public.school_config (
     next_term_fee text NOT NULL DEFAULT '₦150,000.00',
     distinction_threshold integer NOT NULL DEFAULT 85,
     pass_threshold integer NOT NULL DEFAULT 50,
+    portal_locked boolean NOT NULL DEFAULT false,
+    total_attendance integer NOT NULL DEFAULT 110,
     updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- Table 2. Faculty / Teachers & Admin Profiles
--- PASSWORDS NOTE: Since school systems often generate paper passcode sheets (to scissor-cut 
--- and hand over physical login slips to teachers/students), values need to remain readable by 
--- administrators. We store them securely using active, non-bypassable Row Level Security policies.
 CREATE TABLE IF NOT EXISTS public.faculty_profiles (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     name text NOT NULL,
@@ -57,8 +56,8 @@ CREATE TABLE IF NOT EXISTS public.students (
     id text PRIMARY KEY,
     name text NOT NULL,
     age integer NOT NULL DEFAULT 15,
-    sex text NOT NULL, -- Constraint added separately to prevent migration collisions
-    class_name text NOT NULL, -- Constraint added separately to prevent migration collisions
+    sex text NOT NULL, 
+    class_name text NOT NULL, 
     term_date text NOT NULL,
     session text NOT NULL,
     attendance_present integer NOT NULL DEFAULT 0,
@@ -68,6 +67,8 @@ CREATE TABLE IF NOT EXISTS public.students (
     principal_name text DEFAULT '',
     resumption_date text NOT NULL,
     password text NOT NULL DEFAULT '123456',
+    password_use_count integer NOT NULL DEFAULT 0,
+    password_rolled_over boolean NOT NULL DEFAULT false,
     principal_remark text DEFAULT '',
     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
@@ -78,8 +79,8 @@ CREATE TABLE IF NOT EXISTS public.subject_grades (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     student_id text REFERENCES public.students(id) ON DELETE CASCADE NOT NULL,
     name text NOT NULL, -- e.g., Mathematics
-    test_score integer NOT NULL DEFAULT 0, -- Checked separately for safe migration
-    exam_score integer NOT NULL DEFAULT 0, -- Checked separately for safe migration
+    test_score integer NOT NULL DEFAULT 0, 
+    exam_score integer NOT NULL DEFAULT 0, 
     first_term_summary integer DEFAULT 0,
     second_term_summary integer DEFAULT 0,
     third_term_summary integer DEFAULT 0,
@@ -95,7 +96,7 @@ CREATE TABLE IF NOT EXISTS public.behavioural_ratings (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     student_id text REFERENCES public.students(id) ON DELETE CASCADE NOT NULL,
     name text NOT NULL, -- e.g., Punctuality, Neatness
-    rating integer NOT NULL DEFAULT 5, -- Checked separately for safe migration
+    rating integer NOT NULL DEFAULT 5, 
     created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
     unique (student_id, name)
 );
@@ -125,12 +126,27 @@ CREATE TABLE IF NOT EXISTS public.nursery_overrides (
     unique (student_id, term)
 );
 
+-- Table 7. Passcode Audit Logs Table
+CREATE TABLE IF NOT EXISTS public.audit_logs (
+    id text PRIMARY KEY,
+    timestamp timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
+    student_id text NOT NULL,
+    student_name text NOT NULL,
+    student_class text NOT NULL,
+    action text NOT NULL, -- 'Created' | 'Manual Reset' | 'Rollover' | 'Self Reset'
+    performed_by text NOT NULL,
+    old_passcode text,
+    new_passcode text NOT NULL,
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- =====================================================================
 -- 3. INDEXES FOR PERFORMANCE OPTIMIZATION
 -- =====================================================================
 CREATE INDEX IF NOT EXISTS students_class_name_idx ON public.students(class_name);
 CREATE INDEX IF NOT EXISTS subject_grades_student_id_idx ON public.subject_grades(student_id);
 CREATE INDEX IF NOT EXISTS behavioural_ratings_student_id_idx ON public.behavioural_ratings(student_id);
+CREATE INDEX IF NOT EXISTS audit_logs_timestamp_idx ON public.audit_logs(timestamp DESC);
 
 -- =====================================================================
 -- 4. DETERMINISTIC POLICY CLEANUP & ROW LEVEL SECURITY (RLS)
@@ -144,6 +160,7 @@ ALTER TABLE public.subject_grades ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.behavioural_ratings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.calendar_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.nursery_overrides ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- Clean up any conflicting policy definitions from older migration trials
 DO $$
@@ -154,7 +171,7 @@ BEGIN
          SELECT policyname, tablename 
          FROM pg_policies 
          WHERE schemaname = 'public' 
-           AND tablename IN ('school_config', 'faculty_profiles', 'students', 'subject_grades', 'behavioural_ratings', 'calendar_events', 'nursery_overrides')
+           AND tablename IN ('school_config', 'faculty_profiles', 'students', 'subject_grades', 'behavioural_ratings', 'calendar_events', 'nursery_overrides', 'audit_logs')
     LOOP
         EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', pol.policyname, pol.tablename);
     END LOOP;
@@ -198,15 +215,18 @@ CREATE POLICY "Allow public insert operations" ON public.nursery_overrides FOR I
 CREATE POLICY "Allow public update operations" ON public.nursery_overrides FOR UPDATE USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public delete operations" ON public.nursery_overrides FOR DELETE USING (true);
 
+CREATE POLICY "Allow public select operations" ON public.audit_logs FOR SELECT USING (true);
+CREATE POLICY "Allow public insert operations" ON public.audit_logs FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update operations" ON public.audit_logs FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public delete operations" ON public.audit_logs FOR DELETE USING (true);
+
 -- =====================================================================
 -- 5. SEED DATA GENERATION
 -- =====================================================================
 -- Insert Initial Defaults safely
-INSERT INTO public.school_config (school_name, motto, address, phone, email, resumption_date, term_date, session, principal_name, form_teacher_junior, form_teacher_senior, current_term, next_term_fee, distinction_threshold, pass_threshold) 
-VALUES ('Ezibeck Core International College', 'Knowledge, discipline and outstanding character excellence', '120, Broadway Lane, New York, NY 10025', '+1 (555) 489-0128', 'admissions@ezibeckcollege.edu', 'September 14, 2026', 'June 18, 2026', '2025/2026 Academic Year', 'Dr. Christopher Vance, PhD', 'Mrs. Clara Vance', 'Mr. Albert King', 'Third Term Summary', '₦150,000.00', 85, 50)
+INSERT INTO public.school_config (school_name, motto, address, phone, email, resumption_date, term_date, session, principal_name, form_teacher_junior, form_teacher_senior, current_term, next_term_fee, distinction_threshold, pass_threshold, portal_locked, total_attendance) 
+VALUES ('Ezibeck Core International College', 'Knowledge, discipline and outstanding character excellence', '120, Broadway Lane, New York, NY 10025', '+1 (555) 489-0128', 'admissions@ezibeckcollege.edu', 'September 14, 2026', 'June 18, 2026', '2025/2026 Academic Year', 'Dr. Christopher Vance, PhD', 'Mrs. Clara Vance', 'Mr. Albert King', 'Third Term Summary', '₦150,000.00', 85, 50, false, 110)
 ON CONFLICT DO NOTHING;
-
-
 
 -- =====================================================================
 -- 6. SAFE IN-PLACE MIGRATION SCRIPT (DUPLICATE COLUMN PREVENTERS)
@@ -225,6 +245,8 @@ ALTER TABLE public.students ADD COLUMN IF NOT EXISTS form_teacher_name text DEFA
 ALTER TABLE public.students ADD COLUMN IF NOT EXISTS principal_name text DEFAULT '';
 ALTER TABLE public.students ADD COLUMN IF NOT EXISTS resumption_date text DEFAULT '';
 ALTER TABLE public.students ADD COLUMN IF NOT EXISTS password text NOT NULL DEFAULT '123456';
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS password_use_count integer NOT NULL DEFAULT 0;
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS password_rolled_over boolean NOT NULL DEFAULT false;
 ALTER TABLE public.students ADD COLUMN IF NOT EXISTS principal_remark text DEFAULT '';
 
 ALTER TABLE public.school_config ADD COLUMN IF NOT EXISTS resumption_date text NOT NULL DEFAULT 'September 14, 2026';
@@ -237,6 +259,8 @@ ALTER TABLE public.school_config ADD COLUMN IF NOT EXISTS current_term text NOT 
 ALTER TABLE public.school_config ADD COLUMN IF NOT EXISTS next_term_fee text NOT NULL DEFAULT '₦150,000.00';
 ALTER TABLE public.school_config ADD COLUMN IF NOT EXISTS distinction_threshold integer NOT NULL DEFAULT 85;
 ALTER TABLE public.school_config ADD COLUMN IF NOT EXISTS pass_threshold integer NOT NULL DEFAULT 50;
+ALTER TABLE public.school_config ADD COLUMN IF NOT EXISTS portal_locked boolean NOT NULL DEFAULT false;
+ALTER TABLE public.school_config ADD COLUMN IF NOT EXISTS total_attendance integer NOT NULL DEFAULT 110;
 
 ALTER TABLE public.subject_grades ADD COLUMN IF NOT EXISTS first_term_summary integer DEFAULT 0;
 ALTER TABLE public.subject_grades ADD COLUMN IF NOT EXISTS second_term_summary integer DEFAULT 0;
@@ -321,4 +345,3 @@ NOTIFY pgrst, 'reload schema';
 ALTER DATABASE postgres SET idle_session_timeout = '30000'; -- Terminate any sessions inactive for 30 seconds
 ALTER DATABASE postgres SET idle_in_transaction_session_timeout = '45000'; -- Terminate hung transactions after 45 seconds
 ALTER DATABASE postgres SET statement_timeout = '60000'; -- Max query execute duration 1 minute (guards memory)
-
