@@ -1588,6 +1588,7 @@ export default function TeacherDashboard({
   const [facultyNewPass, setFacultyNewPass] = useState('');
   const [facultyNewPassConfirm, setFacultyNewPassConfirm] = useState('');
   const [facultyResetUser, setFacultyResetUser] = useState<FacultyProfile | null>(null);
+  const [deletingFaculty, setDeletingFaculty] = useState<FacultyProfile | null>(null);
 
   // Faculty Login Credentials States
   const [pendingLoginUser, setPendingLoginUser] = useState<FacultyProfile | null>(null);
@@ -6206,22 +6207,7 @@ export default function TeacherDashboard({
                       {!isSelf && p.id !== 'ezekiel' && (
                         <button
                           type="button"
-                          onClick={async () => {
-                            if (safeConfirm(`Are you sure you want to delete ${p.name}? This action cannot be undone.`)) {
-                              const updated = facultyProfiles.filter(f => f.id !== p.id);
-                              setFacultyProfiles(updated);
-                              if (typeof window !== 'undefined') {
-                                localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(updated));
-                              }
-                              if (dbStatus && dbStatus.configured && dbStatus.connected) {
-                                try {
-                                  await dbService.deleteFacultyProfile(p.id);
-                                } catch (err) {
-                                  console.error("Failed to delete staff:", err);
-                                }
-                              }
-                            }
-                          }}
+                          onClick={() => setDeletingFaculty(p)}
                           className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 p-2.5 rounded-xl transition-all mr-2"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -7554,6 +7540,42 @@ export default function TeacherDashboard({
 
       {/* Floating AI Staff Assistant */}
       <AIAgentComponent />
+      {deletingFaculty && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 shadow-xl max-w-sm w-full">
+            <h2 className="text-lg font-black text-slate-900 mb-2">Are you sure?</h2>
+            <p className="text-sm text-slate-600 mb-6">Are you sure you want to delete {deletingFaculty.name}? This action cannot be undone.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeletingFaculty(null)}
+                className="flex-1 px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  const updated = facultyProfiles.filter(f => f.id !== deletingFaculty.id);
+                  setFacultyProfiles(updated);
+                  if (typeof window !== 'undefined') {
+                    localStorage.setItem('ezibeck_faculty_profiles', JSON.stringify(updated));
+                  }
+                  if (dbStatus && dbStatus.configured && dbStatus.connected) {
+                    try {
+                      await dbService.deleteFacultyProfile(deletingFaculty.id);
+                    } catch (err) {
+                      console.error("Failed to delete staff:", err);
+                    }
+                  }
+                  setDeletingFaculty(null);
+                }}
+                className="flex-1 px-4 py-2 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
