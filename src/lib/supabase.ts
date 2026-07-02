@@ -466,7 +466,14 @@ export const dbService = {
 
     return {
       ...studentData,
-      nursery_overrides: overrides
+      subjects: [
+        ...(studentData.subjects || []),
+        ...overrides.map((ov: any) => ({
+          name: `__nursery_term_stats_${ov.term}`,
+          firstTermSummary: ov.cumulative,
+          secondTermSummary: Math.round(Number(ov.average) * 10)
+        }))
+      ]
     };
   },
 
