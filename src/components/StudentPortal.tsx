@@ -1069,10 +1069,18 @@ export default function StudentPortal({
             const isBasic = ['basic1', 'basic2', 'basic3', 'basic4', 'basic5', 'basic6'].includes(cleanClassName) || cleanClassName.startsWith('basic');
 
             const getNurseryTermStats = (termName: 'First Term' | 'Second Term' | 'Third Term') => {
+              // 1. Check if we have an override row in selectedStudent.subjects
+              const overrideSub = selectedStudent.subjects?.find(s => s.name === `__nursery_term_stats_${termName}`);
+              if (overrideSub) {
+                const cumulative = overrideSub.firstTermSummary || 0;
+                const average = (overrideSub.secondTermSummary || 0) / 10;
+                return { cumulative, average, available: true };
+              }
+
+              // 2. Otherwise check if viewing term is the active term being calculated
               let subjectsToUse: any[] = [];
-              
               if (viewingTerm === termName) {
-                subjectsToUse = selectedStudent.subjects || [];
+                subjectsToUse = (selectedStudent.subjects || []).filter(s => !s.name.startsWith('__'));
               } else {
                 const termKey = `ezibeck_students_${termName.toLowerCase().replace(/\s+/g, '_')}`;
                 const data = typeof window !== 'undefined' ? safeStorage.getItem(termKey) : null;
@@ -1083,7 +1091,13 @@ export default function StudentPortal({
                       const baseId = selectedStudent.id.split('_')[0];
                       const matchedStud = parsed.find((s: any) => s && s.id && typeof s.id === 'string' && s.id.split('_')[0] === baseId);
                       if (matchedStud && Array.isArray(matchedStud.subjects)) {
-                        subjectsToUse = matchedStud.subjects;
+                        const matchOverride = matchedStud.subjects.find((s: any) => s.name === `__nursery_term_stats_${termName}`);
+                        if (matchOverride) {
+                          const cumulative = matchOverride.firstTermSummary || 0;
+                          const average = (matchOverride.secondTermSummary || 0) / 10;
+                          return { cumulative, average, available: true };
+                        }
+                        subjectsToUse = matchedStud.subjects.filter((s: any) => !s.name.startsWith('__'));
                       }
                     }
                   } catch (e) {
@@ -1807,16 +1821,16 @@ export default function StudentPortal({
                                   {termName} Average
                                 </td>
                                 <td className="py-2 px-4 text-center font-mono">
-                                  {statsVal.available ? statsVal.cumulative : <span className="text-slate-440 font-normal">-</span>}
+                                  {statsVal.available ? statsVal.cumulative : <span className="text-slate-400 font-normal">-</span>}
                                 </td>
                                 <td className="py-2 px-4 text-center font-mono text-emerald-800">
-                                  {statsVal.available ? `${statsVal.average.toFixed(1)}%` : <span className="text-slate-440 font-normal">-</span>}
+                                  {statsVal.available ? `${statsVal.average.toFixed(1)}%` : <span className="text-slate-400 font-normal">-</span>}
                                 </td>
                                 <td className="py-2 px-4 text-center text-[10px]">
                                   {isCurrentActive ? (
                                     <span className="font-black text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-full uppercase tracking-wider">Current Term</span>
                                   ) : statsVal.available ? (
-                                    <span className="text-slate-505 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold">Recorded</span>
+                                    <span className="text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold">Recorded</span>
                                   ) : (
                                     <span className="text-slate-400 italic font-normal">Pending</span>
                                   )}
