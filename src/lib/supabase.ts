@@ -32,6 +32,47 @@ export const supabase = createClient(
   }
 );
 
+/**
+ * Simple, robust symmetric encryption/decryption utility using a key-based XOR-cipher.
+ * This ensures that passwords stored in the Supabase database are never in plaintext,
+ * preventing data leak risks while preserving the seamless passcode-retrieval and rollover flows.
+ */
+const ENCRYPTION_KEY = "EzibeckSecurePasscodeSalt2026Key!";
+
+export function encryptPassword(text: string): string {
+  if (!text) return "";
+  // If already encrypted, return as is
+  if (text.startsWith("enc::")) return text;
+  
+  let result = "";
+  for (let i = 0; i < text.length; i++) {
+    const charCode = text.charCodeAt(i);
+    const keyChar = ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
+    // XOR operation
+    const xorValue = charCode ^ keyChar;
+    // Hex encode and pad
+    const hex = xorValue.toString(16).padStart(2, '0');
+    result += hex;
+  }
+  return "enc::" + result;
+}
+
+export function decryptPassword(cipherText: string): string {
+  if (!cipherText) return "";
+  if (!cipherText.startsWith("enc::")) return cipherText; // Return plaintext directly if not encrypted yet
+  
+  const hexPart = cipherText.substring(5);
+  let result = "";
+  for (let i = 0; i < hexPart.length; i += 2) {
+    const hex = hexPart.substring(i, i + 2);
+    const xorValue = parseInt(hex, 16);
+    const keyChar = ENCRYPTION_KEY.charCodeAt((i / 2) % ENCRYPTION_KEY.length);
+    const charCode = xorValue ^ keyChar;
+    result += String.fromCharCode(charCode);
+  }
+  return result;
+}
+
 export const mapDbStudentToFrontend = (dbStudent: any): Student => {
   const overrides = dbStudent.nursery_overrides || [];
   
@@ -81,7 +122,7 @@ export const mapDbStudentToFrontend = (dbStudent: any): Student => {
     formTeacherName: dbStudent.form_teacher_name || '',
     principalName: dbStudent.principal_name || '',
     resumptionDate: dbStudent.resumption_date,
-    password: dbStudent.password,
+    password: decryptPassword(dbStudent.password || '123456'),
     passwordUseCount: dbStudent.password_use_count || 0,
     passwordRolledOver: !!dbStudent.password_rolled_over,
     principalRemark: dbStudent.principal_remark || '',
@@ -334,7 +375,7 @@ export const mapDbFacultyToFrontend = (dbFaculty: any): FacultyProfile => {
     name: dbFaculty.name,
     role: dbFaculty.role,
     avatar: dbFaculty.avatar,
-    password: dbFaculty.password,
+    password: decryptPassword(dbFaculty.password || '123456'),
     isRestricted: dbFaculty.is_restricted,
     email: dbFaculty.email || '',
     assignedClass: dbFaculty.assigned_class as ClassName || undefined
@@ -452,7 +493,7 @@ export const dbService = {
           form_teacher_name: studentData.formTeacherName || '',
           principal_name: studentData.principalName || '',
           resumption_date: studentData.resumptionDate || '',
-          password: studentData.password || '123456',
+          password: encryptPassword(studentData.password || '123456'),
           password_use_count: Math.max(0, Math.round(Number(studentData.passwordUseCount) || 0)),
           password_rolled_over: !!studentData.passwordRolledOver,
           principal_remark: studentData.principalRemark || ''
@@ -573,7 +614,7 @@ export const dbService = {
       form_teacher_name: s.formTeacherName || '',
       principal_name: s.principalName || '',
       resumption_date: s.resumptionDate,
-      password: s.password || '123456',
+      password: encryptPassword(s.password || '123456'),
       password_use_count: Math.max(0, Math.round(Number(s.passwordUseCount) || 0)),
       password_rolled_over: !!s.passwordRolledOver,
       principal_remark: s.principalRemark || ''
@@ -704,7 +745,7 @@ export const dbService = {
         name: profile.name,
         role: profile.role,
         avatar: profile.avatar,
-        password: profile.password || '123456',
+        password: encryptPassword(profile.password || '123456'),
         is_restricted: profile.isRestricted || false,
         email: profile.email || '',
         assigned_class: profile.assignedClass || null

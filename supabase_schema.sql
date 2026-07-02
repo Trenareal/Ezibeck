@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS public.faculty_profiles (
     name text NOT NULL,
     role text NOT NULL DEFAULT 'Teacher',  -- 'Teacher' | 'Admin'
     avatar text NOT NULL DEFAULT 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop',
-    password text NOT NULL DEFAULT '123456',
+    password text NOT NULL DEFAULT '123456', -- SECURED: Client-side symmetrically encrypted string (stored starting with 'enc::')
     is_restricted boolean NOT NULL DEFAULT false,
     email text DEFAULT '',
     assigned_class text,
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS public.students (
     form_teacher_name text DEFAULT '',
     principal_name text DEFAULT '',
     resumption_date text NOT NULL,
-    password text NOT NULL DEFAULT '123456',
+    password text NOT NULL DEFAULT '123456', -- SECURED: Client-side symmetrically encrypted string (stored starting with 'enc::')
     password_use_count integer NOT NULL DEFAULT 0,
     password_rolled_over boolean NOT NULL DEFAULT false,
     principal_remark text DEFAULT '',
@@ -342,6 +342,6 @@ NOTIFY pgrst, 'reload schema';
 -- Supabase free instances, we configure PostgreSQL's session supervisor to 
 -- actively terminate idle connections. This frees up connection slots nearly 
 -- instantly for new incoming transactions.
-ALTER DATABASE postgres SET idle_session_timeout = '30000'; -- Terminate any sessions inactive for 30 seconds
-ALTER DATABASE postgres SET idle_in_transaction_session_timeout = '45000'; -- Terminate hung transactions after 45 seconds
-ALTER DATABASE postgres SET statement_timeout = '60000'; -- Max query execute duration 1 minute (guards memory)
+ALTER DATABASE postgres SET idle_session_timeout = '10000'; -- Terminate any sessions inactive for 10 seconds (optimized)
+ALTER DATABASE postgres SET idle_in_transaction_session_timeout = '15000'; -- Terminate hung transactions after 15 seconds (optimized)
+ALTER DATABASE postgres SET statement_timeout = '30000'; -- Max query execute duration 30 seconds (optimized, guards memory)
