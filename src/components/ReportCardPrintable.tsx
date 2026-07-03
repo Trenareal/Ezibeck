@@ -40,7 +40,19 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
   const visibleSubjects = (student?.subjects || []).filter(s => s && s.name && !s.name.startsWith('__'));
 
   const getNurseryTermStats = (termName: 'First Term' | 'Second Term' | 'Third Term') => {
+    // 1. Try to find the override subject directly in the current student's subjects array first.
+    // In database-integrated mode, the backend queries the nursery_overrides table and appends
+    // helper rows for all terms (e.g. __nursery_term_stats_First Term, __nursery_term_stats_Second Term)
+    // directly to the student's subjects, regardless of the active term.
+    const directOverride = (student.subjects || []).find((s: any) => s && s.name === `__nursery_term_stats_${termName}`);
+    if (directOverride) {
+      const cumulative = directOverride.firstTermSummary || 0;
+      const average = (directOverride.secondTermSummary || 0) / 10;
+      return { cumulative, average, available: true };
+    }
+
     let subjectsToUse: any[] = [];
+    let overrideSub: any = null;
     
     if (term === termName) {
       subjectsToUse = student.subjects || [];
@@ -61,6 +73,13 @@ export const ReportCardPrintable = forwardRef<HTMLDivElement, ReportCardPrintabl
           console.error(e);
         }
       }
+    }
+
+    overrideSub = subjectsToUse.find((s: any) => s && s.name === `__nursery_term_stats_${termName}`);
+    if (overrideSub) {
+        const cumulative = overrideSub.firstTermSummary || 0;
+        const average = (overrideSub.secondTermSummary || 0) / 10;
+        return { cumulative, average, available: true };
     }
 
     const filtered = subjectsToUse.filter((s: any) => s && s.name && !s.name.startsWith('__'));

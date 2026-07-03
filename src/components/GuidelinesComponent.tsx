@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  BookOpen, ChevronRight, GraduationCap, Award, Calendar, 
+  BookOpen, ChevronRight, GraduationCap, Award,
   UserCheck, Shield, CheckSquare, Printer, Info, X, Sparkles, Key
 } from 'lucide-react';
 

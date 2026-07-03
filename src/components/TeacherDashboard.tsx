@@ -1238,30 +1238,8 @@ export default function TeacherDashboard({
   };
   
   // Dashboard Sub-navigation Tab
-  const [activeSubTab, setActiveSubTab] = useState<'roster' | 'workspace' | 'staff' | 'audit' | 'passcodes' | 'guidelines' | 'calendar'>('roster');
+  const [activeSubTab, setActiveSubTab] = useState<'roster' | 'workspace' | 'staff' | 'audit' | 'passcodes' | 'guidelines'>('roster');
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
-
-  // Ezibeck Calendar Manager States
-  const [dbCalendarEvents, setDbCalendarEvents] = useState<any[]>([]);
-  const [calendarSelectedMonth, setCalendarSelectedMonth] = useState<number>(5); // June
-  const [calendarEventTitle, setCalendarEventTitle] = useState('');
-  const [calendarEventDesc, setCalendarEventDesc] = useState('');
-  const [calendarEventType, setCalendarEventType] = useState<'holiday' | 'academic' | 'break' | 'exam'>('holiday');
-  const [calendarEventDay, setCalendarEventDay] = useState<number>(1);
-  const [calendarEventYearOptional, setCalendarEventYearOptional] = useState<string>('2026'); // 'annual' or '2024'...'2027'
-  const [editingEventId, setEditingEventId] = useState<string | null>(null);
-  const [isSavingCalendarEvent, setIsSavingCalendarEvent] = useState(false);
-
-  const loadDbCalendarEvents = async () => {
-    try {
-      const events = await dbService.getCalendarEvents();
-      if (events) {
-        setDbCalendarEvents(events);
-      }
-    } catch (err) {
-      console.warn("Could not fetch calendar events:", err);
-    }
-  };
 
   // Update audit logs state on mount and tab activations
   useEffect(() => {
@@ -1276,13 +1254,6 @@ export default function TeacherDashboard({
         }
       });
     }
-    if (activeSubTab === 'calendar') {
-      loadDbCalendarEvents();
-    }
-  }, [activeSubTab]);
-
-  // Prevent unauthorized staff from hanging on the forbidden staff tab
-  React.useEffect(() => {
     if (activeSubTab === 'staff' && (!currentUser || currentUser.id !== 'ezekiel')) {
       setActiveSubTab('roster');
     }
@@ -1575,71 +1546,6 @@ export default function TeacherDashboard({
       clearAuditLogs();
       setAuditLogs([]);
       triggerSuccess("🛡️ Security master audit ledger cleared successfully!");
-    }
-  };
-
-  // Ezibeck Calendar Manager Handlers
-  const handleSaveCalendarEvent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!calendarEventTitle.trim()) {
-      triggerWarning("Event title cannot be empty.");
-      return;
-    }
-    const dayVal = Math.max(1, Math.min(31, Number(calendarEventDay) || 1));
-    const monthVal = Number(calendarSelectedMonth);
-    const yrVal = calendarEventYearOptional === 'annual' ? null : Number(calendarEventYearOptional);
-
-    setIsSavingCalendarEvent(true);
-    try {
-      const payload = {
-        id: editingEventId || undefined,
-        title: calendarEventTitle.trim(),
-        desc: calendarEventDesc.trim(),
-        type: calendarEventType,
-        day: dayVal,
-        month: monthVal,
-        year: yrVal
-      };
-      
-      await dbService.saveCalendarEvent(payload);
-      triggerSuccess(editingEventId ? "📅 Calendar event updated successfully!" : "📅 Calendar event created successfully!");
-      
-      // Reset form
-      setCalendarEventTitle('');
-      setCalendarEventDesc('');
-      setCalendarEventDay(1);
-      setEditingEventId(null);
-      
-      // Reload events
-      await loadDbCalendarEvents();
-    } catch (err: any) {
-      triggerWarning(`Error saving calendar event: ${err?.message || err}`);
-    } finally {
-      setIsSavingCalendarEvent(false);
-    }
-  };
-
-  const handleEditCalendarEvent = (evt: any) => {
-    setEditingEventId(evt.id);
-    setCalendarEventTitle(evt.title);
-    setCalendarEventDesc(evt.desc || '');
-    setCalendarEventType(evt.type);
-    setCalendarEventDay(evt.day);
-    setCalendarSelectedMonth(evt.month);
-    setCalendarEventYearOptional(evt.year ? String(evt.year) : 'annual');
-    triggerSuccess(`Editing event: "${evt.title}"`);
-  };
-
-  const handleDeleteCalendarEvent = async (id: string, title: string) => {
-    if (!window.confirm(`Are you sure you want to delete the calendar event "${title}"?`)) {
-      return;
-    }
-    try {
-      await dbService.deleteCalendarEvent(id);
-      triggerSuccess("📅 Calendar event removed successfully!");
-      await loadDbCalendarEvents();
-    } catch (err: any) {
-      triggerWarning(`Error deleting calendar event: ${err?.message || err}`);
     }
   };
 
@@ -2942,14 +2848,6 @@ export default function TeacherDashboard({
               className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${activeSubTab === 'staff' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-650'}`}
             >
               🔒 Manage Staff Access ({facultyProfiles.length})
-            </button>
-          )}
-          {isAdmin && (
-            <button
-              onClick={() => setActiveSubTab('calendar')}
-              className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${activeSubTab === 'calendar' ? 'border-slate-900 text-slate-900 font-black' : 'border-transparent text-slate-400 hover:text-slate-650'}`}
-            >
-              📅 Ezibeck Calendar Manager
             </button>
           )}
           <button
@@ -6208,215 +6106,6 @@ export default function TeacherDashboard({
                   </div>
                 );
               })}
-            </div>
-          </div>
-        ) : activeSubTab === 'calendar' && isAdmin ? (
-          /* VIEW SEARCH CALENDAR MANAGER */
-          <div className="bg-white border rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm animate-fade-in text-slate-800">
-            <div className="border-b pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-left">
-              <div>
-                <span className="text-[10px] bg-emerald-50 border border-emerald-200 text-emerald-700 font-extrabold tracking-widest uppercase px-2.5 py-1 rounded-md">
-                  School Logistics Desk
-                </span>
-                <h2 className="text-xl font-black text-slate-900 mt-2 flex items-center gap-1.5 uppercase tracking-tight">
-                  📅 Ezibeck Calendar Manager
-                </h2>
-                <p className="text-xs text-slate-500 font-medium">
-                  Add, edit, and delete school holidays and academic activities shown on the public home page calendar.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* Left Column: Form */}
-              <div className="lg:col-span-5 bg-slate-50 border border-slate-150 p-5 sm:p-6 rounded-2xl space-y-4 text-left">
-                <h3 className="font-extrabold text-xs text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b pb-2">
-                  {editingEventId ? "✏️ Edit Calendar Event" : "🆕 Create New Event"}
-                </h3>
-                
-                <form onSubmit={handleSaveCalendarEvent} className="space-y-4">
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Event Title *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Christmas Day, SS3 Trial Exams"
-                      value={calendarEventTitle}
-                      onChange={(e) => setCalendarEventTitle(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-semibold outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Short Description/Details</label>
-                    <textarea
-                      placeholder="Specify logistics, timings, or target audience..."
-                      rows={2}
-                      value={calendarEventDesc}
-                      onChange={(e) => setCalendarEventDesc(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-semibold outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Event Type</label>
-                      <select
-                        value={calendarEventType}
-                        onChange={(e) => setCalendarEventType(e.target.value as any)}
-                        className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:border-emerald-650"
-                      >
-                        <option value="holiday">Holiday (Rose/Red)</option>
-                        <option value="academic">Academic (Indigo/Blue)</option>
-                        <option value="break">Break (Emerald/Green)</option>
-                        <option value="exam">Exam (Amber/Yellow)</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Day of Month</label>
-                      <select
-                        value={calendarEventDay}
-                        onChange={(e) => setCalendarEventDay(Number(e.target.value))}
-                        className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold outline-none"
-                      >
-                        {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
-                          <option key={d} value={d}>Day {d}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Month</label>
-                      <select
-                        value={calendarSelectedMonth}
-                        onChange={(e) => setCalendarSelectedMonth(Number(e.target.value))}
-                        className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:border-emerald-650"
-                      >
-                        {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((m, idx) => (
-                          <option key={idx} value={idx}>{m}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1.5">Academic Year Scope</label>
-                      <select
-                        value={calendarEventYearOptional}
-                        onChange={(e) => setCalendarEventYearOptional(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs font-semibold outline-none focus:border-emerald-650"
-                      >
-                        <option value="annual">Repeating Annually (All years)</option>
-                        <option value="2024">Specific Year: 2024</option>
-                        <option value="2025">Specific Year: 2025</option>
-                        <option value="2026">Specific Year: 2026</option>
-                        <option value="2027">Specific Year: 2027</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 flex gap-2">
-                    <button
-                      type="submit"
-                      disabled={isSavingCalendarEvent}
-                      className="flex-1 bg-emerald-800 hover:bg-emerald-700 disabled:opacity-50 text-white font-extrabold text-xs uppercase tracking-wider py-3 px-4 rounded-xl cursor-pointer transition-all"
-                    >
-                      {isSavingCalendarEvent ? "Saving..." : (editingEventId ? "Update Event" : "Add Event")}
-                    </button>
-                    {editingEventId && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingEventId(null);
-                          setCalendarEventTitle('');
-                          setCalendarEventDesc('');
-                          setCalendarEventDay(1);
-                        }}
-                        className="bg-slate-300 hover:bg-slate-400 text-slate-700 font-extrabold text-xs uppercase tracking-wider py-3 px-4 rounded-xl cursor-pointer transition-all"
-                      >
-                        Cancel
-                      </button>
-                    )}
-                  </div>
-                </form>
-              </div>
-
-              {/* Right Column: List of Events */}
-              <div className="lg:col-span-7 space-y-4 text-left">
-                <div className="flex items-center justify-between border-b pb-2">
-                  <h3 className="font-extrabold text-xs text-slate-900 uppercase tracking-wider">
-                    📋 Active Custom Events ({dbCalendarEvents.length})
-                  </h3>
-                  <button
-                    onClick={loadDbCalendarEvents}
-                    className="text-[10px] bg-slate-100 hover:bg-slate-200 border text-slate-650 font-black tracking-wider uppercase px-2.5 py-1 rounded-md"
-                  >
-                    🔄 Reload
-                  </button>
-                </div>
-
-                {dbCalendarEvents.length === 0 ? (
-                  <div className="p-8 border border-dashed rounded-2xl bg-slate-50/50 text-center space-y-2">
-                    <p className="text-xs text-slate-400 font-medium italic">
-                      No custom activities or holidays registered in the database.
-                    </p>
-                    <p className="text-[10.5px] text-slate-450 leading-relaxed max-w-sm mx-auto font-medium">
-                      Events added here will synchronize directly and override or supplement the static default dates on the homepage.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-2.5 max-h-[480px] overflow-y-auto pr-1">
-                    {dbCalendarEvents.map((evt) => {
-                      const typeColors: Record<string, string> = {
-                        holiday: 'bg-rose-50 text-rose-700 border-rose-205',
-                        academic: 'bg-indigo-50 text-indigo-705 border-indigo-205',
-                        break: 'bg-emerald-50 text-emerald-705 border-emerald-250',
-                        exam: 'bg-amber-50 text-amber-800 border-amber-250'
-                      };
-                      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                      return (
-                        <div key={evt.id} className="p-4 bg-white border rounded-2xl flex items-start justify-between gap-4 hover:shadow-2xs transition-all border-slate-150">
-                          <div className="space-y-1 text-left">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 border rounded ${typeColors[evt.type] || 'bg-slate-50 text-slate-605'}`}>
-                                {evt.type}
-                              </span>
-                              <span className="font-mono text-[10px] font-black text-slate-400">
-                                {monthNames[evt.month]} {evt.day}{evt.year ? `, ${evt.year}` : ' (Annual)'}
-                              </span>
-                            </div>
-                            <h4 className="text-xs font-black text-slate-900 leading-tight">
-                              {evt.title}
-                            </h4>
-                            {evt.desc && (
-                              <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
-                                {evt.desc}
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => handleEditCalendarEvent(evt)}
-                              className="p-1 px-2.5 bg-slate-50 hover:bg-slate-100 border text-[10px] font-bold text-slate-650 rounded-lg cursor-pointer"
-                            >
-                              ✏️ Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteCalendarEvent(evt.id, evt.title)}
-                              className="p-1 px-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-[10px] font-bold text-rose-700 rounded-lg cursor-pointer"
-                            >
-                              🗑️ Delete
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         ) : (activeSubTab === 'passcodes' && isAdmin) ? (
