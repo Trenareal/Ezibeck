@@ -32,7 +32,7 @@ export default function GuidelinesComponent({ onClose, inlineOnly = false, isPub
           <div>
             <h4 className="font-extrabold text-slate-900 text-sm">EZIBECK Academics</h4>
             <p className="text-xs text-slate-650 mt-1 leading-relaxed">
-              Welcome to our high-performance academic management ecosystem. Directed by our motto <span className="text-emerald-700 italic font-semibold">"Sharpening Minds, Inspiring Greatness"</span>, this platform integrates terminal scorecards, behavior monitoring, secure individual logins, and secure real-time online syncing.
+              Welcome to our high-performance academic management ecosystem. Directed by our motto <span className="text-emerald-700 italic font-semibold">"Knowledge is Power"</span>, this platform integrates terminal scorecards, behavior monitoring, secure individual logins, and secure real-time online syncing.
             </p>
           </div>
         </div>

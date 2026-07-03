@@ -83,6 +83,32 @@ export default function App() {
     }
   }, [currentView]);
 
+  // Real-time synchronization across different browser tabs using the storage event
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (!e.key) return;
+      if (e.key === 'ezibeck_workspace15') {
+        try {
+          if (e.newValue) {
+            setTemplate(JSON.parse(e.newValue));
+          }
+        } catch (err) {
+          console.error('Cross-tab workspace sync failed:', err);
+        }
+      } else if (e.key.startsWith('ezibeck_students_') || e.key === 'ezibeck_students') {
+        // Trigger a reload of students for the active term
+        setSyncTrigger(prev => prev + 1);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   // Synchronize browser history pop events to allow back-button navigation
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -108,7 +134,7 @@ export default function App() {
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, []);
+  }, [currentView]);
 
   useEffect(() => {
     const handleOnline = () => {

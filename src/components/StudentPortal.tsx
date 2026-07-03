@@ -157,7 +157,7 @@ export default function StudentPortal({
   onPullFromSupabase,
   onUpdateTemplate
 }: StudentPortalProps) {
-  const [selectedClass, setSelectedClass] = useState<ClassName>('Pre-Nursery');
+  const [selectedClass, setSelectedClass] = useState<ClassName | ''>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(() => {
     if (typeof window !== 'undefined') {
@@ -869,22 +869,36 @@ export default function StudentPortal({
               </div>
             </div>
             
-            {/* Class Tabs Selector */}
-            <div className="flex flex-wrap gap-1.5 bg-slate-50 p-2 rounded-2xl border border-slate-100/80 w-full justify-start">
-              {ALL_CLASSES.map(cls => (
-                <button
-                  key={cls}
-                  onClick={() => {
-                    setSelectedClass(cls);
+            {/* Class Selector Dropdown */}
+            <div className="w-full lg:w-72">
+              <label htmlFor="student-portal-class-select" className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                Choose Academic Class:
+              </label>
+              <div className="relative">
+                <select
+                  id="student-portal-class-select"
+                  value={selectedClass}
+                  onChange={(e) => {
+                    setSelectedClass(e.target.value as ClassName | '');
                     setSearchQuery('');
                     setSelectedStudent(null);
                     setIsUnlocked(false);
                   }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${selectedClass === cls ? 'bg-emerald-700 text-white shadow-md shadow-emerald-100' : 'text-slate-600 hover:bg-slate-100'}`}
+                  className="w-full bg-slate-50 border border-slate-150 focus:border-emerald-500 focus:bg-white rounded-xl py-2.5 pl-4 pr-10 text-xs outline-none transition-all text-slate-750 font-extrabold shadow-xs cursor-pointer appearance-none"
                 >
-                  {cls}
-                </button>
-              ))}
+                  <option value="" disabled>Select Class</option>
+                  {ALL_CLASSES.map(cls => (
+                    <option key={cls} value={cls}>
+                      {cls}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-450">
+                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
 

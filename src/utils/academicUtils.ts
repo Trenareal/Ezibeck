@@ -2,8 +2,8 @@ import { Student, SubjectGrade, BehaviourRating, ClassName, SchoolInfo } from '.
 import { safeStorage } from './safeStorage';
 
 export const SCHOOL_INFO: SchoolInfo = {
-  name: "Ezibeck Core International College",
-  motto: "Knowledge, discipline and outstanding character excellence",
+  name: "Ezibeck Academy",
+  motto: "Knowledge is Power",
   address: "120, Broadway Lane, New York, NY 10025",
   phone: "+1 (555) 489-0128",
   email: "admissions@ezibeckcollege.edu"

@@ -601,7 +601,7 @@ export default function PublicHome({ onEnterPortal, template }: PublicHomeProps)
                   />
                   <div className="bg-slate-900 p-4 text-center">
                     <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">
-                      Ezibeck Core Principal Block Exterior
+                      Ezibeck Academy Principal Block Exterior
                     </span>
                   </div>
                 </div>
