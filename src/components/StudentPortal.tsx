@@ -159,15 +159,46 @@ export default function StudentPortal({
 }: StudentPortalProps) {
   const [selectedClass, setSelectedClass] = useState<ClassName>('Pre-Nursery');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = safeStorage.getItem('ezibeck_student_session');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error loading saved student session:', e);
+        }
+      }
+    }
+    return null;
+  });
   const [viewTab, setViewTab] = useState<'report' | 'charts'>('report');
   
   // Student Lock Portal credentials
   const [passwordInput, setPasswordInput] = useState('');
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const unlocked = safeStorage.getItem('ezibeck_student_unlocked');
+      return unlocked === 'true';
+    }
+    return false;
+  });
   const [loginError, setLoginError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rollNotification, setRollNotification] = useState<string | null>(null);
+
+  // Synchronize student session to safeStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (selectedStudent) {
+        safeStorage.setItem('ezibeck_student_session', JSON.stringify(selectedStudent));
+        safeStorage.setItem('ezibeck_student_unlocked', isUnlocked ? 'true' : 'false');
+      } else {
+        safeStorage.removeItem('ezibeck_student_session');
+        safeStorage.removeItem('ezibeck_student_unlocked');
+      }
+    }
+  }, [selectedStudent, isUnlocked]);
 
   // Password reset via simulated OTP states
   const [showResetForm, setShowResetForm] = useState(false);
@@ -191,6 +222,18 @@ export default function StudentPortal({
 
   const [termStudents, setTermStudents] = useState<Student[]>(students);
   const [loadingStudents, setLoadingStudents] = useState(false);
+
+  // Keep selected student object in sync with any updates to the roster
+  useEffect(() => {
+    if (selectedStudent && termStudents.length > 0) {
+      const latest = termStudents.find(s => s.id === selectedStudent.id);
+      if (latest) {
+        if (JSON.stringify(latest) !== JSON.stringify(selectedStudent)) {
+          setSelectedStudent(latest);
+        }
+      }
+    }
+  }, [termStudents, selectedStudent]);
 
   useEffect(() => {
     let active = true;
